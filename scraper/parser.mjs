@@ -170,7 +170,8 @@ const HM = '(\\d{1,2})\\s*(?::\\s*(\\d{2})|시\\s*(?:(\\d{1,2})\\s*분|(반))?)?
 export function parseTime(title, dateSpan) {
   let t = title;
   if (dateSpan) t = t.replace(dateSpan, ' ');
-  t = t.replace(/\d+\s*(명|분\s*(모집|구|초청)|층|부\)|호선|대\s*(이상|이하|환영|~)|번|km)/g, ' ');
+  t = t.replace(/\d+\s*(명|층|부\)|호선|대\s*(이상|이하|환영|~)|번|km)/g, ' ')
+    .replace(/(?<![\d시:])\d{1,2}\s*분\s*(모집|구|초청)/g, ' '); // '2분 모집'(인원)만 제거, '11시50분 초청'은 유지
   const re = new RegExp(`${PREF}${HM}\\s*(?:~|-|부터|에서)\\s*${PREF}${HM}\\s*(시|까지)?`);
   const one = new RegExp(`${PREF}(\\d{1,2})\\s*(?::\\s*(\\d{2})|시\\s*(?:(\\d{1,2})\\s*분|(반))?)`);
   let m = t.match(re);
