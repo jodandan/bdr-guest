@@ -1,6 +1,8 @@
 name = "bdrguest-push"
 main = "worker.js"
 compatibility_date = "2026-09-01"
+workers_dev = true
+preview_urls = false
 
 [triggers]
 crons = ["*/10 * * * *"]
@@ -8,3 +10,8 @@ crons = ["*/10 * * * *"]
 [[kv_namespaces]]
 binding = "SUBS"
 id = "bf4b5bc23efe498b83f54693a63030fd"
+
+
+[observability.logs]
+enabled = true
+invocation_logs = true
