@@ -61,8 +61,15 @@ async function main() {
     };
   });
 
+  // 삭제 감지: 이번에 훑은 id 범위 안에 있는데 목록에 없으면 카페에서 삭제된 글
+  const freshIds = new Set(fresh.map(p => p.id));
+  const minId = Math.min(...freshIds);
+  const canDetect = fresh.length >= 20; // 응답이 비정상적으로 적으면 삭제 판단 보류
+  const kept = prev.posts.filter(p => !(canDetect && p.id >= minId && !freshIds.has(p.id)));
+  const removed = prev.posts.length - kept.length;
+
   // 병합: 새로 받은 글 우선, 이전 글은 게시시각 유지
-  const byId = new Map(prev.posts.map(p => [p.id, p]));
+  const byId = new Map(kept.map(p => [p.id, p]));
   for (const p of fresh) {
     const old = byId.get(p.id);
     byId.set(p.id, old ? { ...p, posted: old.posted } : p);
@@ -82,7 +89,7 @@ async function main() {
   });
 
   await writeFile(OUT, JSON.stringify({ updated: new Date(now).toISOString(), today, source: `https://m.cafe.daum.net/dongarry/${FLDID}`, posts: dedup }, null, 0));
-  console.log(`fetched=${raw.length} fresh=${fresh.length} saved=${dedup.length}`);
+  console.log(`fetched=${raw.length} fresh=${fresh.length} removed=${removed} saved=${dedup.length}`);
 }
 
 main().catch(e => { console.error(e.message); process.exit(1); });
