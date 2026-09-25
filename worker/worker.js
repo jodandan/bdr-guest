@@ -72,7 +72,7 @@ function cleanFilters(f = {}) {
   const arr = (a, n = 40) => Array.isArray(a) ? a.filter(x => typeof x === 'string' && x.length <= 20).slice(0, n) : [];
   return {
     boards: arr(f.boards, 3), r1: typeof f.r1 === 'string' ? f.r1.slice(0, 10) : '전체',
-    regions: arr(f.regions), slots: arr(f.slots, 3), week: ['주말', '평일'].includes(f.week) ? f.week : '전체',
+    regions: arr(f.regions, 80), slots: arr(f.slots, 3), week: ['주말', '평일'].includes(f.week) ? f.week : '전체',
   };
 }
 
