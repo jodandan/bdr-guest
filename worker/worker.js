@@ -7,6 +7,8 @@
 const SITE = 'https://bdrguest.kro.kr';
 const REPO = 'jodandan/bdr-guest';
 const WORKFLOW = 'scrape.yml';
+// 사이트 HTTPS 인증서 발급 전·장애 시에도 읽히도록 저장소 원본을 직접 읽는다
+const DATA_URL = `https://raw.githubusercontent.com/${REPO}/main/docs/data.json`;
 const ORIGINS = [SITE, 'http://bdrguest.kro.kr', 'http://localhost:8766'];
 
 const b64u = buf => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -86,7 +88,7 @@ async function listSubs(env) {
 
 // 새 글 확인 → 푸시
 export async function checkAndPush(env, now = Date.now()) {
-  const res = await fetch(`${SITE}/data.json?t=${now}`, { cf: { cacheTtl: 0 } });
+  const res = await fetch(`${DATA_URL}?t=${now}`, { cf: { cacheTtl: 0 } });
   if (!res.ok) return { error: `data.json ${res.status}` };
   const d = await res.json();
   const today = new Date(now + 9 * 3600e3).toISOString().slice(0, 10);
