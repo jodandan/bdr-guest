@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BDR 게스트 모아보기</title>
+<meta name="description" content="BDR 동아리농구방 게스트 구인 글을 지역·날짜·시간으로 필터링해 보는 비공식 모아보기">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23e8590c'/><path d='M4 50h92M50 4v92M18 18c20 18 20 46 0 64M82 18c-20 18-20 46 0 64' stroke='%23222' stroke-width='5' fill='none'/></svg>">
+<style>
+:root{
+  --bg:#f6f5f2;--card:#fff;--text:#1d1d1f;--sub:#5f5f66;--line:#e4e2dc;
+  --accent:#d9480f;--accent-bg:#fff0e6;--chip:#fff;--chip-on:#1d1d1f;--chip-on-text:#fff;
+  --ok:#2b8a3e;--muted:#9a9aa1;--shadow:0 1px 2px rgba(0,0,0,.05);
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#141416;--card:#1f1f23;--text:#f2f2f4;--sub:#a8a8b0;--line:#2e2e34;
+  --accent:#ff8a4c;--accent-bg:#3a2217;--chip:#1f1f23;--chip-on:#f2f2f4;--chip-on-text:#141416;--muted:#6d6d75;--shadow:none}
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Noto Sans KR","Malgun Gothic",sans-serif}
+a{color:inherit}
+button{font:inherit;color:inherit}
+.wrap{max-width:720px;margin:0 auto;padding:0 16px}
+header{padding:20px 0 8px}
+h1{font-size:22px;margin:0;letter-spacing:-.02em}
+h1 span{color:var(--accent)}
+.meta{color:var(--sub);font-size:13px;margin-top:4px}
+.bar{padding:8px 0 10px;border-bottom:1px solid var(--line)}
+.row{display:flex;gap:6px;overflow-x:auto;padding:4px 0;scrollbar-width:none}
+.row::-webkit-scrollbar{display:none}
+.lbl{flex:none;align-self:center;font-size:12px;color:var(--sub);width:34px}
+.chip{flex:none;border:1px solid var(--line);background:var(--chip);border-radius:999px;padding:6px 12px;font-size:14px;cursor:pointer;white-space:nowrap;min-height:34px}
+.chip[aria-pressed="true"]{background:var(--chip-on);color:var(--chip-on-text);border-color:var(--chip-on)}
+.chip.sm{padding:4px 10px;font-size:13px;min-height:30px}
+.chip:focus-visible,.star:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tools{display:flex;gap:8px;align-items:center;margin-top:6px}
+.search{flex:1;min-width:0;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 12px;font-size:15px;color:var(--text)}
+.toggle{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.count{font-size:13px;color:var(--sub);padding:12px 0 4px;display:flex;justify-content:space-between;align-items:center}
+.linkbtn{background:none;border:0;color:var(--accent);cursor:pointer;padding:4px;font-size:13px}
+.day{font-size:14px;font-weight:700;margin:18px 0 8px;color:var(--sub)}
+.day b{color:var(--text)}
+.card{display:flex;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:8px;box-shadow:var(--shadow)}
+.card.closed{opacity:.5}
+.time{flex:none;width:62px;text-align:center}
+.time .s{font-size:17px;font-weight:700;letter-spacing:-.02em}
+.time .e{font-size:12px;color:var(--sub)}
+.time .unk{font-size:13px;color:var(--muted)}
+.body{flex:1;min-width:0}
+.tags{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:4px}
+.tag{font-size:12px;padding:1px 7px;border-radius:6px;background:var(--accent-bg);color:var(--accent);font-weight:600}
+.tag.g{background:transparent;border:1px solid var(--line);color:var(--sub);font-weight:500}
+.tag.x{background:var(--line);color:var(--sub)}
+.title{font-size:15px;line-height:1.45;word-break:keep-all;overflow-wrap:anywhere;text-decoration:none;display:block}
+.title:hover{text-decoration:underline}
+.sub{font-size:12px;color:var(--sub);margin-top:4px}
+.star{flex:none;background:none;border:0;font-size:20px;line-height:1;color:var(--muted);cursor:pointer;padding:4px;align-self:flex-start;min-width:32px;min-height:32px}
+.star[aria-pressed="true"]{color:#f59f00}
+.state{text-align:center;padding:48px 16px;color:var(--sub)}
+.state button{margin-top:12px}
+.skel{height:76px;border-radius:14px;background:linear-gradient(90deg,var(--card),var(--line),var(--card));background-size:200% 100%;animation:sh 1.2s infinite;margin-bottom:8px}
+@keyframes sh{to{background-position:-200% 0}}
+footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;border-top:1px solid var(--line);margin-top:28px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--chip-on);color:var(--chip-on-text);padding:10px 16px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+@media (prefers-reduced-motion:reduce){.skel{animation:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>BDR <span>게스트</span> 모아보기</h1>
+    <div class="meta" id="meta">불러오는 중…</div>
+  </header>
+
+  <div class="bar" role="region" aria-label="필터">
+    <div class="row" id="rowR1" role="group" aria-label="광역 지역"><span class="lbl">지역</span></div>
+    <div class="row" id="rowR2" role="group" aria-label="세부 지역" hidden></div>
+    <div class="row" id="rowDate" role="group" aria-label="날짜"><span class="lbl">날짜</span></div>
+    <div class="row" id="rowSlot" role="group" aria-label="시간대"><span class="lbl">시간</span></div>
+    <div class="tools">
+      <input id="q" class="search" type="search" placeholder="체육관·팀명·동네 검색" aria-label="제목 검색">
+    </div>
+    <div class="toggle">
+      <button class="chip sm" id="tgClosed" aria-pressed="true">마감 숨기기</button>
+      <button class="chip sm" id="tgSaved" aria-pressed="false">★ 저장한 글만</button>
+      <button class="chip sm" id="btnFav" aria-pressed="false" title="현재 선택한 지역을 다음 접속 때 자동 적용">📍 이 지역 기억하기</button>
+    </div>
+  </div>
+
+  <div class="count"><span id="count" aria-live="polite"></span><button class="linkbtn" id="reset">필터 초기화</button></div>
+  <main id="list" aria-busy="true">
+    <div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div>
+  </main>
+
+  <footer>
+    이 사이트는 다음카페 <a href="https://m.cafe.daum.net/dongarry/Dilr" target="_blank" rel="noopener">[BDR]동아리농구방 게스트 구인</a> 게시판의 <b>공개된 글 제목</b>만 모아 보여주는 <b>비공식</b> 사이트입니다.
+    글의 내용·비용·연락처는 반드시 원문에서 확인하세요. 모든 글의 권리는 작성자에게 있습니다.<br>
+    지역·날짜·시간은 제목을 자동 분석한 결과라 틀릴 수 있습니다.<br>
+    게시글 제외 요청: <a id="issueLink" href="#" target="_blank" rel="noopener">문의하기</a>
+  </footer>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(() => {
+  const ISSUE_URL = 'https://github.com/jodandan/bdr-guest/issues'; // 배포 시 교체
+  document.getElementById('issueLink').href = ISSUE_URL;
+
+  const $ = id => document.getElementById(id);
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  };
+  const WEEK = ['일', '월', '화', '수', '목', '금', '토'];
+  const R1_ORDER = ['서울', '경기', '인천'];
+
+  let DATA = [], TODAY = '';
+  const fav = store.get('bdr.fav', null); // {r1, r2:[]}
+  const S = {
+    r1: fav?.r1 || '전체',
+    r2: new Set(fav?.r2 || []),
+    date: '전체',
+    slot: new Set(),
+    q: '',
+    hideClosed: store.get('bdr.hideClosed', true),
+    savedOnly: false,
+  };
+  const saved = new Set(store.get('bdr.saved', []));
+
+  function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove('on'), 1600); }
+  function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+  function addDays(ymd, n) { const [y, m, d] = ymd.split('-').map(Number); const t = new Date(Date.UTC(y, m - 1, d + n)); return t.toISOString().slice(0, 10); }
+  function dayLabel(ymd) {
+    if (!ymd) return '날짜 미정';
+    const [y, m, d] = ymd.split('-').map(Number);
+    const w = WEEK[new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
+    const rel = ymd === TODAY ? '오늘 · ' : ymd === addDays(TODAY, 1) ? '내일 · ' : '';
+    return `${rel}${m}/${d} (${w})`;
+  }
+  function kstToday() { return new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10); }
+  function ago(iso) {
+    const m = Math.round((Date.now() - Date.parse(iso)) / 60000);
+    if (m < 1) return '방금'; if (m < 60) return `${m}분 전`;
+    const h = Math.floor(m / 60); if (h < 24) return `${h}시간 전`;
+    return `${Math.floor(h / 24)}일 전`;
+  }
+
+  function chip(label, pressed, onClick, cls = '') {
+    const b = document.createElement('button');
+    b.className = 'chip ' + cls; b.type = 'button'; b.textContent = label;
+    b.setAttribute('aria-pressed', pressed ? 'true' : 'false');
+    b.addEventListener('click', onClick);
+    return b;
+  }
+  function fillRow(row, items) {
+    const lbl = row.querySelector('.lbl');
+    row.replaceChildren(...(lbl ? [lbl] : []), ...items);
+  }
+
+  function base() { // 날짜 기준(지난 글 제외)만 적용한 모집단
+    return DATA.filter(p => !p.date || p.date >= TODAY);
+  }
+
+  function renderFilters() {
+    const pool = base();
+    const r1s = [...new Set(pool.map(p => p.region1 || '기타'))]
+      .sort((a, b) => (R1_ORDER.indexOf(a) + 1 || 99) - (R1_ORDER.indexOf(b) + 1 || 99) || a.localeCompare(b));
+    fillRow($('rowR1'), ['전체', ...r1s].map(r => chip(r, S.r1 === r, () => { S.r1 = r; S.r2.clear(); render(); })));
+
+    const rowR2 = $('rowR2');
+    if (S.r1 !== '전체') {
+      const cnt = {};
+      pool.filter(p => (p.region1 || '기타') === S.r1).forEach(p => { const k = p.region2 || '기타'; cnt[k] = (cnt[k] || 0) + 1; });
+      const keys = Object.keys(cnt).sort((a, b) => (a === '기타') - (b === '기타') || cnt[b] - cnt[a]);
+      [...S.r2].forEach(k => { if (!cnt[k]) keys.push(k), cnt[k] = 0; });
+      fillRow(rowR2, keys.map(k => chip(`${k} ${cnt[k]}`, S.r2.has(k), () => { S.r2.has(k) ? S.r2.delete(k) : S.r2.add(k); render(); }, 'sm')));
+      rowR2.hidden = false;
+    } else rowR2.hidden = true;
+
+    const dates = [...new Set(pool.map(p => p.date).filter(Boolean))].sort().slice(0, 10);
+    fillRow($('rowDate'), ['전체', ...dates].map(d => chip(d === '전체' ? '전체' : dayLabel(d).replace(' · ', ' '), S.date === d, () => { S.date = d; render(); })));
+
+    fillRow($('rowSlot'), ['오전', '오후', '저녁'].map(s => chip(s === '오전' ? '오전(~12시)' : s === '오후' ? '오후(12~18시)' : '저녁(18시~)', S.slot.has(s), () => { S.slot.has(s) ? S.slot.delete(s) : S.slot.add(s); render(); })));
+
+    $('tgClosed').setAttribute('aria-pressed', S.hideClosed);
+    $('tgSaved').setAttribute('aria-pressed', S.savedOnly);
+    const f = store.get('bdr.fav', null);
+    const same = f && f.r1 === S.r1 && [...S.r2].sort().join() === (f.r2 || []).slice().sort().join();
+    $('btnFav').setAttribute('aria-pressed', !!same && S.r1 !== '전체');
+    $('btnFav').textContent = same && S.r1 !== '전체' ? '📍 기억한 지역' : '📍 이 지역 기억하기';
+  }
+
+  function filtered() {
+    const q = S.q.trim().replace(/\s+/g, '').toLowerCase();
+    return base().filter(p => {
+      if (S.savedOnly && !saved.has(p.id)) return false;
+      if (S.hideClosed && p.closed) return false;
+      if (S.r1 !== '전체' && (p.region1 || '기타') !== S.r1) return false;
+      if (S.r2.size && !S.r2.has(p.region2 || '기타')) return false;
+      if (S.date !== '전체' && p.date !== S.date) return false;
+      if (S.slot.size && !S.slot.has(p.slot)) return false;
+      if (q && !p.title.replace(/\s+/g, '').toLowerCase().includes(q)) return false;
+      return true;
+    }).sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999') || (a.start || '99').localeCompare(b.start || '99') || b.id - a.id);
+  }
+
+  function card(p) {
+    const tags = [];
+    if (p.region1) tags.push(`<span class="tag">${esc(p.region1)}${p.region2 ? ' ' + esc(p.region2) : ''}</span>`);
+    if (p.free) tags.push('<span class="tag g">무료</span>');
+    if (p.closed) tags.push('<span class="tag x">마감</span>');
+    const time = p.start
+      ? `<div class="s">${esc(p.start)}</div><div class="e">${p.end ? '~' + esc(p.end) : ''}</div>`
+      : '<div class="unk">시간<br>미정</div>';
+    const on = saved.has(p.id);
+    return `<article class="card${p.closed ? ' closed' : ''}">
+      <div class="time">${time}</div>
+      <div class="body">
+        <div class="tags">${tags.join('')}</div>
+        <a class="title" href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.title)}</a>
+        <div class="sub">${ago(p.posted)} · 조회 ${p.views ?? 0}</div>
+      </div>
+      <button class="star" data-id="${p.id}" aria-pressed="${on}" aria-label="${on ? '저장 해제' : '저장'}">${on ? '★' : '☆'}</button>
+    </article>`;
+  }
+
+  function render() {
+    renderFilters();
+    const rows = filtered();
+    $('count').textContent = `${rows.length}건`;
+    const list = $('list');
+    list.setAttribute('aria-busy', 'false');
+    if (!rows.length) {
+      list.innerHTML = `<div class="state">조건에 맞는 글이 없어요.<br><button class="chip" id="reset2">필터 초기화</button></div>`;
+      $('reset2').onclick = reset;
+      return;
+    }
+    let html = '', cur = null;
+    for (const p of rows) {
+      const d = p.date || '';
+      if (d !== cur) { cur = d; html += `<h2 class="day"><b>${esc(dayLabel(p.date))}</b></h2>`; }
+      html += card(p);
+    }
+    list.innerHTML = html;
+  }
+
+  function reset() {
+    S.r1 = '전체'; S.r2.clear(); S.date = '전체'; S.slot.clear(); S.q = ''; S.savedOnly = false; $('q').value = '';
+    render();
+  }
+
+  $('list').addEventListener('click', e => {
+    const b = e.target.closest('.star'); if (!b) return;
+    const id = +b.dataset.id;
+    saved.has(id) ? saved.delete(id) : saved.add(id);
+    store.set('bdr.saved', [...saved]);
+    toast(saved.has(id) ? '저장했어요' : '저장을 해제했어요');
+    render();
+  });
+  $('q').addEventListener('input', e => { S.q = e.target.value; render(); });
+  $('tgClosed').onclick = () => { S.hideClosed = !S.hideClosed; store.set('bdr.hideClosed', S.hideClosed); render(); };
+  $('tgSaved').onclick = () => { S.savedOnly = !S.savedOnly; render(); };
+  $('btnFav').onclick = () => {
+    if (S.r1 === '전체') { store.set('bdr.fav', null); toast('지역을 먼저 선택해 주세요'); return render(); }
+    const f = store.get('bdr.fav', null);
+    const same = f && f.r1 === S.r1 && [...S.r2].sort().join() === (f.r2 || []).slice().sort().join();
+    if (same) { store.set('bdr.fav', null); toast('기억한 지역을 지웠어요'); }
+    else { store.set('bdr.fav', { r1: S.r1, r2: [...S.r2] }); toast('다음에도 이 지역으로 열려요'); }
+    render();
+  };
+  $('reset').onclick = reset;
+
+  fetch('data.json', { cache: 'no-cache' })
+    .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(d => {
+      DATA = d.posts || [];
+      TODAY = kstToday();
+      $('meta').textContent = `최근 업데이트 ${ago(d.updated)} · 30분마다 갱신`;
+      render();
+    })
+    .catch(() => {
+      $('meta').textContent = '';
+      $('list').setAttribute('aria-busy', 'false');
+      $('list').innerHTML = `<div class="state">목록을 불러오지 못했어요.<br>잠시 후 다시 시도하거나 <a href="https://m.cafe.daum.net/dongarry/Dilr" target="_blank" rel="noopener">원문 게시판</a>에서 확인해 주세요.</div>`;
+    });
+})();
+</script>
+</body>
+</html>
