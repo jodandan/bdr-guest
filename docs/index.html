@@ -511,7 +511,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
   };
 
   // ---- 웹 푸시 알림 ----
-  const PUSH_API = ''; // Cloudflare Worker 주소 (배포 후 입력)
+  const PUSH_API = 'https://bdrguest-push.kiss970322.workers.dev'; // Cloudflare Worker 알림 서버
   const PUSH_KEY = 'bdr.push';
   const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent);
   const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
