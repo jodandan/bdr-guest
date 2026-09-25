@@ -204,7 +204,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     const rowR2 = $('rowR2');
     if (S.r1 !== '전체') {
       const cnt = {};
-      pool.filter(p => (p.region1 || '기타') === S.r1).forEach(p => { const k = p.region2 || '기타'; cnt[k] = (cnt[k] || 0) + 1; });
+      pool.filter(p => (p.region1 || '기타') === S.r1 && !(S.hideClosed && p.closed)).forEach(p => { const k = p.region2 || '기타'; cnt[k] = (cnt[k] || 0) + 1; });
       const keys = Object.keys(cnt).sort((a, b) => (a === '기타') - (b === '기타') || cnt[b] - cnt[a]);
       [...S.r2].forEach(k => { if (!cnt[k]) keys.push(k), cnt[k] = 0; });
       fillRow(rowR2, keys.map(k => chip(`${k} ${cnt[k]}`, S.r2.has(k), () => { S.r2.has(k) ? S.r2.delete(k) : S.r2.add(k); render(); }, 'sm')));
@@ -324,8 +324,13 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     try {
       if (navigator.share) { await navigator.share({ title: text, url }); return; }
     } catch (e) { if (e && e.name === 'AbortError') return; }
-    try { await navigator.clipboard.writeText(url); toast('링크를 복사했어요'); }
-    catch { prompt('이 링크를 복사하세요', url); }
+    try { await navigator.clipboard.writeText(url); toast('링크를 복사했어요'); return; } catch {}
+    const ta = document.createElement('textarea'); // http 등 비보안 환경용 복사
+    ta.value = url; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;top:-100px;opacity:0';
+    document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, url.length);
+    let done = false; try { done = document.execCommand('copy'); } catch {}
+    ta.remove();
+    toast(done ? '링크를 복사했어요' : '주소창의 링크를 복사해 주세요');
   };
 
   $('q').value = S.q;
