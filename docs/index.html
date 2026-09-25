@@ -77,6 +77,9 @@ button{font:inherit;color:inherit}
 .chip.sm{padding:4px 10px;font-size:13px;min-height:32px}
 .chip:focus-visible,.star:focus-visible,a:focus-visible,input:focus-visible,.linkbtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .chip.near{border-style:dashed}
+.chip.inc{border-style:dashed;box-shadow:inset 0 -4px 0 var(--yellow)}
+.chip.zero{opacity:.62}
+.chip.zero[aria-pressed="true"],.chip.zero.inc{opacity:1}
 .tools{display:flex;gap:8px;align-items:center;margin-top:8px}
 .search{flex:1;min-width:0;border:2px solid var(--line);background:var(--card);border-radius:0;padding:9px 12px;font-size:16px;color:var(--text)}
 .toggle{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
@@ -218,6 +221,12 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     '시흥': '광명,안산,군포', '파주': '양주,김포', '광명': '시흥', '군포': '의왕', '하남': '경기광주,구리', '이천': '경기광주,여주,안성',
     '양주': '동두천,포천', '포천': '동두천,가평', '여주': '양평,경기광주', '양평': '가평,경기광주',
   };
+  // 광역별 세부지역 전체 목록 — 글이 없는 동네도 '내 동네'로 고를 수 있게
+  const DISTRICT_LIST = {
+    '서울': '강남,강동,강북,강서,관악,광진,구로,금천,노원,도봉,동대문,동작,마포,서대문,서초,성동,성북,송파,양천,영등포,용산,은평,종로,중구,중랑',
+    '인천': '부평,남동,연수,계양,서구(인천),미추홀,인천중구,동구(인천)',
+    '경기': '수원,성남,용인,고양,부천,안양,안산,화성,평택,의정부,남양주,시흥,파주,김포,광명,군포,하남,오산,이천,안성,구리,의왕,양주,포천,동두천,과천,여주,양평,가평,경기광주',
+  };
   const NEAR = {};
   for (const [a, list] of Object.entries(NEAR_RAW)) for (const b of list.split(',')) {
     (NEAR[a] ||= new Set()).add(b); (NEAR[b] ||= new Set()).add(a);
@@ -323,17 +332,25 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     const r1s = [...new Set(pool.map(p => p.region1 || '기타'))]
       .sort((a, b) => (R1_ORDER.indexOf(a) + 1 || 99) - (R1_ORDER.indexOf(b) + 1 || 99) || a.localeCompare(b));
     if (S.r1 !== '전체' && !r1s.includes(S.r1)) r1s.push(S.r1);
-    fillRow($('rowR1'), ['전체', ...r1s].map(r => chip(r, S.r1 === r, () => { S.r1 = r; S.r2.clear(); render(); })));
+    fillRow($('rowR1'), ['전체', ...r1s].map(r => chip(r, S.r1 === r, () => { S.r1 = r; S.r2.clear(); S.near = false; render(); })));
 
     const rowR2 = $('rowR2');
     if (S.r1 !== '전체') {
       const cnt = {};
       pool.filter(p => (p.region1 || '기타') === S.r1 && !(S.hideClosed && p.closed)).forEach(p => { const k = p.region2 || '기타'; cnt[k] = (cnt[k] || 0) + 1; });
-      const keys = Object.keys(cnt).sort((a, b) => (a === '기타') - (b === '기타') || cnt[b] - cnt[a]);
-      [...S.r2].forEach(k => { if (!(k in cnt)) { keys.push(k); cnt[k] = 0; } });
-      const items = keys.map(k => chip(`${shortR2(k)} ${cnt[k]}`, S.r2.has(k), () => { S.r2.has(k) ? S.r2.delete(k) : S.r2.add(k); render(); }, 'sm'));
+      (DISTRICT_LIST[S.r1] || '').split(',').filter(Boolean).forEach(k => { if (!(k in cnt)) cnt[k] = 0; });
+      [...S.r2].forEach(k => { if (!(k in cnt)) cnt[k] = 0; });
+      const keys = Object.keys(cnt).sort((a, b) => (a === '기타') - (b === '기타') || (cnt[a] === 0) - (cnt[b] === 0) || cnt[b] - cnt[a]);
+      const inc = S.near ? new Set([...regionSet()].filter(k => !S.r2.has(k))) : new Set();
+      const items = keys.map(k => chip(`${shortR2(k)} ${cnt[k]}`, S.r2.has(k), () => {
+        if (S.r2.has(k)) { S.r2.delete(k); if (!S.r2.size) S.near = false; } else S.r2.add(k);
+        render();
+      }, 'sm' + (inc.has(k) ? ' inc' : '') + (cnt[k] === 0 ? ' zero' : '')));
       if (S.r2.size && [...S.r2].some(r => NEAR[r])) {
-        items.unshift(chip('근처 지역 포함', S.near, () => { S.near = !S.near; track('near_toggle', { on: S.near ? 'y' : 'n' }); render(); }, 'sm near'));
+        const nb = [...inc];
+        const c = chip(S.near ? `근처 포함: ${nb.slice(0, 5).map(shortR2).join('·')}${nb.length > 5 ? ` 외 ${nb.length - 5}` : ''}` : '근처 지역 포함', S.near, () => { S.near = !S.near; track('near_toggle', { on: S.near ? 'y' : 'n' }); render(); }, 'sm near');
+        c.title = S.near ? '포함: ' + nb.map(shortR2).join(', ') : '붙어 있는 동네 글도 같이 보기';
+        items.unshift(c);
       }
       fillRow(rowR2, items);
       rowR2.hidden = false;
