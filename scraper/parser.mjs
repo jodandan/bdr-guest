@@ -26,7 +26,7 @@ const DISTRICTS = [
   ['송파', '서울', '송파', '잠실', '문정', '가락', '방이', '오금', '거여', '마천', '위례'],
   ['양천', '서울', '양천', '목동', '신정', '신월'],
   ['영등포', '서울', '영등포', '여의도', '당산', '문래', '대림', '신길'],
-  ['용산', '서울', '용산', '이태원', '한남', '효창'],
+  ['용산', '서울', '용산', '이촌', '이태원', '한남', '효창', '보성여고'],
   ['은평', '서울', '은평', '불광', '연신내', '응암', '녹번', '진관'],
   ['종로', '서울', '종로', '혜화', '평창동'],
   ['중구', '서울', '중구', '신당', '을지로', '충무로'],
@@ -88,6 +88,8 @@ export function normalize(title) {
     .replace(/[ㅡ－]/g, '-')
     .replace(/(?<!\d)([01]\d|2[0-4])([0-5]\d)\s*([~\-])\s*([01]\d|2[0-4])([0-5]\d)(?!\d)/g, '$1:$2$3$4:$5')
     .replace(/(\d{1,2})\s*시\s*(\d{2})(?=\s*(?:~|-|부터))/g, '$1:$2')
+    .replace(/(\d{1,2})\s*시\s*(\d{1,2})\s*분\s+(\d{1,2})\s*시/g, '$1시$2분~$3시')
+    .replace(/(\d{1,2})\s*시\s*(\d{1,2})\s*시/g, '$1시~$2시')
     .replace(/[＜〈<]/g, '<').replace(/[＞〉>]/g, '>')
     .replace(/[～〜]/g, '~').replace(/[–—]/g, '-')
     .replace(/\s+/g, ' ').trim();
@@ -96,6 +98,9 @@ export function normalize(title) {
 export function parseRegion(title, headCont) {
   const t = title.replace(/\s+/g, '');
   let r1 = headCont && REGION1.includes(headCont) ? headCont : null;
+  // 제목 앞부분(12자 이내)에 광역명이 명시돼 있으면 말머리보다 우선 (예: 말머리 경기 + '[인천서구]')
+  const lead = t.slice(0, 12).match(new RegExp(`(${REGION1.filter(r => r !== '광주').join('|')})`));
+  if (lead) r1 = lead[1];
   let hit = null;
   for (const kw of KEYWORDS) {
     const k = kw.k.replace(/\s+/g, '');
