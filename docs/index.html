@@ -278,6 +278,13 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     return k.getUTCHours() * 60 + k.getUTCMinutes() >= span(p)[1];
   }
 
+  // 표시용 지역명: '서구(인천)' → '서구', '경기광주'처럼 광역명이 이미 들어 있으면 광역 생략
+  const shortR2 = r => String(r).replace(/\(.+\)$/, '');
+  function regionLabel(p) {
+    if (!p.region2) return p.region1;
+    const r2 = shortR2(p.region2);
+    return p.region2.startsWith(p.region1) ? r2 : `${p.region1} ${r2}`;
+  }
   function chip(label, pressed, onClick, cls = '') {
     const b = document.createElement('button');
     b.className = 'chip ' + cls; b.type = 'button'; b.textContent = label;
@@ -324,7 +331,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
       pool.filter(p => (p.region1 || '기타') === S.r1 && !(S.hideClosed && p.closed)).forEach(p => { const k = p.region2 || '기타'; cnt[k] = (cnt[k] || 0) + 1; });
       const keys = Object.keys(cnt).sort((a, b) => (a === '기타') - (b === '기타') || cnt[b] - cnt[a]);
       [...S.r2].forEach(k => { if (!(k in cnt)) { keys.push(k); cnt[k] = 0; } });
-      const items = keys.map(k => chip(`${k} ${cnt[k]}`, S.r2.has(k), () => { S.r2.has(k) ? S.r2.delete(k) : S.r2.add(k); render(); }, 'sm'));
+      const items = keys.map(k => chip(`${shortR2(k)} ${cnt[k]}`, S.r2.has(k), () => { S.r2.has(k) ? S.r2.delete(k) : S.r2.add(k); render(); }, 'sm'));
       if (S.r2.size && [...S.r2].some(r => NEAR[r])) {
         items.unshift(chip('근처 지역 포함', S.near, () => { S.near = !S.near; track('near_toggle', { on: S.near ? 'y' : 'n' }); render(); }, 'sm near'));
       }
@@ -368,7 +375,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
   function card(p) {
     const tags = [];
     if (isNew(p)) tags.push('<span class="newwrap"><span class="tag new">NEW!</span></span>');
-    if (p.region1) tags.push(`<span class="tag">${esc(p.region1)}${p.region2 ? ' ' + esc(p.region2) : ''}</span>`);
+    if (p.region1) tags.push(`<span class="tag">${esc(regionLabel(p))}</span>`);
     if (S.near && S.r2.size && p.region2 && !S.r2.has(p.region2)) tags.push('<span class="tag g">근처</span>');
     if (p.free) tags.push('<span class="tag g">무료</span>');
     if (p.closed) tags.push('<span class="tag x">마감</span>');
