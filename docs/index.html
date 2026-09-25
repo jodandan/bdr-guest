@@ -96,6 +96,11 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
 .tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .ics{background:none;border:0;padding:6px 4px;margin:-6px 0;color:var(--sub);font-size:12px;text-decoration:underline;cursor:pointer}
 .chip.near{border-style:dashed}
+.pushbox{margin-top:10px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--card);font-size:14px;line-height:1.55}
+.pushbox b{color:var(--accent)}
+.pushbox .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.pushbox .chip.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.pushbox .note{color:var(--sub);font-size:12px;margin-top:8px}
 </style>
 <script>
   window.GA_ID = 'G-0DWSLR5007'; // GA4 측정 ID
@@ -133,7 +138,9 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
       <button class="chip sm" id="tgSaved" type="button" aria-pressed="false">★ 저장한 글만</button>
       <button class="chip sm" id="btnFav" type="button" aria-pressed="false" title="현재 선택한 지역을 다음 접속 때 자동 적용">📍 이 지역 기억하기</button>
       <button class="chip sm" id="btnShare" type="button">🔗 이 조건 공유</button>
+      <button class="chip sm" id="btnPush" type="button" aria-expanded="false" hidden>🔔 새 글 알림</button>
     </div>
+    <div class="pushbox" id="pushBox" hidden></div>
   </div>
 
   <div class="count"><span id="count" aria-live="polite"></span>
@@ -393,6 +400,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     syncUrl();
     renderTabs();
     renderFilters();
+    if (!$('pushBox').hidden) renderPush();
     const rows = filtered();
     $('count').textContent = `${rows.length}건`;
     trackFilters(rows.length);
@@ -502,6 +510,80 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     toast(done ? '링크를 복사했어요' : '주소창의 링크를 복사해 주세요');
   };
 
+  // ---- 웹 푸시 알림 ----
+  const PUSH_API = ''; // Cloudflare Worker 주소 (배포 후 입력)
+  const PUSH_KEY = 'bdr.push';
+  const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent);
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  function pushFilters() {
+    return { boards: [S.board], r1: S.r1, regions: S.r2.size ? [...regionSet()] : [], slots: [...S.slot], week: S.week };
+  }
+  function pushLabel() {
+    const bn = (BOARDS.find(b => b.key === S.board) || {}).name || '';
+    const reg = S.r2.size ? [...S.r2].join('·') + (S.near ? '(+근처)' : '') : (S.r1 === '전체' ? '전 지역' : S.r1);
+    return [bn, reg, S.slot.size ? [...S.slot].join('·') : '', S.week !== '전체' ? S.week : ''].filter(Boolean).join(' · ');
+  }
+  async function saveSwState(extra) {
+    try { const c = await caches.open('bdr-state'); const prev = await c.match('/__push-state').then(r => r ? r.json() : {});
+      await c.put('/__push-state', new Response(JSON.stringify({ ...prev, ...extra }))); } catch {}
+  }
+  function renderPush() {
+    const box = $('pushBox'); const cur = store.get(PUSH_KEY, null);
+    let html = '';
+    if (!window.isSecureContext) html = '보안 연결(HTTPS)을 준비 중이에요. 곧 알림을 켤 수 있어요.';
+    else if (isIOS && !standalone) html = '아이폰은 <b>공유 버튼 → 홈 화면에 추가</b>로 앱처럼 설치한 뒤, 홈 화면 아이콘으로 열어서 알림을 켤 수 있어요. (iOS 16.4 이상)';
+    else if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) html = '이 브라우저는 웹 알림을 지원하지 않아요. 크롬이나 사파리 최신 버전에서 열어주세요.';
+    else if (Notification.permission === 'denied') html = '브라우저에서 이 사이트 알림이 차단돼 있어요. 브라우저 설정 → 사이트 설정에서 알림을 허용해 주세요.';
+    else {
+      html = cur ? `지금 <b>${esc(cur.label)}</b> 조건으로 알림을 받고 있어요.` : '지금 고른 조건에 맞는 새 글이 올라오면 알려드려요.';
+      html += `<br>알림 조건: <b>${esc(pushLabel())}</b>`;
+      html += `<div class="acts"><button class="chip primary" id="pushOn" type="button">${cur ? '이 조건으로 바꾸기' : '이 조건으로 알림 받기'}</button>${cur ? '<button class="chip" id="pushOff" type="button">알림 끄기</button>' : ''}</div>`;
+      html += '<div class="note">위 필터를 바꾼 뒤 누르면 조건이 바뀌어요. 서버에는 알림 주소와 조건만 저장되고, 이름·연락처는 저장하지 않아요.</div>';
+    }
+    box.innerHTML = html;
+    const on = $('pushOn'), off = $('pushOff');
+    if (on) on.onclick = subscribePush;
+    if (off) off.onclick = unsubscribePush;
+  }
+  async function subscribePush() {
+    try {
+      const perm = await Notification.requestPermission();
+      if (perm !== 'granted') { toast('알림 권한이 필요해요'); return renderPush(); }
+      const reg = await navigator.serviceWorker.ready;
+      const { key } = await fetch(PUSH_API + '/vapid').then(r => r.json());
+      const pad = '='.repeat((4 - key.length % 4) % 4);
+      const raw = Uint8Array.from(atob((key + pad).replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+      const sub = (await reg.pushManager.getSubscription()) || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: raw });
+      const filters = pushFilters(), label = pushLabel();
+      const r = await fetch(PUSH_API + '/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subscription: sub.toJSON(), filters }) });
+      if (!r.ok) throw new Error(r.status);
+      await saveSwState({ filters, label, query: stateQuery() });
+      store.set(PUSH_KEY, { label, at: Date.now() });
+      track('push_subscribe', { board: S.board, region1: S.r1, regions: filters.regions.join(',') || '-', slot: filters.slots.join(',') || '-', week: S.week });
+      toast('알림을 켰어요');
+    } catch (e) { toast('알림을 켜지 못했어요. 잠시 후 다시 시도해 주세요'); }
+    renderPush(); renderPushBtn();
+  }
+  async function unsubscribePush() {
+    try {
+      const reg = await navigator.serviceWorker.ready; const sub = await reg.pushManager.getSubscription();
+      if (sub) { await fetch(PUSH_API + '/unsubscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ endpoint: sub.endpoint }) }).catch(() => {}); await sub.unsubscribe(); }
+    } catch {}
+    store.set(PUSH_KEY, null); track('push_unsubscribe');
+    toast('알림을 껐어요'); renderPush(); renderPushBtn();
+  }
+  function renderPushBtn() {
+    const b = $('btnPush'); b.hidden = !PUSH_API;
+    b.textContent = store.get(PUSH_KEY, null) ? '🔔 알림 켜짐' : '🔔 새 글 알림';
+    b.setAttribute('aria-pressed', store.get(PUSH_KEY, null) ? 'true' : 'false');
+  }
+  $('btnPush').onclick = () => {
+    const box = $('pushBox'); box.hidden = !box.hidden;
+    $('btnPush').setAttribute('aria-expanded', String(!box.hidden));
+    if (!box.hidden) { renderPush(); track('push_panel_open'); }
+  };
+  renderPushBtn();
+
   $('q').value = S.q;
   fetch('data.json', { cache: 'no-cache' })
     .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
@@ -524,7 +606,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
       $('list').innerHTML = `<div class="state">목록을 불러오지 못했어요.<br>잠시 후 다시 시도하거나 <a href="https://m.cafe.daum.net/dongarry/Dilr" target="_blank" rel="noopener">원문 게시판</a>에서 확인해 주세요.</div>`;
     });
 
-  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  if ('serviceWorker' in navigator && window.isSecureContext) {
     window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
   }
 })();
