@@ -13,7 +13,11 @@
 <meta property="og:title" content="BDR 게스트 모아보기 — 농구 게스트 구인 필터">
 <meta property="og:description" content="농구 게스트 구인 글을 지역·날짜·시간대별로 한눈에 모아보기">
 <meta property="og:url" content="https://bdrguest.kro.kr/">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="https://bdrguest.kro.kr/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:site_name" content="BDR 게스트 모아보기">
+<meta name="twitter:card" content="summary_large_image">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"BDR 게스트 모아보기","url":"https://bdrguest.kro.kr/","inLanguage":"ko","description":"농구 게스트 구인 글을 지역·날짜·시간대별로 모아보는 비공식 사이트"}</script>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23e8590c'/><path d='M4 50h92M50 4v92M18 18c20 18 20 46 0 64M82 18c-20 18-20 46 0 64' stroke='%23222' stroke-width='5' fill='none'/></svg>">
 <style>
@@ -37,6 +41,7 @@ h1{font-size:22px;margin:0;letter-spacing:-.02em}
 h1 span{color:var(--accent)}
 .meta{color:var(--sub);font-size:13px;margin-top:4px}
 .intro{margin:6px 0 0}
+.stale{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--accent-bg);color:var(--text);font-size:13px;line-height:1.5}
 .bar{padding:8px 0 10px;border-bottom:1px solid var(--line)}
 .row{display:flex;gap:6px;overflow-x:auto;padding:4px 0;scrollbar-width:none}
 .row::-webkit-scrollbar{display:none}
@@ -85,6 +90,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     <h1>BDR <span>게스트</span> 모아보기</h1>
     <p class="meta intro">서울·경기·인천 농구 게스트 구인 글을 지역·날짜·시간대로 골라 보세요.</p>
     <div class="meta" id="meta">불러오는 중…</div>
+    <div class="stale" id="stale" role="status" hidden></div>
   </header>
 
   <div class="bar" role="region" aria-label="필터">
@@ -99,6 +105,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
       <button class="chip sm" id="tgClosed" aria-pressed="true">마감 숨기기</button>
       <button class="chip sm" id="tgSaved" aria-pressed="false">★ 저장한 글만</button>
       <button class="chip sm" id="btnFav" aria-pressed="false" title="현재 선택한 지역을 다음 접속 때 자동 적용">📍 이 지역 기억하기</button>
+      <button class="chip sm" id="btnShare" type="button">🔗 이 조건 공유</button>
     </div>
   </div>
 
@@ -131,12 +138,15 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
 
   let DATA = [], TODAY = '';
   const fav = store.get('bdr.fav', null); // {r1, r2:[]}
+  const U = new URLSearchParams(location.search);
+  const fromUrl = ['r', 'r2', 'd', 't', 'q'].some(k => U.get(k));
+  const list = k => (U.get(k) || '').split(',').filter(Boolean);
   const S = {
-    r1: fav?.r1 || '전체',
-    r2: new Set(fav?.r2 || []),
-    date: '전체',
-    slot: new Set(),
-    q: '',
+    r1: fromUrl ? (U.get('r') || '전체') : (fav?.r1 || '전체'),
+    r2: new Set(fromUrl ? list('r2') : (fav?.r2 || [])),
+    date: U.get('d') || '전체',
+    slot: new Set(list('t').filter(x => ['오전', '오후', '저녁'].includes(x))),
+    q: U.get('q') || '',
     hideClosed: store.get('bdr.hideClosed', true),
     savedOnly: false,
   };
@@ -248,7 +258,21 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     </article>`;
   }
 
+  function stateQuery() {
+    const q = new URLSearchParams();
+    if (S.r1 !== '전체') q.set('r', S.r1);
+    if (S.r2.size) q.set('r2', [...S.r2].join(','));
+    if (S.date !== '전체') q.set('d', S.date);
+    if (S.slot.size) q.set('t', [...S.slot].join(','));
+    if (S.q.trim()) q.set('q', S.q.trim());
+    return q.toString();
+  }
+  function syncUrl() {
+    const qs = stateQuery();
+    try { history.replaceState(null, '', qs ? `?${qs}` : location.pathname); } catch {}
+  }
   function render() {
+    syncUrl();
     renderFilters();
     const rows = filtered();
     $('count').textContent = `${rows.length}건`;
@@ -293,13 +317,29 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     render();
   };
   $('reset').onclick = reset;
+  $('btnShare').onclick = async () => {
+    const url = location.origin + location.pathname + (stateQuery() ? `?${stateQuery()}` : '');
+    const parts = [S.r1 !== '전체' && S.r1, S.r2.size && [...S.r2].join('·'), S.date !== '전체' && dayLabel(S.date), S.slot.size && [...S.slot].join('·')].filter(Boolean);
+    const text = `농구 게스트 모아보기${parts.length ? ' — ' + parts.join(' ') : ''}`;
+    try {
+      if (navigator.share) { await navigator.share({ title: text, url }); return; }
+    } catch (e) { if (e && e.name === 'AbortError') return; }
+    try { await navigator.clipboard.writeText(url); toast('링크를 복사했어요'); }
+    catch { prompt('이 링크를 복사하세요', url); }
+  };
 
+  $('q').value = S.q;
   fetch('data.json', { cache: 'no-cache' })
     .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
     .then(d => {
       DATA = d.posts || [];
       TODAY = kstToday();
+      const lag = (Date.now() - Date.parse(d.updated)) / 3600e3;
       $('meta').textContent = `최근 업데이트 ${ago(d.updated)} · 30분마다 갱신`;
+      if (lag > 2) {
+        const w = $('stale'); w.hidden = false;
+        w.innerHTML = `⚠️ 목록 업데이트가 ${ago(d.updated).replace(' 전', '')}째 멈춰 있어요. 최신 글은 <a href="https://m.cafe.daum.net/dongarry/Dilr" target="_blank" rel="noopener">원문 게시판</a>에서 확인해 주세요.`;
+      }
       render();
     })
     .catch(() => {
