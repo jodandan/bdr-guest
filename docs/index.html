@@ -76,10 +76,8 @@ button{font:inherit;color:inherit}
 .chip[aria-pressed="true"]{background:var(--chip-on);color:var(--chip-on-text);font-weight:700}
 .chip.sm{padding:4px 10px;font-size:13px;min-height:32px}
 .chip:focus-visible,.star:focus-visible,a:focus-visible,input:focus-visible,.linkbtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-.chip.near{border-style:dashed}
-.chip.inc{border-style:dashed;box-shadow:inset 0 -4px 0 var(--yellow)}
-.chip.zero{opacity:.62}
-.chip.zero[aria-pressed="true"],.chip.zero.inc{opacity:1}
+.chip.nearby{border-style:dashed}
+.chip.homesel{appearance:none;-webkit-appearance:none;font:inherit;font-size:13px;font-weight:700;color:#111;background:var(--yellow) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0h10L5 6z' fill='%23111'/%3E%3C/svg%3E") no-repeat right 10px center;padding-right:28px;width:auto;max-width:9.5em}
 .tools{display:flex;gap:8px;align-items:center;margin-top:8px}
 .search{flex:1;min-width:0;border:2px solid var(--line);background:var(--card);border-radius:0;padding:9px 12px;font-size:16px;color:var(--text)}
 .toggle{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
@@ -202,46 +200,35 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     { key: 'match', name: '연습경기', fld: 'MptT' },
   ];
 
-  // 세부지역 인접 관계 (행정구역 경계 기준, 양방향으로 보정)
-  const NEAR_RAW = {
-    '강남': '서초,송파,성동,성남', '강동': '송파,광진,하남', '강북': '성북,도봉,노원', '강서': '양천,영등포,김포,부천,고양',
-    '관악': '동작,서초,금천,영등포,구로,안양,과천', '광진': '성동,동대문,중랑,강동,송파,구리', '구로': '양천,영등포,금천,관악,광명,부천',
-    '금천': '구로,관악,광명,안양,영등포', '노원': '도봉,강북,성북,중랑,의정부,남양주,구리', '도봉': '강북,노원,의정부,양주',
-    '동대문': '성북,중랑,광진,성동,종로', '동작': '관악,서초,영등포,용산', '마포': '서대문,은평,용산,영등포,강서,고양',
-    '서대문': '마포,은평,종로,중구', '서초': '강남,관악,동작,용산,과천,성남', '성동': '광진,동대문,중구,용산,강남',
-    '성북': '강북,동대문,종로,노원,중랑', '송파': '강남,강동,광진,성남,하남', '양천': '강서,구로,영등포,부천',
-    '영등포': '양천,구로,동작,마포,강서,금천', '용산': '중구,마포,성동,동작,서초', '은평': '마포,서대문,종로,고양',
-    '종로': '중구,서대문,은평,성북,동대문', '중구': '종로,용산,성동,서대문', '중랑': '동대문,광진,노원,성북,구리',
-    '부평': '계양,남동,미추홀,서구(인천),부천', '남동': '부평,연수,미추홀,시흥', '연수': '남동,미추홀',
-    '계양': '부평,서구(인천),김포,부천', '서구(인천)': '계양,부평,김포,동구(인천)', '미추홀': '부평,남동,연수,동구(인천),인천중구',
-    '인천중구': '미추홀,동구(인천)', '동구(인천)': '인천중구,미추홀,서구(인천)',
-    '수원': '용인,화성,의왕,오산', '성남': '용인,경기광주,하남,의왕,과천', '용인': '수원,성남,경기광주,화성,오산,이천,안성',
-    '고양': '파주,김포,양주', '부천': '부평,계양,시흥,광명', '안양': '광명,군포,의왕,과천,시흥', '안산': '시흥,군포,화성',
-    '화성': '오산,안산,평택', '평택': '오산,안성', '의정부': '양주,남양주,포천', '남양주': '구리,하남,포천,양평,가평',
-    '시흥': '광명,안산,군포', '파주': '양주,김포', '광명': '시흥', '군포': '의왕', '하남': '경기광주,구리', '이천': '경기광주,여주,안성',
-    '양주': '동두천,포천', '포천': '동두천,가평', '여주': '양평,경기광주', '양평': '가평,경기광주',
+  // '내 근처' — 동네 대표 좌표(시청·구청 근처, 대략값)로 거리 계산. 서울·경기·인천 경계 상관없음
+  const NEARBY = '내 근처';
+  const RADII = [5, 10, 15, 20];
+  const GEO_RAW = {
+    서울: '강남 37.517 127.047,강동 37.530 127.124,강북 37.640 127.026,강서 37.551 126.850,관악 37.478 126.952,광진 37.539 127.082,구로 37.496 126.888,금천 37.457 126.896,노원 37.654 127.057,도봉 37.669 127.047,동대문 37.574 127.040,동작 37.512 126.939,마포 37.566 126.902,서대문 37.579 126.937,서초 37.484 127.032,성동 37.563 127.037,성북 37.589 127.017,송파 37.515 127.106,양천 37.517 126.866,영등포 37.526 126.896,용산 37.532 126.991,은평 37.603 126.929,종로 37.574 126.979,중구 37.564 126.998,중랑 37.607 127.093',
+    인천: '부평 37.507 126.722,남동 37.447 126.731,연수 37.410 126.678,계양 37.537 126.738,서구(인천) 37.546 126.676,미추홀 37.464 126.651,인천중구 37.480 126.570,동구(인천) 37.474 126.643',
+    경기: '수원 37.264 127.029,성남 37.420 127.127,용인 37.280 127.120,고양 37.658 126.832,부천 37.503 126.766,안양 37.394 126.957,안산 37.322 126.831,화성 37.200 126.980,평택 36.992 127.113,의정부 37.738 127.034,남양주 37.636 127.217,시흥 37.380 126.803,파주 37.760 126.780,김포 37.615 126.716,광명 37.479 126.865,군포 37.362 126.935,하남 37.539 127.215,오산 37.150 127.077,이천 37.272 127.435,안성 37.008 127.280,구리 37.594 127.130,의왕 37.345 126.968,양주 37.785 127.046,포천 37.895 127.200,동두천 37.904 127.061,과천 37.429 126.988,여주 37.298 127.637,양평 37.492 127.488,가평 37.832 127.511,경기광주 37.429 127.255',
   };
-  // 광역별 세부지역 전체 목록 — 글이 없는 동네도 '내 동네'로 고를 수 있게
-  const DISTRICT_LIST = {
-    '서울': '강남,강동,강북,강서,관악,광진,구로,금천,노원,도봉,동대문,동작,마포,서대문,서초,성동,성북,송파,양천,영등포,용산,은평,종로,중구,중랑',
-    '인천': '부평,남동,연수,계양,서구(인천),미추홀,인천중구,동구(인천)',
-    '경기': '수원,성남,용인,고양,부천,안양,안산,화성,평택,의정부,남양주,시흥,파주,김포,광명,군포,하남,오산,이천,안성,구리,의왕,양주,포천,동두천,과천,여주,양평,가평,경기광주',
-  };
-  const NEAR = {};
-  for (const [a, list] of Object.entries(NEAR_RAW)) for (const b of list.split(',')) {
-    (NEAR[a] ||= new Set()).add(b); (NEAR[b] ||= new Set()).add(a);
+  const GEO = {}, GEO_R1 = {};
+  for (const [r1, list] of Object.entries(GEO_RAW)) for (const it of list.split(',')) {
+    const [n, la, lo] = it.split(' '); GEO[n] = [+la, +lo]; (GEO_R1[r1] ||= []).push(n);
+  }
+  function km(a, b) {
+    const R = 6371, t = x => x * Math.PI / 180, [la1, lo1] = GEO[a], [la2, lo2] = GEO[b];
+    const h = Math.sin(t(la2 - la1) / 2) ** 2 + Math.cos(t(la1)) * Math.cos(t(la2)) * Math.sin(t(lo2 - lo1) / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(h));
   }
 
   let DATA = [], TODAY = '', BOARDS = DEFAULT_BOARDS;
-  const fav = store.get('bdr.fav', null); // {r1, r2:[], near}
+  const fav = store.get('bdr.fav', null); // {r1, r2:[]}
   const U = new URLSearchParams(location.search);
-  const fromUrl = ['r', 'r2', 'd', 't', 'q', 'w', 'n'].some(k => U.get(k));
+  const fromUrl = ['r', 'r2', 'd', 't', 'q', 'w', 'h', 'km'].some(k => U.get(k));
   const list = k => (U.get(k) || '').split(',').filter(Boolean);
   const S = {
     board: U.get('b') || 'guest',
     r1: fromUrl ? (U.get('r') || '전체') : (fav?.r1 || '전체'),
     r2: new Set(fromUrl ? list('r2') : (fav?.r2 || [])),
-    near: fromUrl ? U.get('n') === '1' : !!fav?.near,
+    home: GEO[U.get('h')] ? U.get('h') : (GEO[store.get('bdr.home', '')] ? store.get('bdr.home', '') : ''),
+    radius: RADII.includes(+U.get('km')) ? +U.get('km') : (RADII.includes(store.get('bdr.radius', 10)) ? store.get('bdr.radius', 10) : 10),
     date: U.get('d') || '전체',
     week: ['주말', '평일'].includes(U.get('w')) ? U.get('w') : '전체',
     slot: new Set(list('t').filter(x => ['오전', '오후', '저녁'].includes(x))),
@@ -308,11 +295,12 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
 
   const boardOf = p => p.board || 'guest';
   function base() { return DATA.filter(p => boardOf(p) === S.board && !isOver(p)); }
-  function regionSet() { // 선택한 세부지역 + (근처 포함 시) 인접 지역
-    const set = new Set(S.r2);
-    if (S.near) for (const r of S.r2) for (const n of NEAR[r] || []) set.add(n);
-    return set;
+  function nearSet() { // 내 동네에서 반경 안의 동네 → 거리(km)
+    const m = new Map();
+    if (S.home) for (const n of Object.keys(GEO)) { const d = km(S.home, n); if (d <= S.radius) m.set(n, d); }
+    return m;
   }
+
 
   function renderTabs() {
     const counts = {};
@@ -331,28 +319,34 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     const pool = base();
     const r1s = [...new Set(pool.map(p => p.region1 || '기타'))]
       .sort((a, b) => (R1_ORDER.indexOf(a) + 1 || 99) - (R1_ORDER.indexOf(b) + 1 || 99) || a.localeCompare(b));
-    if (S.r1 !== '전체' && !r1s.includes(S.r1)) r1s.push(S.r1);
-    fillRow($('rowR1'), ['전체', ...r1s].map(r => chip(r, S.r1 === r, () => { S.r1 = r; S.r2.clear(); S.near = false; render(); })));
+    if (S.r1 !== '전체' && S.r1 !== NEARBY && !r1s.includes(S.r1)) r1s.push(S.r1);
+    const r1Chips = ['전체', ...r1s].map(r => chip(r, S.r1 === r, () => { S.r1 = r; S.r2.clear(); render(); }));
+    r1Chips.splice(1, 0, chip('📍 ' + NEARBY, S.r1 === NEARBY, () => { S.r1 = NEARBY; S.r2.clear(); track('nearby_open', { home: S.home || '-' }); render(); }, 'nearby'));
+    fillRow($('rowR1'), r1Chips);
 
     const rowR2 = $('rowR2');
-    if (S.r1 !== '전체') {
-      const cnt = {};
-      pool.filter(p => (p.region1 || '기타') === S.r1 && !(S.hideClosed && p.closed)).forEach(p => { const k = p.region2 || '기타'; cnt[k] = (cnt[k] || 0) + 1; });
-      (DISTRICT_LIST[S.r1] || '').split(',').filter(Boolean).forEach(k => { if (!(k in cnt)) cnt[k] = 0; });
-      [...S.r2].forEach(k => { if (!(k in cnt)) cnt[k] = 0; });
-      const keys = Object.keys(cnt).sort((a, b) => (a === '기타') - (b === '기타') || (cnt[a] === 0) - (cnt[b] === 0) || cnt[b] - cnt[a]);
-      const inc = S.near ? new Set([...regionSet()].filter(k => !S.r2.has(k))) : new Set();
-      const items = keys.map(k => chip(`${shortR2(k)} ${cnt[k]}`, S.r2.has(k), () => {
-        if (S.r2.has(k)) { S.r2.delete(k); if (!S.r2.size) S.near = false; } else S.r2.add(k);
-        render();
-      }, 'sm' + (inc.has(k) ? ' inc' : '') + (cnt[k] === 0 ? ' zero' : '')));
-      if (S.r2.size && [...S.r2].some(r => NEAR[r])) {
-        const nb = [...inc];
-        const c = chip(S.near ? `근처 포함: ${nb.slice(0, 5).map(shortR2).join('·')}${nb.length > 5 ? ` 외 ${nb.length - 5}` : ''}` : '근처 지역 포함', S.near, () => { S.near = !S.near; track('near_toggle', { on: S.near ? 'y' : 'n' }); render(); }, 'sm near');
-        c.title = S.near ? '포함: ' + nb.map(shortR2).join(', ') : '붙어 있는 동네 글도 같이 보기';
-        items.unshift(c);
+    if (S.r1 === NEARBY) {
+      const sel = document.createElement('select');
+      sel.className = 'chip sm homesel'; sel.setAttribute('aria-label', '내 동네');
+      sel.innerHTML = `<option value="">📍 내 동네 고르기</option>` + Object.entries(GEO_R1).map(([r1, ns]) =>
+        `<optgroup label="${r1}">${ns.map(n => `<option value="${esc(n)}"${n === S.home ? ' selected' : ''}>${esc(shortR2(n))}</option>`).join('')}</optgroup>`).join('');
+      sel.onchange = () => { S.home = sel.value; store.set('bdr.home', S.home); track('nearby_home', { home: S.home || '-' }); render(); };
+      const items = [sel];
+      if (S.home) {
+        const live = pool.filter(p => p.region2 && GEO[p.region2] && !(S.hideClosed && p.closed));
+        for (const r of RADII) {
+          const n = live.filter(p => km(S.home, p.region2) <= r).length;
+          items.push(chip(`${r}km ${n}`, S.radius === r, () => { S.radius = r; store.set('bdr.radius', r); track('nearby_radius', { km: r }); render(); }, 'sm'));
+        }
       }
       fillRow(rowR2, items);
+      rowR2.hidden = false;
+    } else if (S.r1 !== '전체') {
+      const cnt = {};
+      pool.filter(p => (p.region1 || '기타') === S.r1 && !(S.hideClosed && p.closed)).forEach(p => { const k = p.region2 || '기타'; cnt[k] = (cnt[k] || 0) + 1; });
+      const keys = Object.keys(cnt).sort((a, b) => (a === '기타') - (b === '기타') || cnt[b] - cnt[a]);
+      [...S.r2].forEach(k => { if (!(k in cnt)) { keys.push(k); cnt[k] = 0; } });
+      fillRow(rowR2, keys.map(k => chip(`${shortR2(k)} ${cnt[k]}`, S.r2.has(k), () => { S.r2.has(k) ? S.r2.delete(k) : S.r2.add(k); render(); }, 'sm')));
       rowR2.hidden = false;
     } else rowR2.hidden = true;
 
@@ -366,18 +360,19 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     $('tgSaved').setAttribute('aria-pressed', S.savedOnly);
     $('sort').textContent = S.sort === 'new' ? '최신 글순 ⇅' : '일정순 ⇅';
     const f = store.get('bdr.fav', null);
-    const same = f && f.r1 === S.r1 && [...S.r2].sort().join() === (f.r2 || []).slice().sort().join() && !!f.near === S.near;
+    const same = f && f.r1 === S.r1 && [...S.r2].sort().join() === (f.r2 || []).slice().sort().join();
     $('btnFav').setAttribute('aria-pressed', !!same && S.r1 !== '전체');
     $('btnFav').textContent = same && S.r1 !== '전체' ? '📍 기억한 지역' : '📍 이 지역 기억하기';
   }
 
   function filtered() {
     const q = S.q.trim().replace(/\s+/g, '').toLowerCase();
-    const regions = regionSet();
+    const near = S.r1 === NEARBY ? nearSet() : null;
     const rows = base().filter(p => {
       if (S.savedOnly && !saved.has(p.key)) return false;
       if (S.hideClosed && p.closed) return false;
-      if (S.r2.size) { if (!regions.has(p.region2 || '기타') || (!S.near && (p.region1 || '기타') !== S.r1)) return false; }
+      if (near) { if (!near.has(p.region2)) return false; }
+      else if (S.r2.size) { if (!S.r2.has(p.region2 || '기타') || (p.region1 || '기타') !== S.r1) return false; }
       else if (S.r1 !== '전체' && (p.region1 || '기타') !== S.r1) return false;
       if (S.date !== '전체' && p.date !== S.date) return false;
       if (S.week !== '전체') { if (!p.date) return false; const w = wdOf(p.date); if ((S.week === '주말') !== (w === 0 || w === 6)) return false; }
@@ -393,7 +388,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     const tags = [];
     if (isNew(p)) tags.push('<span class="newwrap"><span class="tag new">NEW!</span></span>');
     if (p.region1) tags.push(`<span class="tag">${esc(regionLabel(p))}</span>`);
-    if (S.near && S.r2.size && p.region2 && !S.r2.has(p.region2)) tags.push('<span class="tag g">근처</span>');
+    if (S.r1 === NEARBY && S.home && GEO[p.region2]) { const d = km(S.home, p.region2); tags.push(`<span class="tag g">${d < 2 ? '내 동네' : '약 ' + Math.round(d) + 'km'}</span>`); }
     if (p.free) tags.push('<span class="tag g">무료</span>');
     if (p.closed) tags.push('<span class="tag x">마감</span>');
     const time = p.start
@@ -419,7 +414,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     if (S.board !== 'guest') q.set('b', S.board);
     if (S.r1 !== '전체') q.set('r', S.r1);
     if (S.r2.size) q.set('r2', [...S.r2].join(','));
-    if (S.near && S.r2.size) q.set('n', '1');
+    if (S.r1 === NEARBY && S.home) { q.set('h', S.home); q.set('km', S.radius); }
     if (S.date !== '전체') q.set('d', S.date);
     if (S.week !== '전체') q.set('w', S.week);
     if (S.slot.size) q.set('t', [...S.slot].join(','));
@@ -438,7 +433,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     if (first && !qs) return;
     clearTimeout(fTimer);
     fTimer = setTimeout(() => track('filter_apply', {
-      board: S.board, region1: S.r1, region2: [...S.r2].join(',') || '-', near: S.near ? 'y' : 'n',
+      board: S.board, region1: S.r1, region2: [...S.r2].join(',') || '-', near: S.r1 === NEARBY ? `${S.home || '-'}:${S.radius}` : 'n',
       date_offset: S.date === '전체' ? '-' : String(Math.round((Date.parse(S.date) - Date.parse(TODAY)) / 864e5)),
       week: S.week, slot: [...S.slot].join(',') || '-', has_query: S.q.trim() ? 'y' : 'n', sort: S.sort, result_count: count,
     }), 1500);
@@ -455,8 +450,8 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     const list = $('list');
     list.setAttribute('aria-busy', 'false');
     if (!rows.length) {
-      list.innerHTML = `<div class="state">조건에 맞는 글이 없어요.<br><button class="chip" id="reset2" type="button">필터 초기화</button></div>`;
-      $('reset2').onclick = reset;
+      list.innerHTML = S.r1 === NEARBY && !S.home ? `<div class="state">위에서 <b>내 동네</b>를 골라 주세요.<br>한 번 고르면 다음에도 기억해요.</div>` : `<div class="state">조건에 맞는 글이 없어요.<br><button class="chip" id="reset2" type="button">필터 초기화</button></div>`;
+      if ($('reset2')) $('reset2').onclick = reset;
       return;
     }
     let html = '';
@@ -473,7 +468,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
   }
 
   function reset() {
-    S.r1 = '전체'; S.r2.clear(); S.near = false; S.date = '전체'; S.week = '전체'; S.slot.clear(); S.q = ''; S.savedOnly = false; $('q').value = '';
+    S.r1 = '전체'; S.r2.clear(); S.date = '전체'; S.week = '전체'; S.slot.clear(); S.q = ''; S.savedOnly = false; $('q').value = '';
     render();
   }
 
@@ -535,16 +530,16 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
   $('btnFav').onclick = () => {
     if (S.r1 === '전체') { store.set('bdr.fav', null); toast('지역을 먼저 선택해 주세요'); return render(); }
     const f = store.get('bdr.fav', null);
-    const same = f && f.r1 === S.r1 && [...S.r2].sort().join() === (f.r2 || []).slice().sort().join() && !!f.near === S.near;
+    const same = f && f.r1 === S.r1 && [...S.r2].sort().join() === (f.r2 || []).slice().sort().join();
     if (same) { store.set('bdr.fav', null); toast('기억한 지역을 지웠어요'); }
-    else { store.set('bdr.fav', { r1: S.r1, r2: [...S.r2], near: S.near }); toast('다음에도 이 지역으로 열려요'); track('fav_region', { region1: S.r1, region2: [...S.r2].join(',') || '-' }); }
+    else { store.set('bdr.fav', { r1: S.r1, r2: [...S.r2] }); toast('다음에도 이 지역으로 열려요'); track('fav_region', { region1: S.r1, region2: [...S.r2].join(',') || '-' }); }
     render();
   };
   $('reset').onclick = reset;
   $('btnShare').onclick = async () => {
     const url = location.origin + location.pathname + (stateQuery() ? `?${stateQuery()}` : '');
     const bn = (BOARDS.find(b => b.key === S.board) || {}).name;
-    const parts = [bn, S.r1 !== '전체' && S.r1, S.r2.size && [...S.r2].join('·'), S.date !== '전체' && dayLabel(S.date), S.week !== '전체' && S.week, S.slot.size && [...S.slot].join('·')].filter(Boolean);
+    const parts = [bn, S.r1 !== '전체' && (S.r1 === NEARBY ? `${shortR2(S.home) || ''} ${S.radius}km 이내` : S.r1), S.r2.size && [...S.r2].join('·'), S.date !== '전체' && dayLabel(S.date), S.week !== '전체' && S.week, S.slot.size && [...S.slot].join('·')].filter(Boolean);
     const text = `농구 게스트 모아보기 — ${parts.join(' ')}`;
     track('share', { method: navigator.share ? 'share_sheet' : 'copy', filters: stateQuery() || '-' });
     try { if (navigator.share) { await navigator.share({ title: text, url }); return; } }
@@ -564,11 +559,11 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
   const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent);
   const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
   function pushFilters() {
-    return { boards: [S.board], r1: S.r1, regions: S.r2.size ? [...regionSet()] : [], slots: [...S.slot], week: S.week };
+    return { boards: [S.board], r1: S.r1, regions: S.r1 === NEARBY ? [...nearSet().keys()] : [...S.r2], slots: [...S.slot], week: S.week };
   }
   function pushLabel() {
     const bn = (BOARDS.find(b => b.key === S.board) || {}).name || '';
-    const reg = S.r2.size ? [...S.r2].join('·') + (S.near ? '(+근처)' : '') : (S.r1 === '전체' ? '전 지역' : S.r1);
+    const reg = S.r1 === NEARBY ? `${shortR2(S.home)} ${S.radius}km 이내` : S.r2.size ? [...S.r2].join('·') : (S.r1 === '전체' ? '전 지역' : S.r1);
     return [bn, reg, S.slot.size ? [...S.slot].join('·') : '', S.week !== '전체' ? S.week : ''].filter(Boolean).join(' · ');
   }
   async function saveSwState(extra) {
