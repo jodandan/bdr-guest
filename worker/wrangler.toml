@@ -1,0 +1,10 @@
+name = "bdrguest-push"
+main = "worker.js"
+compatibility_date = "2026-09-01"
+
+[triggers]
+crons = ["*/10 * * * *"]
+
+[[kv_namespaces]]
+binding = "SUBS"
+id = "bf4b5bc23efe498b83f54693a63030fd"
