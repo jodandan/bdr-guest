@@ -15,7 +15,7 @@ concurrency:
 jobs:
   scrape:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -32,5 +32,6 @@ jobs:
             echo "no changes"
           else
             git commit -m "data: update $(date -u +%Y-%m-%dT%H:%MZ)"
+            git pull --rebase --autostash || true
             git push
           fi
