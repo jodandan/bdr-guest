@@ -116,6 +116,9 @@ export function parseRegion(title, headCont) {
     if (m) r1 = m[1];
   }
   if (!r1 && hit) r1 = hit.r1;
+  // 말머리 광역만 있고 제목에 광역명이 없는데 동네가 다른 광역이면 동네를 믿음 (예: 말머리 서울 + '[덕양구]')
+  const titleR1 = new RegExp(`(${REGION1.filter(r => r !== '광주').join('|')})`).test(t);
+  if (hit && r1 && hit.r1 !== r1 && r1 === headCont && !titleR1) r1 = hit.r1;
   // 광역이 명시됐는데 세부지역 광역이 다르면 세부지역 버림 (예: 광주광역시 vs 경기광주)
   let r2 = hit && (!r1 || hit.r1 === r1) ? hit.name : null;
   if (r1 === '광주' && headCont === '경기') { r1 = '경기'; r2 = '경기광주'; }

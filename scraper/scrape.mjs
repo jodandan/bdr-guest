@@ -94,7 +94,11 @@ async function main() {
 
   // 병합: 새로 받은 글 우선, 이전 글은 게시시각 유지
   // 이전 글도 매번 최신 분석 규칙으로 다시 분석 (분석기 개선이 기존 글에도 반영되도록)
-  kept = kept.map(p => ({ ...p, ...parsePost(p.title, p.head || '', kstYmd(p.posted)) }));
+  kept = kept.map(p => {
+    const n = parsePost(p.title, p.head || '', kstYmd(p.posted));
+    if (p.head === undefined && !n.region1) { n.region1 = p.region1; n.region2 = p.region2; } // 말머리 저장 전 글은 기존 지역 유지
+    return { ...p, ...n };
+  });
   const byKey = new Map(kept.map(p => [p.key, p]));
   for (const p of fresh) {
     const old = byKey.get(p.key);
