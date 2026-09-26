@@ -417,7 +417,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     if (p.closed) tags.push('<span class="tag x">마감</span>');
     const time = p.start
       ? `<div class="s">${esc(p.start)}</div><div class="e">${p.end ? '~' + esc(p.end) : ''}</div>`
-      : '<div class="unk">시간<br>미정</div>';
+      : p.slot ? `<div class="unk"><b>${esc(p.slot)}</b><br>시각 미정</div>` : '<div class="unk">시간<br>미정</div>';
     const on = saved.has(p.key);
     const when = S.sort === 'new' && p.date ? `${dayLabel(p.date)} · ` : '';
     const ics = p.date && p.start ? `<span>·</span><button class="ics" type="button" data-key="${esc(p.key)}">캘린더에 추가</button>` : '';
