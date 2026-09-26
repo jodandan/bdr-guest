@@ -85,10 +85,7 @@ button{font:inherit;color:inherit}
 .fsum-c{transition:transform .15s}
 .fsum[aria-expanded="true"] .fsum-c{transform:rotate(180deg)}
 .fpanel{padding-top:4px}
-.acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:2px dashed var(--line)}
-.act{flex:none;background:none;border:0;padding:6px 8px;font-size:13px;font-weight:700;color:var(--sub);cursor:pointer;min-height:32px;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
-.act[aria-pressed="true"]{background:var(--yellow);color:#111;text-decoration:none}
-.act:focus-visible,.chk:focus-visible,.fsum:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.chk:focus-visible,.fsum:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 @media (max-width:639px){.fsum{display:flex}.fpanel[hidden]{display:none}}
 .chip{flex:none;border:2px solid var(--line);background:var(--chip);border-radius:0;padding:6px 12px;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;min-height:36px}
 .chip[aria-pressed="true"]{background:var(--chip-on);color:var(--chip-on-text);font-weight:700}
@@ -98,7 +95,12 @@ button{font:inherit;color:inherit}
 .chip.homesel{appearance:none;-webkit-appearance:none;font:inherit;font-size:13px;font-weight:700;color:#111;background:var(--yellow) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0h10L5 6z' fill='%23111'/%3E%3C/svg%3E") no-repeat right 10px center;padding-right:28px;width:auto;max-width:9.5em}
 .tools{display:flex;gap:8px;align-items:center;margin-top:4px}
 .search{flex:1;min-width:0;border:2px solid var(--line);background:var(--card);border-radius:0;padding:9px 12px;font-size:16px;color:var(--text)}
-.count{font-size:14px;font-weight:700;color:var(--text);padding:14px 0 4px;display:flex;justify-content:space-between;align-items:center}
+.count{font-size:14px;font-weight:700;color:var(--text);padding:14px 0 4px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.cr{display:flex;align-items:center;gap:4px}
+.ibtn{position:relative;display:inline-grid;place-items:center;width:36px;height:36px;border:2px solid var(--line);background:var(--card);color:var(--text);cursor:pointer;padding:0}
+.ibtn[aria-pressed="true"]{background:var(--yellow);color:#111}
+.ibtn .dot{position:absolute;top:-4px;right:-4px;width:10px;height:10px;border-radius:50%;background:var(--accent-strong);border:2px solid var(--bg)}
+.ibtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .linkbtn{background:none;border:0;color:var(--accent);cursor:pointer;padding:4px;font-size:13px;font-weight:700}
 /* 목록 */
 .day{display:inline-block;background:var(--ink);color:var(--on-ink);font:400 17px/1.3 var(--f-head);padding:4px 12px 6px;margin:22px 0 12px;transform:rotate(-2deg)}
@@ -184,16 +186,11 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
         <button class="chk" id="tgSaved" type="button" aria-pressed="false">저장한 글만</button>
       </div>
     </div>
-    <div class="acts" role="group" aria-label="도구">
-      <button class="act" id="btnFav" type="button" aria-pressed="false" title="현재 선택한 지역을 다음 접속 때 자동 적용">📍 이 지역 기억하기</button>
-      <button class="act" id="btnShare" type="button">🔗 이 조건 공유</button>
-      <button class="act" id="btnPush" type="button" aria-expanded="false" hidden>🔔 새 글 알림</button>
-    </div>
     <div class="pushbox" id="pushBox" hidden></div>
   </div>
 
   <div class="count"><span id="count" aria-live="polite"></span>
-    <span><button class="linkbtn" id="sort" type="button" aria-label="정렬 바꾸기">일정순 ⇅</button> <button class="linkbtn" id="reset" type="button">필터 초기화</button></span>
+    <span class="cr"><button class="linkbtn" id="reset" type="button">필터 초기화</button><button class="linkbtn" id="sort" type="button" aria-label="정렬 바꾸기">일정순 ⇅</button><button class="ibtn" id="btnShare" type="button" aria-label="이 조건 링크 공유" title="이 조건 링크 공유"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button><button class="ibtn" id="btnPush" type="button" aria-label="새 글 알림" title="새 글 알림" aria-expanded="false" hidden><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 21h4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/></svg><i class="dot" hidden></i></button></span>
   </div>
   <main id="list" aria-busy="true">
     <div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div>
@@ -383,10 +380,6 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     $('tgClosed').setAttribute('aria-pressed', S.hideClosed);
     $('tgSaved').setAttribute('aria-pressed', S.savedOnly);
     $('sort').textContent = S.sort === 'new' ? '최신 글순 ⇅' : '일정순 ⇅';
-    const f = store.get('bdr.fav', null);
-    const same = f && f.r1 === S.r1 && [...S.r2].sort().join() === (f.r2 || []).slice().sort().join();
-    $('btnFav').setAttribute('aria-pressed', !!same && S.r1 !== '전체');
-    $('btnFav').textContent = same && S.r1 !== '전체' ? '📍 기억한 지역' : '📍 이 지역 기억하기';
   }
 
   function filtered() {
@@ -497,6 +490,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
 
   function render() {
     syncUrl();
+    store.set('bdr.fav', { r1: S.r1, r2: [...S.r2] }); // 마지막에 고른 지역을 자동 기억
     renderTabs();
     renderFilters();
     if (!$('pushBox').hidden) renderPush();
@@ -584,14 +578,6 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
   $('tgClosed').onclick = () => { S.hideClosed = !S.hideClosed; store.set('bdr.hideClosed', S.hideClosed); render(); };
   $('tgSaved').onclick = () => { S.savedOnly = !S.savedOnly; render(); };
   $('sort').onclick = () => { S.sort = S.sort === 'new' ? 'time' : 'new'; track('sort_change', { sort: S.sort }); render(); };
-  $('btnFav').onclick = () => {
-    if (S.r1 === '전체') { store.set('bdr.fav', null); toast('지역을 먼저 선택해 주세요'); return render(); }
-    const f = store.get('bdr.fav', null);
-    const same = f && f.r1 === S.r1 && [...S.r2].sort().join() === (f.r2 || []).slice().sort().join();
-    if (same) { store.set('bdr.fav', null); toast('기억한 지역을 지웠어요'); }
-    else { store.set('bdr.fav', { r1: S.r1, r2: [...S.r2] }); toast('다음에도 이 지역으로 열려요'); track('fav_region', { region1: S.r1, region2: [...S.r2].join(',') || '-' }); }
-    render();
-  };
   $('reset').onclick = reset;
   $('btnShare').onclick = async () => {
     const url = location.origin + location.pathname + (stateQuery() ? `?${stateQuery()}` : '');
@@ -674,8 +660,11 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
   }
   function renderPushBtn() {
     const b = $('btnPush'); b.hidden = !PUSH_API;
-    b.textContent = store.get(PUSH_KEY, null) ? '🔔 알림 켜짐' : '🔔 새 글 알림';
-    b.setAttribute('aria-pressed', store.get(PUSH_KEY, null) ? 'true' : 'false');
+    const on = !!store.get(PUSH_KEY, null);
+    b.querySelector('.dot').hidden = !on;
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    b.setAttribute('aria-label', on ? '새 글 알림 (켜짐)' : '새 글 알림');
+    b.title = on ? '새 글 알림 켜짐' : '새 글 알림 받기';
   }
   $('btnPush').onclick = () => {
     const box = $('pushBox'); box.hidden = !box.hidden;
