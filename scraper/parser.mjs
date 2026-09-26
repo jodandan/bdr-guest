@@ -160,6 +160,7 @@ function toMin(pref, h, mm) {
   h = +h; mm = +(mm || 0);
   if (h > 24 || mm > 59) return null;
   if (pref && PM.test(pref) && h < 12) h += 12;
+  else if (pref && /낮/.test(pref) && h >= 1 && h <= 6) h += 12; // '낮1시' → 13시
   else if (pref && /새벽/.test(pref) && h === 12) h = 0; // '오전 12시'는 정오로 봄
   return h * 60 + mm;
 }
@@ -219,7 +220,9 @@ export function parsePost(title, headCont, postedYmd) {
   const { start, end, startMin } = parseTime(n, span);
   const wd = date ? WEEK[mk(...date.split('-').map(Number)).getUTCDay()] : null;
   return {
-    region1, region2, date, weekday: wd, start, end, slot: slotOf(startMin),
+    region1, region2, date, weekday: wd, start, end,
+    // 시각이 없으면 '오전/오후/저녁' 같은 말로 시간대만 추정
+    slot: slotOf(startMin) ?? (/오전|아침|새벽/.test(n) ? '오전' : /저녁|밤|야간/.test(n) ? '저녁' : /오후|낮/.test(n) ? '오후' : null),
     closed: /마감|모집\s*완료|\[완료|종료/.test(n),
     free: /무료/.test(n),
   };

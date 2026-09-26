@@ -60,6 +60,7 @@ async function fetchBoard(b, now) {
       url: `https://m.cafe.daum.net/dongarry/${b.fld}/${a.dataid}`,
       posted,
       views: a.viewCount,
+      head: a.headCont || '',
       ...parsePost(a.title, a.headCont, kstYmd(posted)),
     };
   });
@@ -92,6 +93,8 @@ async function main() {
   if (!fresh.length) throw new Error('수집 0건 — 기존 data.json 유지');
 
   // 병합: 새로 받은 글 우선, 이전 글은 게시시각 유지
+  // 이전 글도 매번 최신 분석 규칙으로 다시 분석 (분석기 개선이 기존 글에도 반영되도록)
+  kept = kept.map(p => ({ ...p, ...parsePost(p.title, p.head || '', kstYmd(p.posted)) }));
   const byKey = new Map(kept.map(p => [p.key, p]));
   for (const p of fresh) {
     const old = byKey.get(p.key);
