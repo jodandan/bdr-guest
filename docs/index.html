@@ -107,6 +107,18 @@ button{font:inherit;color:inherit}
 .day b{font-weight:400}
 .card{display:flex;gap:12px;background:var(--card);border:3px solid var(--line);border-radius:0;padding:14px 10px 14px 12px;margin-bottom:14px;box-shadow:5px 5px 0 var(--shadow-c)}
 .card.closed{opacity:.5}
+.card.seen .title{color:var(--sub)}
+.card.seen .time{opacity:.55}
+.seenmark{font-weight:700;color:var(--sub)}
+.tag.soon{background:var(--accent-strong);color:#fff;border-color:#0E0E10}
+.dup{margin-top:6px;font-size:13px}
+.dup summary{cursor:pointer;color:var(--sub);font-weight:700;padding:4px 0;min-height:24px}
+.dup .dupt{font-size:14px;margin-top:4px}
+.dupm{display:block;font-size:12px;color:var(--sub)}
+.unkbox{margin:22px 0 8px;padding-top:14px;border-top:2px dashed var(--line)}
+.unkbox p{margin:6px 0 14px;font-size:13px;color:var(--sub)}
+.sugs{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:14px}
+.sugs .chip b{color:var(--accent)}
 .time{flex:none;width:74px;text-align:center;border-right:3px solid var(--accent);padding-right:8px}
 .time .s{font:400 22px/1.15 var(--f-display);letter-spacing:-.01em}
 .time .e{font-size:12px;color:var(--sub)}
@@ -257,6 +269,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     sort: U.get('s') === 'new' ? 'new' : 'time',
     hideClosed: store.get('bdr.hideClosed', true),
     savedOnly: false,
+    showUnk: false,
   };
   const toKey = v => typeof v === 'number' ? `Dilr:${v}` : v; // 구버전(숫자 id) 호환
   const saved = new Set(store.get('bdr.saved', []).map(toKey));
@@ -382,28 +395,91 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     $('sort').textContent = S.sort === 'new' ? '최신 글순 ⇅' : '일정순 ⇅';
   }
 
-  function filtered() {
-    const q = S.q.trim().replace(/\s+/g, '').toLowerCase();
-    const near = S.r1 === NEARBY ? nearSet() : null;
-    const rows = base().filter(p => {
-      if (S.savedOnly && !saved.has(p.key)) return false;
-      if (S.hideClosed && p.closed) return false;
-      if (near) { if (!near.has(p.region2)) return false; }
-      else if (S.r2.size) { if (!S.r2.has(p.region2 || '기타') || (p.region1 || '기타') !== S.r1) return false; }
-      else if (S.r1 !== '전체' && (p.region1 || '기타') !== S.r1) return false;
-      if (S.date !== '전체' && p.date !== S.date) return false;
-      if (S.week !== '전체') { if (!p.date) return false; const w = wdOf(p.date); if ((S.week === '주말') !== (w === 0 || w === 6)) return false; }
-      if (S.slot.size && !S.slot.has(p.slot)) return false;
-      if (q && !p.title.replace(/\s+/g, '').toLowerCase().includes(q)) return false;
-      return true;
-    });
+  // st: 필터 상태 (S 또는 S 일부를 바꾼 사본). region: false면 지역 조건 무시
+  function passes(p, st, region = true) {
+    const q = st.q.trim().replace(/\s+/g, '').toLowerCase();
+    if (st.savedOnly && !saved.has(p.key)) return false;
+    if (st.hideClosed && p.closed) return false;
+    if (region) {
+      if (st.r1 === NEARBY) { if (!st.home || !GEO[p.region2] || km(st.home, p.region2) > st.radius) return false; }
+      else if (st.r2.size) { if (!st.r2.has(p.region2 || '기타') || (p.region1 || '기타') !== st.r1) return false; }
+      else if (st.r1 !== '전체' && (p.region1 || '기타') !== st.r1) return false;
+    }
+    if (st.date !== '전체' && p.date !== st.date) return false;
+    if (st.week !== '전체') { if (!p.date) return false; const w = wdOf(p.date); if ((st.week === '주말') !== (w === 0 || w === 6)) return false; }
+    if (st.slot.size && !st.slot.has(p.slot)) return false;
+    if (q && !p.title.replace(/\s+/g, '').toLowerCase().includes(q)) return false;
+    return true;
+  }
+  function sortRows(rows) {
     if (S.sort === 'new') return rows.sort((a, b) => Date.parse(b.posted) - Date.parse(a.posted) || b.id - a.id);
     return rows.sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999') || (a.start || '99').localeCompare(b.start || '99') || b.id - a.id);
   }
+  function filtered() { return sortRows(base().filter(p => passes(p, S))); }
+  // 지역을 골랐을 때, 제목에 동네가 없어 빠진 글 (다른 조건은 만족)
+  function unknownRegion() {
+    if (S.r1 === '전체') return [];
+    const homeR1 = S.r1 === NEARBY && S.home ? Object.keys(GEO_R1).find(r => GEO_R1[r].includes(S.home)) : null;
+    return sortRows(base().filter(p => {
+      if (passes(p, S) || !passes(p, S, false)) return false;
+      if (!p.region1) return true;
+      if (p.region2) return false;
+      return S.r1 === NEARBY ? p.region1 === homeR1 : (S.r2.size > 0 && p.region1 === S.r1);
+    }));
+  }
+  // 0건일 때 조건을 하나씩 풀어 본 제안
+  function suggestions() {
+    const cp = o => ({ ...S, r2: new Set(S.r2), slot: new Set(S.slot), ...o });
+    const cand = [];
+    if (S.r1 === NEARBY && S.home) for (const r of RADII) if (r > S.radius) cand.push([`${r}km로 넓히기`, cp({ radius: r }), () => { S.radius = r; store.set('bdr.radius', r); }]);
+    if (S.slot.size) cand.push(['시간 전체로', cp({ slot: new Set() }), () => S.slot.clear()]);
+    if (S.date !== '전체') cand.push(['날짜 전체로', cp({ date: '전체' }), () => { S.date = '전체'; }]);
+    if (S.week !== '전체') cand.push(['요일 전체로', cp({ week: '전체' }), () => { S.week = '전체'; }]);
+    if (S.r2.size) cand.push([`${S.r1} 전체로`, cp({ r2: new Set() }), () => S.r2.clear()]);
+    if (S.r1 !== '전체' && S.r1 !== NEARBY) cand.push(['지역 전체로', cp({ r1: '전체', r2: new Set() }), () => { S.r1 = '전체'; S.r2.clear(); }]);
+    if (S.q.trim()) cand.push(['검색어 지우기', cp({ q: '' }), () => { S.q = ''; $('q').value = ''; }]);
+    if (S.savedOnly) cand.push(['저장한 글만 끄기', cp({ savedOnly: false }), () => { S.savedOnly = false; }]);
+    if (S.hideClosed) cand.push(['마감 글도 보기', cp({ hideClosed: false }), () => { S.hideClosed = false; store.set('bdr.hideClosed', false); }]);
+    const out = []; const seenN = new Set();
+    for (const [label, st, apply] of cand) {
+      const n = base().filter(p => passes(p, st)).length;
+      if (n > 0) { out.push({ label, n, apply }); if (out.length >= 3) break; }
+      if (S.r1 === NEARBY && label.endsWith('km로 넓히기') && n > 0) break; // 반경은 가장 가까운 것 하나만
+    }
+    return out;
+  }
+  // 같은 게시판·같은 일시·같은 지역에 제목이 거의 같은 글(재게시) 묶기
+  function bigrams(t) { t = t.replace(/[\s\[\]()]/g, ''); const r = new Set(); for (let i = 0; i < t.length - 1; i++) r.add(t.slice(i, i + 2)); return r; }
+  function similar(a, b) { const A = bigrams(a), B = bigrams(b); let n = 0; A.forEach(x => B.has(x) && n++); return n / Math.max(1, Math.min(A.size, B.size)); }
+  function groupDupes(rows) {
+    const out = [], used = new Set();
+    const newest = [...rows].sort((a, b) => Date.parse(b.posted) - Date.parse(a.posted));
+    const lead = new Map();
+    for (const p of newest) {
+      if (used.has(p.key)) continue;
+      used.add(p.key); const g = { p, dup: [] }; lead.set(p.key, g);
+      if (!p.date || !p.start) continue;
+      for (const q of newest) {
+        if (used.has(q.key) || q.date !== p.date || q.start !== p.start || (q.region2 || q.region1) !== (p.region2 || p.region1)) continue;
+        if (similar(p.title, q.title) >= 0.6) { used.add(q.key); g.dup.push(q); }
+      }
+    }
+    for (const p of rows) if (lead.has(p.key)) out.push(lead.get(p.key));
+    return out;
+  }
+  const seenPosts = new Set(store.get('bdr.seen', []));
+  function markSeen(k) { seenPosts.add(k); store.set('bdr.seen', [...seenPosts].slice(-800)); }
+  function startsSoon(p) {
+    if (p.closed || !p.date || !p.start || p.date !== TODAY) return false;
+    const k = new Date(Date.now() + 9 * 3600e3), now = k.getUTCHours() * 60 + k.getUTCMinutes();
+    const d = toMin(p.start) - now;
+    return d > 0 && d <= 180;
+  }
 
-  function card(p) {
+  function card(p, dup = []) {
     const tags = [];
     if (isNew(p)) tags.push('<span class="newwrap"><span class="tag new">NEW!</span></span>');
+    if (startsSoon(p)) tags.push('<span class="tag soon">곧 시작</span>');
     if (p.region1) tags.push(`<span class="tag">${esc(regionLabel(p))}</span>`);
     if (S.r1 === NEARBY && S.home && GEO[p.region2]) { const d = km(S.home, p.region2); tags.push(`<span class="tag g">${d < 2 ? '내 동네' : '약 ' + Math.round(d) + 'km'}</span>`); }
     if (p.free) tags.push('<span class="tag g">무료</span>');
@@ -415,12 +491,14 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     const when = S.sort === 'new' && p.date ? `${dayLabel(p.date)} · ` : '';
     const ics = p.date && p.start ? `<span>·</span><button class="ics" type="button" data-key="${esc(p.key)}">캘린더에 추가</button>` : '';
     const rep = reported.has(p.key) ? '<span>· 신고됨</span>' : `<span>·</span><button class="rep" type="button" data-key="${esc(p.key)}" aria-expanded="false">정보가 틀렸나요?</button>`;
-    return `<article class="card${p.closed ? ' closed' : ''}">
+    const seen = seenPosts.has(p.key) && !saved.has(p.key);
+    const dupHtml = dup.length ? `<details class="dup"><summary>비슷한 글 ${dup.length}건 더</summary>${dup.map(q => `<a href="${esc(q.url)}" target="_blank" rel="noopener" class="title dupt" data-key="${esc(q.key)}">${esc(q.title)}</a><span class="dupm">${ago(q.posted)} · 조회 ${q.views ?? 0}</span>`).join('')}</details>` : '';
+    return `<article class="card${p.closed ? ' closed' : ''}${seen ? ' seen' : ''}">
       <div class="time">${time}</div>
       <div class="body">
         <div class="tags">${tags.join('')}</div>
         <a class="title" href="${esc(p.url)}" target="_blank" rel="noopener" data-key="${esc(p.key)}">${esc(p.title)}</a>
-        <div class="sub"><span>${when}${ago(p.posted)} · 조회 ${p.views ?? 0}</span>${ics}${rep}</div>
+        <div class="sub"><span>${seen ? '<b class="seenmark">읽음</b> · ' : ''}${when}${ago(p.posted)} · 조회 ${p.views ?? 0}</span>${ics}${rep}</div>${dupHtml}
       </div>
       <button class="star" type="button" data-key="${esc(p.key)}" aria-pressed="${on}" aria-label="${on ? '저장 해제' : '저장'}">${on ? '★' : '☆'}</button>
     </article>`;
@@ -496,26 +574,40 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     if (!$('pushBox').hidden) renderPush();
     renderSummary(); requestAnimationFrame(markScroll);
     const rows = filtered();
-    $('count').textContent = `${rows.length}건`;
-    trackFilters(rows.length);
+    const groups = groupDupes(rows);
+    $('count').textContent = `${groups.length}건`;
+    trackFilters(groups.length);
     const list = $('list');
     list.setAttribute('aria-busy', 'false');
-    if (!rows.length) {
-      list.innerHTML = S.r1 === NEARBY && !S.home ? `<div class="state">위에서 <b>내 동네</b>를 골라 주세요.<br>한 번 고르면 다음에도 기억해요.</div>` : `<div class="state">조건에 맞는 글이 없어요.<br><button class="chip" id="reset2" type="button">필터 초기화</button></div>`;
+    const unk = unknownRegion();
+    const unkHtml = unk.length ? `<div class="unkbox"><button class="chip sm" id="unkBtn" type="button" aria-expanded="${S.showUnk ? 'true' : 'false'}">지역 미확인 글 ${unk.length}건 ${S.showUnk ? '접기' : '보기'}</button><p>제목에 동네가 없어 지역을 알 수 없는 글이에요.</p>${S.showUnk ? unk.map(p => card(p)).join('') : ''}</div>` : '';
+    if (!groups.length) {
+      if (S.r1 === NEARBY && !S.home) list.innerHTML = `<div class="state">위에서 <b>내 동네</b>를 골라 주세요.<br>한 번 고르면 다음에도 기억해요.</div>`;
+      else {
+        const sug = suggestions();
+        list.innerHTML = `<div class="state">조건에 맞는 글이 없어요.${sug.length ? '<br>이렇게 바꿔 볼까요?' : ''}<div class="sugs">${sug.map((x, i) => `<button class="chip" type="button" data-sug="${i}">${esc(x.label)} <b>${x.n}건</b></button>`).join('')}<button class="chip all" id="reset2" type="button">필터 초기화</button></div></div>` + unkHtml;
+        list.querySelectorAll('[data-sug]').forEach(b => b.onclick = () => { const x = sug[+b.dataset.sug]; x.apply(); track('empty_suggest', { label: x.label }); render(); });
+      }
       if ($('reset2')) $('reset2').onclick = reset;
+      bindUnk();
       return;
     }
     let html = '';
-    if (S.sort === 'new') html = rows.map(card).join('');
+    if (S.sort === 'new') html = groups.map(g => card(g.p, g.dup)).join('');
     else {
       let cur = null;
-      for (const p of rows) {
-        const d = p.date || '';
-        if (d !== cur) { cur = d; html += `<h2 class="day"><b>${esc(dayLabel(p.date))}</b></h2>`; }
-        html += card(p);
+      for (const g of groups) {
+        const d = g.p.date || '';
+        if (d !== cur) { cur = d; html += `<h2 class="day"><b>${esc(dayLabel(g.p.date))}</b></h2>`; }
+        html += card(g.p, g.dup);
       }
     }
-    list.innerHTML = html;
+    list.innerHTML = html + unkHtml;
+    bindUnk();
+  }
+  function bindUnk() {
+    const b = $('unkBtn'); if (!b) return;
+    b.onclick = () => { S.showUnk = !S.showUnk; track('unknown_region', { open: S.showUnk ? 'y' : 'n' }); render(); if (S.showUnk) $('unkBtn').scrollIntoView({ block: 'start' }); };
   }
 
   function reset() {
@@ -565,7 +657,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     const ic = e.target.closest('.ics');
     if (ic) { downloadIcs(byKey(ic.dataset.key)); return; }
     const a = e.target.closest('a.title');
-    if (a) { const p = byKey(a.dataset.key); track('open_post', { post_id: a.dataset.key, board: boardOf(p), region1: p.region1 || '기타', slot: p.slot || '미정' }); return; }
+    if (a) { markSeen(a.dataset.key); setTimeout(render, 300); const p = byKey(a.dataset.key); track('open_post', { post_id: a.dataset.key, board: boardOf(p), region1: p.region1 || '기타', slot: p.slot || '미정' }); return; }
     const b = e.target.closest('.star'); if (!b) return;
     const k = b.dataset.key;
     saved.has(k) ? saved.delete(k) : saved.add(k);
@@ -624,7 +716,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
       html = cur ? `지금 <b>${esc(cur.label)}</b> 조건으로 알림을 받고 있어요.` : '지금 고른 조건에 맞는 새 글이 올라오면 알려드려요.';
       html += `<br>알림 조건: <b>${esc(pushLabel())}</b>`;
       html += `<div class="acts"><button class="chip primary" id="pushOn" type="button">${cur ? '이 조건으로 바꾸기' : '이 조건으로 알림 받기'}</button>${cur ? '<button class="chip" id="pushOff" type="button">알림 끄기</button>' : ''}</div>`;
-      html += '<div class="note">위 필터를 바꾼 뒤 누르면 조건이 바뀌어요. 서버에는 알림 주소와 조건만 저장되고, 이름·연락처는 저장하지 않아요.</div>';
+      html += '<div class="note">밤 12시~아침 7시에 올라온 글은 아침 7시에 한 번에 알려드려요. 위 필터를 바꾼 뒤 누르면 조건이 바뀌어요. 서버에는 알림 주소와 조건만 저장되고, 이름·연락처는 저장하지 않아요.</div>';
     }
     box.innerHTML = html;
     const on = $('pushOn'), off = $('pushOff');

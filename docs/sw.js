@@ -1,6 +1,6 @@
 // 앱 껍데기는 캐시 우선, 목록 데이터는 네트워크 우선 (오프라인이면 마지막 목록)
 // + 웹 푸시: 서버는 '새 글 있음' 신호만 보내고, 알림 내용은 여기서 목록을 읽어 만든다
-const CACHE = 'bdr-v3';
+const CACHE = 'bdr-v4';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png', '/ball.svg'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL))); self.skipWaiting(); });
 self.addEventListener('activate', e => {
@@ -45,7 +45,7 @@ self.addEventListener('push', e => {
       const d = await (await fetch('/data.json?t=' + Date.now(), { cache: 'no-store' })).json();
       const now = Date.now(), today = new Date(now + 9 * 3600e3).toISOString().slice(0, 10);
       hits = (d.posts || []).filter(p => p.key && !notified.has(p.key) && (!p.date || p.date >= today)
-        && now - Date.parse(p.posted) < 6 * 3600e3 && matches(f, p));
+        && now - Date.parse(p.posted) < 9 * 3600e3 && matches(f, p));
     } catch {}
     hits.forEach(p => notified.add(p.key));
     await setState({ ...st, notified: [...notified].slice(-500) });
