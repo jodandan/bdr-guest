@@ -88,6 +88,9 @@ async function listSubs(env) {
 
 // 새 글 확인 → 푸시
 export async function checkAndPush(env, now = Date.now()) {
+  // 조용한 시간(KST 0~7시): 보내지 않고 기록도 건드리지 않음 → 7시 이후 첫 확인 때 밤사이 글을 한 번에 알림
+  const kh = new Date(now + 9 * 3600e3).getUTCHours();
+  if (kh < 7) return { quiet: true };
   const res = await fetch(`${DATA_URL}?t=${now}`, { cf: { cacheTtl: 0 } });
   if (!res.ok) return { error: `data.json ${res.status}` };
   const d = await res.json();
@@ -95,7 +98,7 @@ export async function checkAndPush(env, now = Date.now()) {
   const live = (d.posts || []).filter(p => p.key && !p.closed && (!p.date || p.date >= today));
   const seen = new Set((await env.SUBS.get('seen', 'json')) || []);
   const first = seen.size === 0;
-  const fresh = first ? [] : live.filter(p => !seen.has(p.key) && now - Date.parse(p.posted) < 6 * 3600e3);
+  const fresh = first ? [] : live.filter(p => !seen.has(p.key) && now - Date.parse(p.posted) < 9 * 3600e3);
   await env.SUBS.put('seen', JSON.stringify(live.map(p => p.key).slice(0, 2000)));
   if (!fresh.length) return { fresh: 0, first };
   const v = await vapid(env);
