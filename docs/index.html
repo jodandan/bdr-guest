@@ -71,16 +71,33 @@ button{font:inherit;color:inherit}
 .row{display:flex;gap:6px;overflow-x:auto;padding:4px 0;scrollbar-width:none}
 .row::-webkit-scrollbar{display:none}
 .row[hidden]{display:none}
-.lbl{flex:none;align-self:stretch;display:flex;align-items:center;font-size:12px;font-weight:700;color:var(--sub);width:40px;position:sticky;left:0;background:var(--bg);z-index:1}
+.lbl{flex:none;align-self:stretch;display:flex;align-items:center;font:400 14px/1 var(--f-head);color:var(--text);width:44px;position:sticky;left:0;background:var(--bg);z-index:1;box-shadow:6px 0 6px -2px var(--bg)}
+.row.more{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 36px),transparent)}
+.chip.all[aria-pressed="true"]{background:var(--card);color:var(--text);font-weight:700;box-shadow:inset 0 -4px 0 var(--line)}
+.chk{flex:none;display:inline-flex;align-items:center;gap:6px;background:none;border:0;padding:4px 10px 4px 2px;font-size:14px;font-weight:500;color:var(--text);cursor:pointer;min-height:36px;white-space:nowrap}
+.chk::before{content:"";width:18px;height:18px;border:2px solid var(--line);background:var(--card);box-sizing:border-box}
+.chk[aria-pressed="true"]{font-weight:700}
+.chk[aria-pressed="true"]::before{background:var(--line) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='10'%3E%3Cpath d='M1 5l3.5 3.5L11 1' stroke='%23fff' stroke-width='2.4' fill='none'/%3E%3C/svg%3E") no-repeat center}
+.fsum{display:none;width:100%;align-items:center;gap:10px;margin-top:8px;padding:10px 12px;border:2px solid var(--line);background:var(--card);color:var(--text);font-size:14px;cursor:pointer;text-align:left;min-height:44px}
+.fsum-k{font:400 15px/1 var(--f-head)}
+.fsum-v{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}
+.fsum-v.none{font-weight:500;color:var(--sub)}
+.fsum-c{transition:transform .15s}
+.fsum[aria-expanded="true"] .fsum-c{transform:rotate(180deg)}
+.fpanel{padding-top:4px}
+.acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:2px dashed var(--line)}
+.act{flex:none;background:none;border:0;padding:6px 8px;font-size:13px;font-weight:700;color:var(--sub);cursor:pointer;min-height:32px;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
+.act[aria-pressed="true"]{background:var(--yellow);color:#111;text-decoration:none}
+.act:focus-visible,.chk:focus-visible,.fsum:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+@media (max-width:639px){.fsum{display:flex}.fpanel[hidden]{display:none}}
 .chip{flex:none;border:2px solid var(--line);background:var(--chip);border-radius:0;padding:6px 12px;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;min-height:36px}
 .chip[aria-pressed="true"]{background:var(--chip-on);color:var(--chip-on-text);font-weight:700}
 .chip.sm{padding:4px 10px;font-size:13px;min-height:32px}
 .chip:focus-visible,.star:focus-visible,a:focus-visible,input:focus-visible,.linkbtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .chip.nearby{border-style:dashed}
 .chip.homesel{appearance:none;-webkit-appearance:none;font:inherit;font-size:13px;font-weight:700;color:#111;background:var(--yellow) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0h10L5 6z' fill='%23111'/%3E%3C/svg%3E") no-repeat right 10px center;padding-right:28px;width:auto;max-width:9.5em}
-.tools{display:flex;gap:8px;align-items:center;margin-top:8px}
+.tools{display:flex;gap:8px;align-items:center;margin-top:4px}
 .search{flex:1;min-width:0;border:2px solid var(--line);background:var(--card);border-radius:0;padding:9px 12px;font-size:16px;color:var(--text)}
-.toggle{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .count{font-size:14px;font-weight:700;color:var(--text);padding:14px 0 4px;display:flex;justify-content:space-between;align-items:center}
 .linkbtn{background:none;border:0;color:var(--accent);cursor:pointer;padding:4px;font-size:13px;font-weight:700}
 /* 목록 */
@@ -150,20 +167,27 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
   <div class="tabs" id="tabs" role="tablist" aria-label="게시판"></div>
 
   <div class="bar" role="region" aria-label="필터">
-    <div class="row" id="rowR1" role="group" aria-label="광역 지역"><span class="lbl">지역</span></div>
-    <div class="row" id="rowR2" role="group" aria-label="세부 지역" hidden></div>
-    <div class="row" id="rowDate" role="group" aria-label="날짜"><span class="lbl">날짜</span></div>
-    <div class="row" id="rowWeek" role="group" aria-label="요일"><span class="lbl">요일</span></div>
-    <div class="row" id="rowSlot" role="group" aria-label="시간대"><span class="lbl">시간</span></div>
     <div class="tools">
       <input id="q" class="search" type="search" placeholder="체육관·팀명·동네 검색" aria-label="제목 검색">
     </div>
-    <div class="toggle">
-      <button class="chip sm" id="tgClosed" type="button" aria-pressed="true">마감 숨기기</button>
-      <button class="chip sm" id="tgSaved" type="button" aria-pressed="false">★ 저장한 글만</button>
-      <button class="chip sm" id="btnFav" type="button" aria-pressed="false" title="현재 선택한 지역을 다음 접속 때 자동 적용">📍 이 지역 기억하기</button>
-      <button class="chip sm" id="btnShare" type="button">🔗 이 조건 공유</button>
-      <button class="chip sm" id="btnPush" type="button" aria-expanded="false" hidden>🔔 새 글 알림</button>
+    <button class="fsum" id="fToggle" type="button" aria-expanded="true" aria-controls="fpanel">
+      <span class="fsum-k">필터</span><span class="fsum-v" id="fsumText">조건 없음</span><span class="fsum-c" aria-hidden="true">▾</span>
+    </button>
+    <div class="fpanel" id="fpanel">
+      <div class="row" id="rowR1" role="group" aria-label="지역"><span class="lbl">지역</span></div>
+      <div class="row" id="rowR2" role="group" aria-label="세부 지역" hidden><span class="lbl">동네</span></div>
+      <div class="row" id="rowDate" role="group" aria-label="날짜"><span class="lbl">날짜</span></div>
+      <div class="row" id="rowWeek" role="group" aria-label="요일"><span class="lbl">요일</span></div>
+      <div class="row" id="rowSlot" role="group" aria-label="시간대"><span class="lbl">시간</span></div>
+      <div class="row" id="rowView" role="group" aria-label="보기"><span class="lbl">보기</span>
+        <button class="chk" id="tgClosed" type="button" aria-pressed="true">마감 숨기기</button>
+        <button class="chk" id="tgSaved" type="button" aria-pressed="false">저장한 글만</button>
+      </div>
+    </div>
+    <div class="acts" role="group" aria-label="도구">
+      <button class="act" id="btnFav" type="button" aria-pressed="false" title="현재 선택한 지역을 다음 접속 때 자동 적용">📍 이 지역 기억하기</button>
+      <button class="act" id="btnShare" type="button">🔗 이 조건 공유</button>
+      <button class="act" id="btnPush" type="button" aria-expanded="false" hidden>🔔 새 글 알림</button>
     </div>
     <div class="pushbox" id="pushBox" hidden></div>
   </div>
@@ -320,7 +344,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     const r1s = [...new Set(pool.map(p => p.region1 || '기타'))]
       .sort((a, b) => (R1_ORDER.indexOf(a) + 1 || 99) - (R1_ORDER.indexOf(b) + 1 || 99) || a.localeCompare(b));
     if (S.r1 !== '전체' && S.r1 !== NEARBY && !r1s.includes(S.r1)) r1s.push(S.r1);
-    const r1Chips = ['전체', ...r1s].map(r => chip(r, S.r1 === r, () => { S.r1 = r; S.r2.clear(); render(); }));
+    const r1Chips = ['전체', ...r1s].map(r => chip(r, S.r1 === r, () => { S.r1 = r; S.r2.clear(); render(); }, r === '전체' ? 'all' : ''));
     r1Chips.splice(1, 0, chip('📍 ' + NEARBY, S.r1 === NEARBY, () => { S.r1 = NEARBY; S.r2.clear(); track('nearby_open', { home: S.home || '-' }); render(); }, 'nearby'));
     fillRow($('rowR1'), r1Chips);
 
@@ -352,9 +376,9 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
 
     const dates = [...new Set(pool.map(p => p.date).filter(Boolean))].sort().slice(0, 10);
     if (S.date !== '전체' && !dates.includes(S.date)) S.date = '전체';
-    fillRow($('rowDate'), ['전체', ...dates].map(d => chip(d === '전체' ? '전체' : dayLabel(d).replace(' · ', ' '), S.date === d, () => { S.date = d; render(); })));
-    fillRow($('rowWeek'), ['전체', '주말', '평일'].map(w => chip(w === '주말' ? '주말(토·일)' : w === '평일' ? '평일(월~금)' : w, S.week === w, () => { S.week = w; render(); })));
-    fillRow($('rowSlot'), ['오전', '오후', '저녁'].map(s => chip(s === '오전' ? '오전(~12시)' : s === '오후' ? '오후(12~18시)' : '저녁(18시~)', S.slot.has(s), () => { S.slot.has(s) ? S.slot.delete(s) : S.slot.add(s); render(); })));
+    fillRow($('rowDate'), ['전체', ...dates].map(d => chip(d === '전체' ? '전체' : dayLabel(d).replace(' · ', ' '), S.date === d, () => { S.date = d; render(); }, d === '전체' ? 'all' : '')));
+    fillRow($('rowWeek'), ['전체', '주말', '평일'].map(w => chip(w === '주말' ? '주말(토·일)' : w === '평일' ? '평일(월~금)' : w, S.week === w, () => { S.week = w; render(); }, w === '전체' ? 'all' : '')));
+    fillRow($('rowSlot'), [chip('전체', !S.slot.size, () => { S.slot.clear(); render(); }, 'all')].concat(['오전', '오후', '저녁'].map(s => chip(s === '오전' ? '오전(~12시)' : s === '오후' ? '오후(12~18시)' : '저녁(18시~)', S.slot.has(s), () => { S.slot.has(s) ? S.slot.delete(s) : S.slot.add(s); render(); }))));
 
     $('tgClosed').setAttribute('aria-pressed', S.hideClosed);
     $('tgSaved').setAttribute('aria-pressed', S.savedOnly);
@@ -439,11 +463,44 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     }), 1500);
   }
 
+  function filterSummary() {
+    const parts = [];
+    if (S.r1 === NEARBY) parts.push(S.home ? `${shortR2(S.home)} ${S.radius}km` : '내 근처');
+    else if (S.r1 !== '전체') parts.push(S.r2.size ? [...S.r2].map(shortR2).join('·') : S.r1);
+    if (S.date !== '전체') parts.push(dayLabel(S.date).replace(' · ', ' '));
+    if (S.week !== '전체') parts.push(S.week);
+    if (S.slot.size) parts.push([...S.slot].join('·'));
+    if (S.savedOnly) parts.push('저장한 글');
+    if (!S.hideClosed) parts.push('마감 포함');
+    return parts;
+  }
+  function renderSummary() {
+    const parts = filterSummary(), v = $('fsumText');
+    v.textContent = parts.length ? parts.join(' · ') : '조건 없음';
+    v.classList.toggle('none', !parts.length);
+    $('reset').hidden = !parts.length && !S.q.trim();
+  }
+  function markScroll() {
+    document.querySelectorAll('.bar .row').forEach(r => r.classList.toggle('more', r.scrollWidth - r.scrollLeft - r.clientWidth > 4));
+  }
+  document.querySelectorAll('.bar .row').forEach(r => r.addEventListener('scroll', markScroll, { passive: true }));
+  addEventListener('resize', markScroll);
+  const mqMobile = matchMedia('(max-width:639px)');
+  function setPanel(open) {
+    $('fpanel').hidden = mqMobile.matches && !open;
+    $('fToggle').setAttribute('aria-expanded', String(!$('fpanel').hidden));
+    if (open) requestAnimationFrame(markScroll);
+  }
+  $('fToggle').onclick = () => { const open = $('fpanel').hidden; setPanel(open); track('filter_panel', { open: open ? 'y' : 'n' }); };
+  mqMobile.addEventListener?.('change', () => setPanel(!mqMobile.matches));
+  setPanel(!mqMobile.matches);
+
   function render() {
     syncUrl();
     renderTabs();
     renderFilters();
     if (!$('pushBox').hidden) renderPush();
+    renderSummary(); requestAnimationFrame(markScroll);
     const rows = filtered();
     $('count').textContent = `${rows.length}건`;
     trackFilters(rows.length);
