@@ -1,0 +1,20 @@
+name: naver-probe
+# 네이버 카페 게시판 목록을 로그인 없이 읽을 수 있는지 1회 시험 (수동 실행 전용)
+on:
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: probe list APIs
+        run: |
+          UA="Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Mobile Safari/537.36"
+          for URL in \
+            "https://apis.naver.com/cafe-web/cafe-boardlist-api/v1/cafes/10586238/menus/34/articles?page=1&pageSize=15&sortBy=TIME&viewType=L" \
+            "https://apis.naver.com/cafe-web/cafe2/ArticleListV2dot1.json?search.clubid=10586238&search.menuid=34&search.page=1&search.perPage=15&search.queryType=lastArticle" \
+            "https://apis.naver.com/cafe-web/cafe2/SideMenuList?cafeId=10586238" ; do
+            echo "=== $URL"
+            curl -sS -m 20 -A "$UA" -H "Referer: https://m.cafe.naver.com/" -w "\nHTTP %{http_code}\n" "$URL" | head -c 2500
+            echo
+          done
