@@ -1,0 +1,15 @@
+name: naver-probe2
+# 네이버 카페 게시판 목록 시험 (수동 실행 전용)
+on:
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: menus
+        run: |
+          curl -sS -m 20 -A 'Mozilla/5.0' 'https://apis.naver.com/cafe-web/cafe2/SideMenuList?cafeId=10586238' | jq -r '.message.result.menus[] | "\(.menuId)\t\(.menuType)\t\(.menuName)"'
+      - name: heads
+        run: |
+          for M in 34; do curl -sS -m 20 -A 'Mozilla/5.0' "https://apis.naver.com/cafe-web/cafe-boardlist-api/v1/cafes/10586238/menus/$M/articles?page=1&pageSize=50&sortBy=TIME&viewType=L" | jq -r '.result.articleList[].item | "\(.articleId)\t\(.headName)\t\(.writeDateTimestamp)\t\(.subject)"' | head -20; done
