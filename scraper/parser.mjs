@@ -138,7 +138,7 @@ export function parseDate(title, posted) {
     return dt;
   };
   let m, span = null, dt = null;
-  if ((m = t.match(/(?:20\d{2}\s*[년.\-/]\s*)?(\d{1,2})\s*월\s*(\d{1,2})\s*일?/))) { dt = fix(+m[1], +m[2]); span = m[0]; }
+  if ((m = t.match(/(?:20\d{2}\s*[년.\-/]\s*)?(?<![\d/.:])(\d{1,2})\s*월\s*(\d{1,2})(?![\d:])\s*일?/)) && +m[1] <= 12) { dt = fix(+m[1], +m[2]); span = m[0]; }
   else if ((m = t.match(/(?<![\d:])(\d{1,2})\s*[/.]\s*(\d{1,2})(?![\d:])\s*\.?\s*일?/))) { dt = fix(+m[1], +m[2]); span = m[0]; }
   else if ((m = t.match(/(?<![\d:])(\d{1,2})\s*-\s*(\d{1,2})\s*일/))) { dt = fix(+m[1], +m[2]); span = m[0]; }
   else if ((m = t.match(/(?<![\d:~\-])(\d{1,2})\s*일(?!\s*[~\-])/))) {
@@ -153,6 +153,17 @@ export function parseDate(title, posted) {
     const wd = WEEK.indexOf(m[1]);
     const diff = (wd - posted.getUTCDay() + 7) % 7;
     dt = new Date(+posted + diff * 864e5); span = m[0];
+  }
+  // 제목의 요일과 날짜가 안 맞으면 앞뒤 달 중 요일이 맞는 날로 보정 (예: 9/25 게시 '10/27(일)' → 9/27)
+  const wm = t.match(/\(([월화수목금토일])\)|([월화수목금토일])요일/);
+  if (dt && wm) {
+    const want = WEEK.indexOf(wm[1] || wm[2]);
+    if (dt.getUTCDay() !== want) {
+      const y = dt.getUTCFullYear(), mo = dt.getUTCMonth() + 1, d = dt.getUTCDate();
+      const alt = [mo - 1, mo + 1].map(x => x < 1 ? mk(y - 1, 12, d) : x > 12 ? mk(y + 1, 1, d) : mk(y, x, d))
+        .filter(x => x.getUTCDate() === d && x.getUTCDay() === want && (x - posted) / 864e5 >= -3 && (x - posted) / 864e5 <= 45);
+      if (alt.length) dt = alt[0];
+    }
   }
   return { date: dt ? ymd(dt) : null, span };
 }
