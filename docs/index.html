@@ -121,6 +121,16 @@ button{font:inherit;color:inherit}
 .srcm::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:currentColor;margin-right:4px;vertical-align:1px}
 .srcm.nv{color:#157A34}.srcm.dm{color:#C8161B}
 @media (prefers-color-scheme:dark){.srcm.nv{color:#5FD38A}.srcm.dm{color:#FF7A6E}}
+.chip.srcchip.nv[aria-pressed="true"]{background:#157A34;border-color:var(--line);color:#fff}
+.chip.srcchip.dm[aria-pressed="true"]{background:#C8161B;border-color:var(--line);color:#fff}
+.compact .card{padding:8px 8px 8px 10px;margin-bottom:8px;box-shadow:3px 3px 0 var(--shadow-c);gap:10px}
+.compact .time{width:58px;padding-right:6px;border-right-width:2px}
+.compact .time .s{font-size:17px}
+.compact .tags{margin-bottom:2px}
+.compact .title{font-size:14px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.compact .sub{margin-top:2px}
+.compact .ics,.compact .rep,.compact .dup{display:none}
+.compact .star{min-width:30px;min-height:30px;font-size:19px}
 .tag.soon{background:var(--accent-strong);color:#fff;border-color:#0E0E10}
 .dup{margin-top:6px;font-size:13px}
 .dup summary{cursor:pointer;color:var(--sub);font-weight:700;padding:4px 0;min-height:24px}
@@ -208,7 +218,9 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
       <div class="row" id="rowView" role="group" aria-label="보기"><span class="lbl">보기</span>
         <button class="chk" id="tgClosed" type="button" aria-pressed="true">마감 숨기기</button>
         <button class="chk" id="tgSaved" type="button" aria-pressed="false">저장한 글만</button>
+        <button class="chk" id="tgCompact" type="button" aria-pressed="false">촘촘히 보기</button>
       </div>
+      <div class="row" id="rowSrc" role="group" aria-label="출처"><span class="lbl">출처</span></div>
     </div>
     <div class="pushbox" id="pushBox" hidden></div>
   </div>
@@ -281,6 +293,8 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     q: U.get('q') || '',
     sort: U.get('s') === 'new' ? 'new' : 'time',
     hideClosed: store.get('bdr.hideClosed', true),
+    src: ['daum', 'naver'].includes(U.get('src')) ? U.get('src') : '전체',
+    compact: !!store.get('bdr.compact', false),
     savedOnly: false,
     showUnk: false,
   };
@@ -406,6 +420,9 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
 
     $('tgClosed').setAttribute('aria-pressed', S.hideClosed);
     $('tgSaved').setAttribute('aria-pressed', S.savedOnly);
+    $('tgCompact').setAttribute('aria-pressed', S.compact);
+    document.body.classList.toggle('compact', S.compact);
+    fillRow($('rowSrc'), [['전체', '전체'], ['daum', '다음 BDR'], ['naver', '네이버 농심']].map(([k, l]) => chip(l, S.src === k, () => { S.src = k; track('source_filter', { src: k }); render(); }, k === '전체' ? 'all' : 'srcchip ' + (k === 'naver' ? 'nv' : 'dm'))));
     $('sort').textContent = S.sort === 'new' ? '최신 글순 ⇅' : '일정순 ⇅';
   }
 
@@ -414,6 +431,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     const q = st.q.trim().replace(/\s+/g, '').toLowerCase();
     if (st.savedOnly && !saved.has(p.key)) return false;
     if (st.hideClosed && p.closed) return false;
+    if (st.src !== '전체' && (p.src === 'naver' ? 'naver' : 'daum') !== st.src) return false;
     if (region) {
       if (st.r1 === NEARBY) { if (!st.home || !GEO[p.region2] || km(st.home, p.region2) > st.radius) return false; }
       else if (st.r2.size) { if (!st.r2.has(p.region2 || '기타') || (p.region1 || '기타') !== st.r1) return false; }
@@ -453,6 +471,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     if (S.r1 !== '전체' && S.r1 !== NEARBY) cand.push(['지역 전체로', cp({ r1: '전체', r2: new Set() }), () => { S.r1 = '전체'; S.r2.clear(); }]);
     if (S.q.trim()) cand.push(['검색어 지우기', cp({ q: '' }), () => { S.q = ''; $('q').value = ''; }]);
     if (S.savedOnly) cand.push(['저장한 글만 끄기', cp({ savedOnly: false }), () => { S.savedOnly = false; }]);
+    if (S.src !== '전체') cand.push(['출처 전체로', cp({ src: '전체' }), () => { S.src = '전체'; }]);
     if (S.hideClosed) cand.push(['마감 글도 보기', cp({ hideClosed: false }), () => { S.hideClosed = false; store.set('bdr.hideClosed', false); }]);
     const out = []; const seenN = new Set();
     for (const [label, st, apply] of cand) {
@@ -530,6 +549,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     if (S.slot.size) q.set('t', [...S.slot].join(','));
     if (S.q.trim()) q.set('q', S.q.trim());
     if (S.sort === 'new') q.set('s', 'new');
+    if (S.src !== '전체') q.set('src', S.src);
     return q.toString();
   }
   function syncUrl() {
@@ -557,6 +577,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     if (S.week !== '전체') parts.push(S.week);
     if (S.slot.size) parts.push([...S.slot].join('·'));
     if (S.savedOnly) parts.push('저장한 글');
+    if (S.src !== '전체') parts.push(S.src === 'naver' ? '네이버만' : '다음만');
     if (!S.hideClosed) parts.push('마감 포함');
     return parts;
   }
@@ -631,7 +652,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
   }
 
   function reset() {
-    S.r1 = '전체'; S.r2.clear(); S.date = '전체'; S.week = '전체'; S.slot.clear(); S.q = ''; S.savedOnly = false; $('q').value = '';
+    S.r1 = '전체'; S.r2.clear(); S.date = '전체'; S.week = '전체'; S.slot.clear(); S.q = ''; S.savedOnly = false; S.src = '전체'; $('q').value = '';
     render();
   }
 
@@ -689,6 +710,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
   $('q').addEventListener('input', e => { S.q = e.target.value; render(); });
   $('tgClosed').onclick = () => { S.hideClosed = !S.hideClosed; store.set('bdr.hideClosed', S.hideClosed); render(); };
   $('tgSaved').onclick = () => { S.savedOnly = !S.savedOnly; render(); };
+  $('tgCompact').onclick = () => { S.compact = !S.compact; store.set('bdr.compact', S.compact); track('compact_view', { on: S.compact ? 'y' : 'n' }); render(); };
   $('sort').onclick = () => { S.sort = S.sort === 'new' ? 'time' : 'new'; track('sort_change', { sort: S.sort }); render(); };
   $('reset').onclick = reset;
   $('btnShare').onclick = async () => {
