@@ -103,8 +103,15 @@ button{font:inherit;color:inherit}
 .ibtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .linkbtn{background:none;border:0;color:var(--accent);cursor:pointer;padding:4px;font-size:13px;font-weight:700}
 /* 목록 */
-.day{display:inline-block;background:var(--ink);color:var(--on-ink);font:400 17px/1.3 var(--f-head);padding:4px 12px 6px;margin:22px 0 12px;transform:rotate(-2deg)}
+.day{display:inline-block;position:sticky;top:8px;z-index:3;background:var(--ink);color:var(--on-ink);font:400 17px/1.3 var(--f-head);padding:4px 12px 6px;margin:22px 0 12px;transform:rotate(-2deg)}
 .day b{font-weight:400}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.day small{font:700 13px/1 var(--f-body, inherit);opacity:.8;margin-left:4px}
+.skip{position:absolute;left:8px;top:-60px;z-index:50;background:var(--ink);color:var(--on-ink);padding:10px 14px;font-weight:700;border:2px solid var(--line)}
+.skip:focus{top:8px}
+.totop{position:fixed;right:16px;bottom:20px;z-index:20;width:48px;height:48px;border:3px solid var(--line);background:var(--yellow);color:#111;font:400 13px/1.1 var(--f-head);box-shadow:3px 3px 0 var(--shadow-c);cursor:pointer}
+.totop[hidden]{display:none}
+.totop:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .card{display:flex;gap:12px;background:var(--card);border:3px solid var(--line);border-radius:0;padding:14px 10px 14px 12px;margin-bottom:14px;box-shadow:5px 5px 0 var(--shadow-c)}
 .card.closed{opacity:.5}
 .card.seen .title{color:var(--sub)}
@@ -136,8 +143,8 @@ button{font:inherit;color:inherit}
 .newwrap .tag.new{filter:none}
 .title{font-size:15px;font-weight:500;line-height:1.45;padding:2px 0;word-break:keep-all;overflow-wrap:anywhere;text-decoration:none;display:block}
 .title:hover{text-decoration:underline;text-decoration-thickness:2px;text-decoration-color:var(--accent)}
-.sub{font-size:12px;color:var(--sub);margin-top:5px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-.rep,.ics{background:none;border:0;padding:6px 4px;margin:-6px 0;color:var(--sub);font-size:12px;text-decoration:underline;cursor:pointer}
+.sub{font-size:13px;color:var(--sub);margin-top:6px;display:flex;gap:2px 12px;align-items:center;flex-wrap:wrap}
+.rep,.ics{background:none;border:0;padding:6px 0;margin:-6px 0;color:var(--sub);font-size:13px;text-decoration:underline;cursor:pointer}
 .repbox{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .repbox .chip{font-size:13px;padding:4px 10px;min-height:32px}
 .star{flex:none;background:none;border:0;font-size:22px;line-height:1;color:var(--muted);cursor:pointer;padding:4px;align-self:flex-start;min-width:34px;min-height:34px}
@@ -169,6 +176,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
 </script>
 </head>
 <body>
+<a class="skip" href="#list">글 목록으로 바로가기</a>
 <header class="hero">
   <div class="wrap">
     <div class="brand"><img src="ball.svg" alt="" width="42" height="42"><h1>BDR 게스트 <span class="label">모아보기</span></h1></div>
@@ -182,7 +190,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
   <div class="tabs" id="tabs" role="tablist" aria-label="게시판"></div>
 
   <div class="bar" role="region" aria-label="필터">
-    <div class="tools">
+    <div class="tools" role="search">
       <input id="q" class="search" type="search" placeholder="체육관·팀명·동네 검색" aria-label="제목 검색">
     </div>
     <button class="fsum" id="fToggle" type="button" aria-expanded="true" aria-controls="fpanel">
@@ -205,10 +213,11 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
   <div class="count"><span id="count" aria-live="polite"></span>
     <span class="cr"><button class="linkbtn" id="reset" type="button">필터 초기화</button><button class="linkbtn" id="sort" type="button" aria-label="정렬 바꾸기">일정순 ⇅</button><button class="ibtn" id="btnShare" type="button" aria-label="이 조건 링크 공유" title="이 조건 링크 공유"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button><button class="ibtn" id="btnPush" type="button" aria-label="새 글 알림" title="새 글 알림" aria-expanded="false" hidden><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 21h4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/></svg><i class="dot" hidden></i></button></span>
   </div>
-  <main id="list" aria-busy="true">
+  <main id="list" aria-busy="true" tabindex="-1" aria-label="모집 글 목록">
     <div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div>
   </main>
 
+  <button class="totop" id="toTop" type="button" aria-label="맨 위로" hidden>▲<br>위로</button>
   <footer>
     이 사이트는 다음카페 <a href="https://m.cafe.daum.net/dongarry" target="_blank" rel="noopener">[BDR]동아리농구방</a>의 게스트 구인·픽업게임·연습경기 게시판과 네이버 카페 <a href="https://cafe.naver.com/cornrow" target="_blank" rel="noopener">NSB 농심카페</a>의 수도권 게스트 게시판(운영진 허락)에서 <b>공개된 글 제목</b>만 모아 보여주는 <b>비공식</b> 사이트입니다. 작성자 정보는 모으지 않고, 제목 속 연락처는 가려서 보여줍니다.
     글의 내용·비용·연락처는 반드시 원문에서 확인하세요. 모든 글의 권리는 작성자에게 있습니다.<br>
@@ -491,15 +500,15 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
       : p.slot ? `<div class="unk"><b>${esc(p.slot)}</b><br>시각 미정</div>` : '<div class="unk">시간<br>미정</div>';
     const on = saved.has(p.key);
     const when = S.sort === 'new' && p.date ? `${dayLabel(p.date)} · ` : '';
-    const ics = p.date && p.start ? `<span>·</span><button class="ics" type="button" data-key="${esc(p.key)}">캘린더에 추가</button>` : '';
-    const rep = reported.has(p.key) ? '<span>· 신고됨</span>' : `<span>·</span><button class="rep" type="button" data-key="${esc(p.key)}" aria-expanded="false">정보가 틀렸나요?</button>`;
+    const ics = p.date && p.start ? `<button class="ics" type="button" data-key="${esc(p.key)}">캘린더에 추가</button>` : '';
+    const rep = reported.has(p.key) ? '<span>신고됨</span>' : `<button class="rep" type="button" data-key="${esc(p.key)}" aria-expanded="false">정보가 틀렸나요?</button>`;
     const seen = seenPosts.has(p.key) && !saved.has(p.key);
     const dupHtml = dup.length ? `<details class="dup"><summary>비슷한 글 ${dup.length}건 더</summary>${dup.map(q => `<a href="${esc(q.url)}" target="_blank" rel="noopener" class="title dupt" data-key="${esc(q.key)}">${esc(q.title)}</a><span class="dupm">${ago(q.posted)} · 조회 ${q.views ?? 0}</span>`).join('')}</details>` : '';
     return `<article class="card${p.closed ? ' closed' : ''}${seen ? ' seen' : ''}">
       <div class="time">${time}</div>
       <div class="body">
         <div class="tags">${tags.join('')}</div>
-        <a class="title" href="${esc(p.url)}" target="_blank" rel="noopener" data-key="${esc(p.key)}">${esc(p.title)}</a>
+        <a class="title" href="${esc(p.url)}" target="_blank" rel="noopener" data-key="${esc(p.key)}">${esc(p.title)}<span class="sr">(새 창)</span></a>
         <div class="sub"><span>${seen ? '<b class="seenmark">읽음</b> · ' : ''}${when}${ago(p.posted)} · 조회 ${p.views ?? 0}</span>${ics}${rep}</div>${dupHtml}
       </div>
       <button class="star" type="button" data-key="${esc(p.key)}" aria-pressed="${on}" aria-label="${on ? '저장 해제' : '저장'}">${on ? '★' : '☆'}</button>
@@ -598,15 +607,20 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     if (S.sort === 'new') html = groups.map(g => card(g.p, g.dup)).join('');
     else {
       let cur = null;
+      const dayN = {}; for (const g of groups) { const d = g.p.date || ''; dayN[d] = (dayN[d] || 0) + 1; }
       for (const g of groups) {
         const d = g.p.date || '';
-        if (d !== cur) { cur = d; html += `<h2 class="day"><b>${esc(dayLabel(g.p.date))}</b></h2>`; }
+        if (d !== cur) { html += (cur === null ? '' : '</section>') + `<section class="dayg"><h2 class="day"><b>${esc(dayLabel(g.p.date))}</b> <small>${dayN[d]}건</small></h2>`; cur = d; }
         html += card(g.p, g.dup);
       }
+      if (cur !== null) html += '</section>';
     }
     list.innerHTML = html + unkHtml;
     bindUnk();
   }
+  const toTop = $('toTop');
+  addEventListener('scroll', () => { toTop.hidden = scrollY < innerHeight * 1.5; }, { passive: true });
+  toTop.onclick = () => { scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); $('fToggle').focus({ preventScroll: true }); };
   function bindUnk() {
     const b = $('unkBtn'); if (!b) return;
     b.onclick = () => { S.showUnk = !S.showUnk; track('unknown_region', { open: S.showUnk ? 'y' : 'n' }); render(); if (S.showUnk) $('unkBtn').scrollIntoView({ block: 'start' }); };
