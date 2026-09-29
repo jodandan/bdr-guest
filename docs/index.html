@@ -117,7 +117,10 @@ button{font:inherit;color:inherit}
 .card.seen .title{color:var(--sub)}
 .card.seen .time{opacity:.55}
 .seenmark{font-weight:700;color:var(--sub)}
-.srcm{font-weight:700;color:var(--text)}
+.srcm{font-weight:700}
+.srcm::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:currentColor;margin-right:4px;vertical-align:1px}
+.srcm.nv{color:#157A34}.srcm.dm{color:#C8161B}
+@media (prefers-color-scheme:dark){.srcm.nv{color:#5FD38A}.srcm.dm{color:#FF7A6E}}
 .tag.soon{background:var(--accent-strong);color:#fff;border-color:#0E0E10}
 .dup{margin-top:6px;font-size:13px}
 .dup summary{cursor:pointer;color:var(--sub);font-weight:700;padding:4px 0;min-height:24px}
@@ -504,13 +507,13 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     const ics = p.date && p.start ? `<button class="ics" type="button" data-key="${esc(p.key)}">캘린더에 추가</button>` : '';
     const rep = reported.has(p.key) ? '<span>신고됨</span>' : `<button class="rep" type="button" data-key="${esc(p.key)}" aria-expanded="false">정보가 틀렸나요?</button>`;
     const seen = seenPosts.has(p.key) && !saved.has(p.key);
-    const dupHtml = dup.length ? `<details class="dup"><summary>비슷한 글 ${dup.length}건 더</summary>${dup.map(q => `<a href="${esc(q.url)}" target="_blank" rel="noopener" class="title dupt" data-key="${esc(q.key)}">${esc(q.title)}</a><span class="dupm">${srcName(q)} · ${ago(q.posted)} · 조회 ${q.views ?? 0}</span>`).join('')}</details>` : '';
+    const dupHtml = dup.length ? `<details class="dup"><summary>비슷한 글 ${dup.length}건 더</summary>${dup.map(q => `<a href="${esc(q.url)}" target="_blank" rel="noopener" class="title dupt" data-key="${esc(q.key)}">${esc(q.title)}</a><span class="dupm"><b class="srcm ${q.src === 'naver' ? 'nv' : 'dm'}">${srcName(q)}</b> · ${ago(q.posted)} · 조회 ${q.views ?? 0}</span>`).join('')}</details>` : '';
     return `<article class="card${p.closed ? ' closed' : ''}${seen ? ' seen' : ''}">
       <div class="time">${time}</div>
       <div class="body">
         <div class="tags">${tags.join('')}</div>
         <a class="title" href="${esc(p.url)}" target="_blank" rel="noopener" data-key="${esc(p.key)}">${esc(p.title)}<span class="sr">(새 창)</span></a>
-        <div class="sub"><span>${seen ? '<b class="seenmark">읽음</b> · ' : ''}<b class="srcm">${srcName(p)}</b> · ${when}${ago(p.posted)} · 조회 ${p.views ?? 0}</span>${ics}${rep}</div>${dupHtml}
+        <div class="sub"><span>${seen ? '<b class="seenmark">읽음</b> · ' : ''}<b class="srcm ${p.src === 'naver' ? 'nv' : 'dm'}">${srcName(p)}</b> · ${when}${ago(p.posted)} · 조회 ${p.views ?? 0}</span>${ics}${rep}</div>${dupHtml}
       </div>
       <button class="star" type="button" data-key="${esc(p.key)}" aria-pressed="${on}" aria-label="${on ? '저장 해제' : '저장'}">${on ? '★' : '☆'}</button>
     </article>`;
