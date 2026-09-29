@@ -2,6 +2,7 @@
 // 게스트 구인 · 픽업게임 · 연습경기. 본문·작성자·연락처는 수집하지 않음. Node 20+ (내장 fetch)
 import { readFile, writeFile } from 'node:fs/promises';
 import { parsePost, postedAt, kstYmd } from './parser.mjs';
+import { buildPages } from './pages.mjs';
 
 const GRPID = 'IGaj';           // dongarry 카페 내부 ID
 export const BOARDS = [
@@ -178,13 +179,15 @@ async function main() {
   });
 
   const added = dedup.filter(p => !prevKeys.has(p.key)).map(p => p.key);
-  await writeFile(OUT, JSON.stringify({
+  const out = {
     updated: new Date(now).toISOString(), today,
     boards: BOARDS.map(({ fld, key, name }) => ({ fld, key, name, url: `https://m.cafe.daum.net/dongarry/${fld}` })),
     sources: [{ key: 'daum', name: 'BDR 동아리농구방', url: 'https://m.cafe.daum.net/dongarry' }, { key: 'naver', name: NAVER.name, url: `https://m.cafe.naver.com/ca-fe/web/cafes/${NAVER.cafeId}/menus/${NAVER.menuId}` }],
     added, posts: dedup,
-  }));
-  console.log(log.join(' / '), `| saved=${dedup.length} added=${added.length}`);
+  };
+  await writeFile(OUT, JSON.stringify(out));
+  const pages = await buildPages(out);
+  console.log(log.join(' / '), `| saved=${dedup.length} added=${added.length} pages=${pages}`);
 }
 
 main().catch(e => { console.error(e.message); process.exit(1); });
