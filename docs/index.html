@@ -110,6 +110,7 @@ button{font:inherit;color:inherit}
 .card.seen .title{color:var(--sub)}
 .card.seen .time{opacity:.55}
 .seenmark{font-weight:700;color:var(--sub)}
+.tag.src{background:#7FD8A4;color:#0E0E10;border-color:#0E0E10}
 .tag.soon{background:var(--accent-strong);color:#fff;border-color:#0E0E10}
 .dup{margin-top:6px;font-size:13px}
 .dup summary{cursor:pointer;color:var(--sub);font-weight:700;padding:4px 0;min-height:24px}
@@ -209,7 +210,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
   </main>
 
   <footer>
-    이 사이트는 다음카페 <a href="https://m.cafe.daum.net/dongarry" target="_blank" rel="noopener">[BDR]동아리농구방</a>의 게스트 구인·픽업게임·연습경기 게시판에서 <b>공개된 글 제목</b>만 모아 보여주는 <b>비공식</b> 사이트입니다.
+    이 사이트는 다음카페 <a href="https://m.cafe.daum.net/dongarry" target="_blank" rel="noopener">[BDR]동아리농구방</a>의 게스트 구인·픽업게임·연습경기 게시판과 네이버 카페 <a href="https://cafe.naver.com/cornrow" target="_blank" rel="noopener">NSB 농심카페</a>의 수도권 게스트 게시판(운영진 허락)에서 <b>공개된 글 제목</b>만 모아 보여주는 <b>비공식</b> 사이트입니다. 작성자 정보는 모으지 않고, 제목 속 연락처는 가려서 보여줍니다.
     글의 내용·비용·연락처는 반드시 원문에서 확인하세요. 모든 글의 권리는 작성자에게 있습니다.<br>
     지역·날짜·시간은 제목을 자동 분석한 결과라 틀릴 수 있습니다.<br>
     서비스 개선을 위해 Google 애널리틱스로 익명 방문 통계(쿠키)를 수집합니다. 저장·기억 기능은 이 기기 브라우저에만 저장됩니다.<br>
@@ -482,6 +483,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     if (startsSoon(p)) tags.push('<span class="tag soon">곧 시작</span>');
     if (p.region1) tags.push(`<span class="tag">${esc(regionLabel(p))}</span>`);
     if (S.r1 === NEARBY && S.home && GEO[p.region2]) { const d = km(S.home, p.region2); tags.push(`<span class="tag g">${d < 2 ? '내 동네' : '약 ' + Math.round(d) + 'km'}</span>`); }
+    if (p.src === 'naver') tags.push('<span class="tag src">농심카페</span>');
     if (p.free) tags.push('<span class="tag g">무료</span>');
     if (p.closed) tags.push('<span class="tag x">마감</span>');
     const time = p.start
