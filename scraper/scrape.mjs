@@ -28,6 +28,8 @@ export function maskTitle(t) {
     .replace(/(?:\+?82[-.\s]?)?0?1[016789][-.\s]?\d{3,4}[-.\s]?\d{4}/g, '010-****-****')
     .replace(/((?:카톡|카카오톡|오픈채팅|오톡|kakao)\s*(?:아이디|id|ID)?\s*[:：]?\s*)[A-Za-z0-9_.\-]{3,}/gi, '$1****');
 }
+// 모집 글이 아닌 것 (대관 양도·중고 거래·분실물) — 목록에서 제외
+export const NON_RECRUIT = /양도|판매합니다|팝니다|삽니다|구매합니다|구해봅니다\s*\(중고\)|분실|습득/;
 // 한 게시판에 섞인 글을 제목으로 게시판 분류
 export function classify(title) {
   const t = title.replace(/\s+/g, '');
@@ -169,7 +171,7 @@ async function main() {
 
   // 같은 게시판에서 같은 제목 재게시는 최신 1건만
   const seen = new Set();
-  const dedup = posts.filter(p => {
+  const dedup = posts.filter(p => !NON_RECRUIT.test(p.title)).filter(p => {
     const k = p.board + p.title.replace(/\s+/g, '');
     if (seen.has(k)) return false;
     seen.add(k); return true;
