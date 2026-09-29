@@ -348,7 +348,8 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
 
   function renderTabs() {
     const counts = {};
-    DATA.filter(p => !isOver(p) && !p.closed).forEach(p => { counts[boardOf(p)] = (counts[boardOf(p)] || 0) + 1; });
+    // 탭 숫자 = 목록과 같은 기준(지난 일정·마감 제외, 비슷한 글은 1건)
+    for (const bd of BOARDS) counts[bd.key] = groupDupes(DATA.filter(p => boardOf(p) === bd.key && !isOver(p) && !p.closed)).length;
     $('tabs').replaceChildren(...BOARDS.map(b => {
       const t = document.createElement('button');
       t.className = 'tab'; t.type = 'button'; t.setAttribute('role', 'tab');
