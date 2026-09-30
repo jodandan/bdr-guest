@@ -2,7 +2,7 @@
 // docs/r/<광역>/index.html, docs/r/<광역>/<동네>/index.html, docs/sitemap.xml
 import { mkdir, writeFile, rm } from 'node:fs/promises';
 
-const SITE = 'https://bdrguest.kro.kr';
+const SITE = 'https://hoopguest.kro.kr';
 const DOCS = new URL('../docs/', import.meta.url);
 const GA_ID = 'G-0DWSLR5007';
 
@@ -39,7 +39,7 @@ function page({ path, title, desc, h1, intro, posts, today, updated, crumbs, lin
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(desc)}">
 <link rel="canonical" href="${url}">
-<meta property="og:type" content="website"><meta property="og:locale" content="ko_KR"><meta property="og:site_name" content="BDR 게스트 모아보기">
+<meta property="og:type" content="website"><meta property="og:locale" content="ko_KR"><meta property="og:site_name" content="훕게스트">
 <meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:url" content="${url}"><meta property="og:image" content="${SITE}/og.png">
 <meta name="theme-color" content="#E0201B"><link rel="icon" href="/ball.svg" type="image/svg+xml">
 <script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>
@@ -65,9 +65,9 @@ li .m{font-size:13px;color:var(--sub)}
 footer{font-size:13px;color:var(--sub);margin-top:28px;line-height:1.6}
 a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 </style>
-<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}if(location.hostname==='bdrguest.kro.kr'){const s=document.createElement('script');s.async=1;s.src='https://www.googletagmanager.com/gtag/js?id=${GA_ID}';document.head.appendChild(s);gtag('js',new Date());gtag('config','${GA_ID}')}</script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}if(location.hostname==='hoopguest.kro.kr'){const s=document.createElement('script');s.async=1;s.src='https://www.googletagmanager.com/gtag/js?id=${GA_ID}';document.head.appendChild(s);gtag('js',new Date());gtag('config','${GA_ID}')}</script>
 </head><body>
-<header><div class="w" style="padding-bottom:0"><a href="/">🏀 BDR 게스트 모아보기</a></div></header>
+<header><div class="w" style="padding-bottom:0"><a href="/">🏀 훕게스트</a></div></header>
 <main class="w">
 <nav class="bc" aria-label="위치">${crumbs.map(([n, u], i) => i === crumbs.length - 1 ? esc(n) : `<a href="${u}">${esc(n)}</a> › `).join('')}</nav>
 <h1>${esc(h1)}</h1>
@@ -92,7 +92,7 @@ export async function buildPages(data) {
     const byD = DISTRICTS[r1].map(([n, s]) => [`${n === '경기광주' ? '광주' : n} (${ps.filter(p => p.region2 === n).length})`, `/r/${s1}/${s}/`]);
     out.push([`/r/${s1}/`, page({
       path: `/r/${s1}/`, today, updated,
-      title: `${r1} 농구 게스트 모집 · 픽업게임 · 교류전 | BDR 게스트 모아보기`,
+      title: `${r1} 농구 게스트 모집 · 픽업게임 · 교류전 | 훕게스트`,
       desc: `${r1} 지역 농구 게스트 구인, 픽업게임, 연습경기·교류전 모집 글 ${ps.length}건을 날짜·시간순으로 모았어요. ${ymdK} 기준, 30분마다 갱신.`,
       h1: `${r1} 농구 게스트 · 픽업게임 · 교류전`,
       intro: `${r1} 지역에서 지금 올라온 농구 게스트 구함, 픽업게임, 연습경기 모집 글이에요. 제목을 누르면 카페 원문으로 이동해요.`,
@@ -109,7 +109,7 @@ export async function buildPages(data) {
       const nm = label(r1, n);
       out.push([`/r/${s1}/${s}/`, page({
         path: `/r/${s1}/${s}/`, today, updated,
-        title: `${nm} 농구 게스트 모집 · 픽업게임 · 교류전 | BDR 게스트 모아보기`,
+        title: `${nm} 농구 게스트 모집 · 픽업게임 · 교류전 | 훕게스트`,
         desc: `${nm} 농구 게스트 구함·픽업게임·교류전 모집 글을 날짜·시간순으로 모아봐요.${mine.length ? ` 지금 ${mine.length}건` : ''}${nearby.length ? `${mine.length ? ',' : ' 지금'} 근처 지역 ${nearby.length}건` : ''}. 30분마다 갱신.`,
         h1: `${nm} 농구 게스트 · 픽업게임`,
         intro: mine.length ? `${nm}에서 지금 모집 중인 농구 게스트·픽업게임·교류전 글 ${mine.length}건이에요.` : `${nm}에는 지금 모집 글이 없어요. 아래 근처 지역 글도 확인해 보세요.`,
