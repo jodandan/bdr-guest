@@ -1,15 +1,15 @@
-// BDR 게스트 모아보기 — 알림 서버 (Cloudflare Workers 무료 플랜)
+// 훕게스트(hoopguest) — 알림 서버 (Cloudflare Workers 무료 플랜)
 // - POST /subscribe, /unsubscribe : 웹 푸시 구독 저장/삭제 (알림 주소 + 조건만 저장)
 // - GET  /vapid                   : 푸시 공개키 (최초 요청 때 자동 생성해 KV에 보관)
 // - cron(10분마다)                : 사이트 data.json의 새 글 확인 → 조건 맞는 구독자에게 푸시
 //                                   + 매시 0·30분엔 GitHub 수집 워크플로 실행 요청
 // 바인딩: KV "SUBS" / 시크릿: GH_TOKEN(선택, 워크플로 실행 권한)
-const SITE = 'https://bdrguest.kro.kr';
+const SITE = 'https://hoopguest.kro.kr';
 const REPO = 'jodandan/bdr-guest';
 const WORKFLOW = 'scrape.yml';
 // 사이트 HTTPS 인증서 발급 전·장애 시에도 읽히도록 저장소 원본을 직접 읽는다
 const DATA_URL = `https://raw.githubusercontent.com/${REPO}/main/docs/data.json`;
-const ORIGINS = [SITE, 'http://bdrguest.kro.kr', 'http://localhost:8766'];
+const ORIGINS = [SITE, 'https://bdrguest.kro.kr', 'http://hoopguest.kro.kr', 'http://bdrguest.kro.kr', 'http://localhost:8766'];
 
 const b64u = buf => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 const enc = s => new TextEncoder().encode(s);
