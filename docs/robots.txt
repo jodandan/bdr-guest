@@ -1,3 +1,5 @@
 User-agent: *
 Allow: /
 Sitemap: https://bdrguest.kro.kr/sitemap.xml
+
+#DaumWebMasterTool:1f8c64071db5ba309720a4a634f194daa0022c23cebd7e17a1c4865d85690d30:WiejS/EdbXg9VKmepY6BWg==
