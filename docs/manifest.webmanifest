@@ -1,6 +1,6 @@
 {
-  "name": "BDR 게스트 모아보기",
-  "short_name": "BDR 게스트",
+  "name": "훕게스트 — 농구 게스트 모아보기",
+  "short_name": "훕게스트",
   "description": "농구 게스트·픽업게임·연습경기 글을 지역·날짜·시간대로 모아보기",
   "start_url": "/",
   "scope": "/",
