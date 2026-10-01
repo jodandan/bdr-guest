@@ -138,7 +138,9 @@ export function parseDate(title, posted) {
     return dt;
   };
   let m, span = null, dt = null;
-  if ((m = t.match(/(?:20\d{2}\s*[년.\-/]\s*)?(?<![\d/.:])(\d{1,2})\s*월\s*(\d{1,2})(?![\d:])\s*일?/)) && +m[1] <= 12) { dt = fix(+m[1], +m[2]); span = m[0]; }
+  // '26.10.01' / '2026.10.01' / '26-10-01' 처럼 연도가 붙은 숫자 날짜
+  if ((m = t.match(/(?<![\d:])(?:20)?(\d{2})\s*[.\-/]\s*(\d{1,2})\s*[.\-/]\s*(\d{1,2})(?![\d:])/)) && +m[2] >= 1 && +m[2] <= 12 && Math.abs(2000 + +m[1] - py) <= 1) { dt = mk(2000 + +m[1], +m[2], +m[3]); span = m[0]; }
+  else if ((m = t.match(/(?:20\d{2}\s*[년.\-/]\s*)?(?<![\d/.:])(\d{1,2})\s*월\s*(\d{1,2})(?![\d:])\s*일?/)) && +m[1] <= 12) { dt = fix(+m[1], +m[2]); span = m[0]; }
   else if ((m = t.match(/(?<![\d:])(\d{1,2})\s*[/.]\s*(\d{1,2})(?![\d:])\s*\.?\s*일?/))) { dt = fix(+m[1], +m[2]); span = m[0]; }
   else if ((m = t.match(/(?<![\d:])(\d{1,2})\s*-\s*(\d{1,2})\s*일/))) { dt = fix(+m[1], +m[2]); span = m[0]; }
   else if ((m = t.match(/(?<![\d:~\-])(\d{1,2})\s*일(?!\s*[~\-])/))) {
@@ -163,6 +165,12 @@ export function parseDate(title, posted) {
       const alt = [mo - 1, mo + 1].map(x => x < 1 ? mk(y - 1, 12, d) : x > 12 ? mk(y + 1, 1, d) : mk(y, x, d))
         .filter(x => x.getUTCDate() === d && x.getUTCDay() === want && (x - posted) / 864e5 >= -3 && (x - posted) / 864e5 <= 45);
       if (alt.length) dt = alt[0];
+      else {
+        // 앞뒤 달에도 없으면 ±2일 안에서 요일이 맞고 게시일 이후인 날 (예: 10/1 게시 '10월1일(토)' → 10/3)
+        const near = [1, -1, 2, -2].map(k => new Date(+dt + k * 864e5))
+          .filter(x => x.getUTCDay() === want && x - posted >= 0);
+        if (near.length) dt = near[0];
+      }
     }
   }
   return { date: dt ? ymd(dt) : null, span };
@@ -238,7 +246,7 @@ export function parsePost(title, headCont, postedYmd) {
     region1, region2, date, weekday: wd, start, end,
     // 시각이 없으면 '오전/오후/저녁' 같은 말로 시간대만 추정
     slot: slotOf(startMin) ?? (/오전|아침|새벽/.test(n) ? '오전' : /저녁|밤|야간/.test(n) ? '저녁' : /오후|낮/.test(n) ? '오후' : null),
-    closed: /마감|모집\s*완료|\[완료|종료/.test(n),
+    closed: /마감(?!\s*(임박|직전|예정|전))|완료(?!\s*(후|되면))|종료/.test(n),
     free: /무료/.test(n),
   };
 }
