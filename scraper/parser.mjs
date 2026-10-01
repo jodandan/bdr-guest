@@ -242,6 +242,24 @@ export function slotOf(startMin) {
   return '저녁';
 }
 
+// 제목 속 조건 → 태그 (필터용). 제목에 적힌 것만 뽑음
+const TAGS = [
+  ['즐농', /즐농|즐겜|즐겁게|친목/],
+  ['여성 환영', /여성|여자|남\s*[.·,/&]\s*여|남녀|혼성/],
+  ['초보 환영', /초보|입문|하하|하\s*~\s*하|하\s*~\s*중|실력\s*무관|누구나/],
+  ['실력자', /빡겜|빡농|선출|실력자|상급자|중상\s*이상/],
+  ['포지션 구함', /(?<!전\s*)(가드|빅맨|포워드|앞선|뒷선)|[1-5]\s*번\s*(포지션|or|,)/],
+  ['늦참 가능', /늦참|조퇴/],
+  ['주차', /주차\s*(O|ㅇ|가능|무료|있|지원)/i],
+  ['샤워', /샤워\s*(O|ㅇ|가능|있)/i],
+];
+export function parseTags(n) {
+  const out = TAGS.filter(([, re]) => re.test(n)).map(([k]) => k);
+  const age = [...n.matchAll(/([2-6])0\s*대/g)].map(m => +m[1]);
+  if (age.length) out.push(`${Math.min(...age)}0대${age.length > 1 || /이상|↑|\+|부터/.test(n) ? '+' : ''}`);
+  return out;
+}
+
 export function parsePost(title, headCont, postedYmd) {
   const n = normalize(title);
   const [y, m, d] = postedYmd.split('-').map(Number);
@@ -257,6 +275,7 @@ export function parsePost(title, headCont, postedYmd) {
     slot: amb ? null : slotOf(startMin) ?? (/오전|아침|새벽/.test(n) ? '오전' : /저녁|밤|야간/.test(n) ? '저녁' : /오후|낮/.test(n) ? '오후' : null),
     closed: /마감(?!\s*(임박|직전|예정|전))|완료(?!\s*(후|되면))|종료/.test(n),
     free: /무료/.test(n),
+    ...(() => { const t = parseTags(n); return t.length ? { tags: t } : {}; })(),
   };
 }
 
