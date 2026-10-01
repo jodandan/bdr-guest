@@ -60,7 +60,7 @@ export function matches(f, p) {
   if (f.boards?.length && !f.boards.includes(p.board || 'guest')) return false;
   if (f.regions?.length) { if (!f.regions.includes(p.region2 || '기타')) return false; }
   else if (f.r1 && f.r1 !== '전체' && (p.region1 || '기타') !== f.r1) return false;
-  if (f.slots?.length && !f.slots.includes(p.slot)) return false;
+  if (f.slots?.length && !f.slots.includes(p.slot) && !(p.amb && (f.slots.includes('오전') || f.slots.includes('저녁')))) return false;
   if (f.week && f.week !== '전체') {
     if (!p.date) return false;
     const w = new Date(p.date + 'T00:00:00Z').getUTCDay();
