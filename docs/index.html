@@ -145,6 +145,7 @@ button{font:inherit;color:inherit}
 .time .s{font:400 22px/1.15 var(--f-display);letter-spacing:-.01em}
 .time .e{font-size:12px;color:var(--sub)}
 .time .unk{font:400 15px/1.3 var(--f-head);color:var(--muted)}
+.time .amb{margin-top:4px;font:700 11px/1.2 var(--f-body);color:var(--accent)}
 .body{flex:1;min-width:0}
 .tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:5px;align-items:center}
 .tag{font-size:12px;padding:1px 7px 2px;background:var(--yellow);color:#0E0E10;border:1.5px solid #0E0E10;font-weight:700}
@@ -442,7 +443,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     }
     if (st.date !== '전체' && p.date !== st.date) return false;
     if (st.week !== '전체') { if (!p.date) return false; const w = wdOf(p.date); if ((st.week === '주말') !== (w === 0 || w === 6)) return false; }
-    if (st.slot.size && !st.slot.has(p.slot)) return false;
+    if (st.slot.size && !st.slot.has(p.slot) && !(p.amb && (st.slot.has('오전') || st.slot.has('저녁')))) return false; // 오전/저녁 미표기 글은 둘 다에 포함
     if (q && !p.title.replace(/\s+/g, '').toLowerCase().includes(q)) return false;
     return true;
   }
@@ -506,7 +507,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
   const seenPosts = new Set(store.get('bdr.seen', []));
   function markSeen(k) { seenPosts.add(k); store.set('bdr.seen', [...seenPosts].slice(-800)); }
   function startsSoon(p) {
-    if (p.closed || !p.date || !p.start || p.date !== TODAY) return false;
+    if (p.closed || p.amb || !p.date || !p.start || p.date !== TODAY) return false;
     const k = new Date(Date.now() + 9 * 3600e3), now = k.getUTCHours() * 60 + k.getUTCMinutes();
     const d = toMin(p.start) - now;
     return d > 0 && d <= 180;
@@ -522,7 +523,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     if (p.free) tags.push('<span class="tag g">무료</span>');
     if (p.closed) tags.push('<span class="tag x">마감</span>');
     const time = p.start
-      ? `<div class="s">${esc(p.start)}</div><div class="e">${p.end ? '~' + esc(p.end) : ''}</div>`
+      ? `<div class="s">${esc(p.start)}</div><div class="e">${p.end ? '~' + esc(p.end) : ''}</div>${p.amb ? '<div class="amb" title="제목에 오전·오후 표시가 없어요. 원문을 확인하세요">오전? 저녁?</div>' : ''}`
       : p.slot ? `<div class="unk"><b>${esc(p.slot)}</b><br>시각 미정</div>` : '<div class="unk">시간<br>미정</div>';
     const on = saved.has(p.key);
     const when = S.sort === 'new' && p.date ? `${dayLabel(p.date)} · ` : '';

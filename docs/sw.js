@@ -1,6 +1,6 @@
 // 앱 껍데기는 캐시 우선, 목록 데이터는 네트워크 우선 (오프라인이면 마지막 목록)
 // + 웹 푸시: 서버는 '새 글 있음' 신호만 보내고, 알림 내용은 여기서 목록을 읽어 만든다
-const CACHE = 'bdr-v5';
+const CACHE = 'bdr-v6';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png', '/ball.svg'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL))); self.skipWaiting(); });
 self.addEventListener('activate', e => {
@@ -27,7 +27,7 @@ function matches(f, p) {
   if (f.boards && f.boards.length && !f.boards.includes(p.board || 'guest')) return false;
   if (f.regions && f.regions.length) { if (!f.regions.includes(p.region2 || '기타')) return false; }
   else if (f.r1 && f.r1 !== '전체' && (p.region1 || '기타') !== f.r1) return false;
-  if (f.slots && f.slots.length && !f.slots.includes(p.slot)) return false;
+  if (f.slots && f.slots.length && !f.slots.includes(p.slot) && !(p.amb && (f.slots.includes('오전') || f.slots.includes('저녁')))) return false;
   if (f.week && f.week !== '전체') {
     if (!p.date) return false;
     const w = new Date(p.date + 'T00:00:00Z').getUTCDay();
