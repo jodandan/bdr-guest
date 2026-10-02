@@ -131,7 +131,7 @@ button{font:inherit;color:inherit}
 .compact .tags{margin-bottom:2px}
 .compact .title{font-size:14px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .compact .sub{margin-top:2px}
-.compact .ics,.compact .rep,.compact .dup{display:none}
+.compact .ics,.compact .rep,.compact .shr,.compact .dup{display:none}
 .compact .star{min-width:30px;min-height:30px;font-size:19px}
 .nowbtn{display:flex;align-items:center;gap:10px;width:100%;margin-top:8px;min-height:44px;padding:9px 12px;border:2px solid var(--line);background:var(--card);color:var(--text);font-size:15px;font-weight:700;text-align:left;cursor:pointer;box-shadow:3px 3px 0 var(--line)}
 .nowbtn small{margin-left:auto;font-size:13px;font-weight:500;color:var(--sub)}
@@ -175,6 +175,8 @@ button{font:inherit;color:inherit}
 .title{font-size:15px;font-weight:500;line-height:1.45;padding:2px 0;word-break:keep-all;overflow-wrap:anywhere;text-decoration:none;display:block}
 .title:hover{text-decoration:underline;text-decoration-thickness:2px;text-decoration-color:var(--accent)}
 .sub{font-size:13px;color:var(--sub);margin-top:6px;display:flex;gap:2px 12px;align-items:center;flex-wrap:wrap}
+.shr{background:none;border:0;padding:6px 0;margin:-6px 0;color:var(--accent);font-size:13px;font-weight:700;text-decoration:underline;cursor:pointer}
+.shr:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .rep,.ics{background:none;border:0;padding:6px 0;margin:-6px 0;color:var(--sub);font-size:13px;text-decoration:underline;cursor:pointer}
 .repbox{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .repbox .chip{font-size:13px;padding:4px 10px;min-height:32px}
@@ -579,6 +581,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
       : p.slot ? `<div class="unk"><b>${esc(p.slot)}</b><br>시각 미정</div>` : '<div class="unk">시간<br>미정</div>';
     const on = saved.has(p.key);
     const when = S.sort === 'new' && p.date ? `${dayLabel(p.date)} · ` : '';
+    const shr = `<button class="shr" type="button" data-key="${esc(p.key)}">같이 갈 사람에게 공유</button>`;
     const ics = p.date && p.start ? `<button class="ics" type="button" data-key="${esc(p.key)}">캘린더에 추가</button>` : '';
     const rep = reported.has(p.key) ? '<span>신고됨</span>' : `<button class="rep" type="button" data-key="${esc(p.key)}" aria-expanded="false">정보가 틀렸나요?</button>`;
     const seen = seenPosts.has(p.key) && !saved.has(p.key);
@@ -588,7 +591,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
       <div class="body">
         <div class="tags">${tags.join('')}</div>
         <a class="title" href="${esc(p.url)}" target="_blank" rel="noopener" data-key="${esc(p.key)}">${esc(unent(p.title))}<span class="sr">(새 창)</span></a>
-        <div class="sub"><span>${seen ? '<b class="seenmark">읽음</b> · ' : ''}<b class="srcm ${p.src === 'naver' ? 'nv' : 'dm'}">${srcName(p)}</b> · ${when}${ago(p.posted)} · 조회 ${p.views ?? 0}</span>${ics}${rep}</div>${dupHtml}
+        <div class="sub"><span>${seen ? '<b class="seenmark">읽음</b> · ' : ''}<b class="srcm ${p.src === 'naver' ? 'nv' : 'dm'}">${srcName(p)}</b> · ${when}${ago(p.posted)} · 조회 ${p.views ?? 0}</span>${p.closed ? '' : shr}${ics}${rep}</div>${dupHtml}
       </div>
       <button class="star" type="button" data-key="${esc(p.key)}" aria-pressed="${on}" aria-label="${on ? '저장 해제' : '저장'}">${on ? '★' : '☆'}</button>
     </article>`;
@@ -742,6 +745,18 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
   }
 
   const byKey = k => DATA.find(x => x.key === k) || {};
+  // 글 하나를 공유: 미리보기가 붙는 /p/<키>/ 페이지 링크를 보냄
+  async function sharePost(p) {
+    if (!p.key) return;
+    const url = `${location.origin}/p/${p.key.replace(/[^A-Za-z0-9]/g, '-')}/`;
+    const when = [p.date ? dayLabel(p.date).replace(' · ', ' ') : '', p.start || ''].filter(Boolean).join(' ');
+    const text = `🏀 ${when} ${p.region1 ? regionLabel(p) : ''} 농구 같이 갈래?`.replace(/\s+/g, ' ');
+    track('share_post', { post_id: p.key, method: navigator.share ? 'share_sheet' : 'copy' });
+    try { if (navigator.share) { await navigator.share({ title: '훕게스트', text, url }); return; } }
+    catch (e) { if (e && e.name === 'AbortError') return; }
+    try { await navigator.clipboard.writeText(`${text}\n${url}`); toast('링크를 복사했어요. 카톡에 붙여 넣어 보내세요'); return; } catch {}
+    toast('공유하지 못했어요. 잠시 후 다시 눌러 주세요');
+  }
   $('list').addEventListener('click', e => {
     const rep = e.target.closest('.rep');
     if (rep) {
@@ -760,6 +775,8 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
       reported.add(f.dataset.key); store.set('bdr.reported', [...reported].slice(-200));
       toast('알려주셔서 고마워요'); render(); return;
     }
+    const sh = e.target.closest('.shr');
+    if (sh) { sharePost(byKey(sh.dataset.key)); return; }
     const ic = e.target.closest('.ics');
     if (ic) { downloadIcs(byKey(ic.dataset.key)); return; }
     const a = e.target.closest('a.title');
