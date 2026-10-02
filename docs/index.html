@@ -98,6 +98,7 @@ button{font:inherit;color:inherit}
 .search{flex:1;min-width:0;border:2px solid var(--line);background:var(--card);border-radius:0;padding:9px 12px;font-size:16px;color:var(--text)}
 .count{font-size:14px;font-weight:700;color:var(--text);padding:14px 0 4px;display:flex;justify-content:space-between;align-items:center;gap:8px}
 .cr{display:flex;align-items:center;gap:4px}
+.cr .linkbtn{min-height:36px;padding:0 4px}
 .ibtn{position:relative;display:inline-grid;place-items:center;width:36px;height:36px;border:2px solid var(--line);background:var(--card);color:var(--text);cursor:pointer;padding:0}
 .ibtn[aria-pressed="true"]{background:var(--yellow);color:#111}
 .ibtn .dot{position:absolute;top:-4px;right:-4px;width:10px;height:10px;border-radius:50%;background:var(--accent-strong);border:2px solid var(--bg)}
@@ -548,15 +549,19 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
   }
   const seenPosts = new Set(store.get('bdr.seen', []));
   function markSeen(k) { seenPosts.add(k); store.set('bdr.seen', [...seenPosts].slice(-800)); }
+  // 시작까지 남은 분 (날짜까지 따져서 자정 넘김도 계산)
+  function minsToStart(p) {
+    const [y, m, d] = p.date.split('-').map(Number);
+    return Math.round((Date.UTC(y, m - 1, d, 0, toMin(p.start)) - 9 * 3600e3 - Date.now()) / 60000);
+  }
   function startsSoon(p) {
-    if (p.closed || p.amb || !p.date || !p.start || p.date !== TODAY) return false;
-    const k = new Date(Date.now() + 9 * 3600e3), now = k.getUTCHours() * 60 + k.getUTCMinutes();
-    const d = toMin(p.start) - now;
+    if (p.closed || p.amb || !p.date || !p.start) return false;
+    const d = minsToStart(p);
     return d > 0 && d <= 180;
   }
 
   function soonLabel(p) {
-    const k = new Date(Date.now() + 9 * 3600e3), d = toMin(p.start) - (k.getUTCHours() * 60 + k.getUTCMinutes());
+    const d = minsToStart(p);
     return d < 60 ? `${d}분 뒤 시작` : `${Math.floor(d / 60)}시간${d % 60 ? ` ${d % 60}분` : ''} 뒤 시작`;
   }
   const srcName = p => p.src === 'naver' ? '네이버 농심' : '다음 BDR';
@@ -833,7 +838,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
   $('btnShare').onclick = async () => {
     const url = location.origin + location.pathname + (stateQuery() ? `?${stateQuery()}` : '');
     const bn = (BOARDS.find(b => b.key === S.board) || {}).name;
-    const parts = [bn, S.r1 !== '전체' && (S.r1 === NEARBY ? `${shortR2(S.home) || ''} ${S.radius}km 이내` : S.r1), S.r2.size && [...S.r2].join('·'), S.date !== '전체' && dayLabel(S.date), S.week !== '전체' && S.week, S.slot.size && [...S.slot].join('·'), S.tags.size && [...S.tags].join('·')].filter(Boolean);
+    const parts = [bn, S.r1 !== '전체' && (S.r1 === NEARBY ? `${shortR2(S.home) || ''} ${S.radius}km 이내` : S.r1), S.r2.size && [...S.r2].join('·'), S.date !== '전체' && dayLabel(S.date), S.week !== '전체' && S.week, S.slot.size && [...S.slot].join('·'), S.tags.size && [...S.tags].join('·'), S.soon && '3시간 안에 시작'].filter(Boolean);
     const text = `훕게스트 — ${parts.join(' ')}`;
     track('share', { method: navigator.share ? 'share_sheet' : 'copy', filters: stateQuery() || '-' });
     try { if (navigator.share) { await navigator.share({ title: text, url }); return; } }
