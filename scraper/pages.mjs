@@ -82,6 +82,69 @@ ${list}
 </main></body></html>`;
 }
 
+
+// 글 하나 공유용 페이지 /p/<키>/ — 카톡 등에 링크를 보내면 미리보기에 일시·동네가 보이게
+export const postSlug = key => String(key).replace(/[^A-Za-z0-9]/g, '-');
+function postPage(p, today) {
+  const path = `/p/${postSlug(p.key)}/`, url = `${SITE}${path}`;
+  const t = unent(p.title);
+  const abs = ymd => { const [y, m, d] = ymd.split('-').map(Number); return `${m}/${d} (${WEEK[new Date(Date.UTC(y, m - 1, d)).getUTCDay()]})`; }; // 공유 미리보기는 '오늘·내일' 대신 날짜로
+  const when = [p.date ? abs(p.date) : '날짜는 원문 확인', p.start ? `${p.start}${p.end ? '~' + p.end : ''}` : ''].filter(Boolean).join(' ');
+  const place = where(p) || '지역은 원문 확인';
+  const kind = BOARD_NAME[p.board] || '게스트';
+  const src = p.src === 'naver' ? '네이버 농심카페' : '다음 BDR 동아리농구방';
+  const ogTitle = `🏀 ${when} · ${place} ${kind} 모집`;
+  const desc = `${t} — ${src} 글이에요. 훕게스트에서 수도권 농구 게스트·픽업게임·교류전 모집 글을 한눈에 모아봐요.`;
+  const q = new URLSearchParams();
+  if (p.region1) q.set('r', p.region1);
+  if (p.region2) q.set('r2', p.region2);
+  if (p.date && p.date >= today) q.set('d', p.date);
+  if (p.board && p.board !== 'guest') q.set('b', p.board);
+  const more = `/?${q}`;
+  return `<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${esc(ogTitle)} | 훕게스트</title>
+<meta name="description" content="${esc(desc)}"><meta name="robots" content="noindex,follow">
+<link rel="canonical" href="${url}">
+<meta property="og:type" content="website"><meta property="og:locale" content="ko_KR"><meta property="og:site_name" content="훕게스트">
+<meta property="og:title" content="${esc(ogTitle)}"><meta property="og:description" content="${esc(t)}"><meta property="og:url" content="${url}"><meta property="og:image" content="${SITE}/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#E0201B"><link rel="icon" href="/ball.svg" type="image/svg+xml">
+<style>
+:root{--bg:#FFFDF6;--text:#0E0E10;--sub:#4E4E55;--line:#0E0E10;--card:#fff}
+@media (prefers-color-scheme:dark){:root{--bg:#121214;--text:#F4F1E8;--sub:#B4B0A8;--line:#F4F1E8;--card:#1C1C20}}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 "Noto Sans KR",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif}
+.w{max-width:560px;margin:0 auto;padding:0 16px 40px}
+header{background:#E0201B;color:#fff;padding:16px 0;border-bottom:3px solid #0E0E10}
+header a{color:#fff;font-weight:700;text-decoration:none}
+.c{margin:20px 0 14px;background:var(--card);border:3px solid var(--line);box-shadow:5px 5px 0 var(--line);padding:16px}
+.when{font-size:22px;font-weight:800;line-height:1.3}
+.where{display:inline-block;margin:8px 0 10px;background:#FFE14D;color:#0E0E10;font-weight:700;font-size:14px;padding:2px 8px;border:2px solid #0E0E10}
+.t{font-size:16px;word-break:keep-all;overflow-wrap:anywhere;margin:0 0 6px}
+.m{font-size:13px;color:var(--sub)}
+.x{margin:0 0 10px;padding:6px 10px;border:2px dashed var(--line);font-weight:700}
+.b{display:block;text-align:center;font-weight:700;padding:13px 16px;border:3px solid var(--line);text-decoration:none;margin:10px 0}
+.b1{background:#C8161B;color:#fff;box-shadow:4px 4px 0 var(--line)}
+.b2{background:var(--card);color:var(--text)}
+p.f{font-size:13px;color:var(--sub);margin-top:22px;line-height:1.6}
+a:focus-visible{outline:3px solid #E0201B;outline-offset:2px}
+</style>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}if(location.hostname==='hoopguest.kro.kr'){const s=document.createElement('script');s.async=1;s.src='https://www.googletagmanager.com/gtag/js?id=${GA_ID}';document.head.appendChild(s);gtag('js',new Date());gtag('config','${GA_ID}');gtag('event','shared_post_view',{post_id:'${esc(p.key)}'})}</script>
+</head><body>
+<header><div class="w" style="padding-bottom:0"><a href="/">🏀 훕게스트</a></div></header>
+<main class="w">
+<div class="c">
+${p.closed ? '<p class="x">마감됐다고 표시된 글이에요. 아래에서 다른 글을 찾아보세요.</p>' : ''}<div class="when">${esc(when)}</div>
+<span class="where">${esc(place)} · ${esc(kind)}</span>
+<p class="t">${esc(t)}</p>
+<div class="m">${esc(src)} 글 · 비용·장소·연락처는 원문에서 확인하세요</div>
+</div>
+<a class="b b1" href="${esc(p.url)}" rel="nofollow noopener">카페 원문 보고 신청하기 →</a>
+<a class="b b2" href="${esc(more)}">${esc(p.region2 ? place : '수도권')} 다른 모집 글 더 보기</a>
+<p class="f">훕게스트는 다음카페 [BDR]동아리농구방과 네이버 NSB 농심카페(운영진 허락)의 농구 게스트·픽업게임·교류전 모집 글 제목을 모아 30분마다 갱신하는 비공식 사이트예요. 지역·날짜·시간대로 골라 보고, 새 글 알림도 받을 수 있어요.</p>
+</main></body></html>`;
+}
+
 export async function buildPages(data) {
   const today = data.today, updated = data.updated;
   const live = data.posts.filter(p => !p.closed && (p.date ? p.date >= today : (Date.parse(updated) - Date.parse(p.posted)) / 864e5 <= 2))
@@ -124,6 +187,14 @@ export async function buildPages(data) {
     }
   }
   await rm(new URL('r/', DOCS), { recursive: true, force: true });
+  // 글별 공유 페이지 (검색 노출 안 함, 사이트맵 제외)
+  await rm(new URL('p/', DOCS), { recursive: true, force: true });
+  for (const p of data.posts) {
+    if (!p.key) continue;
+    const dir = new URL(`p/${postSlug(p.key)}/`, DOCS);
+    await mkdir(dir, { recursive: true });
+    await writeFile(new URL('index.html', dir), postPage(p, today));
+  }
   for (const [path, html] of out) {
     const dir = new URL('.' + path, DOCS);
     await mkdir(dir, { recursive: true });
