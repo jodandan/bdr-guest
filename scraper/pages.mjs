@@ -17,7 +17,10 @@ const BOARD_NAME = { guest: '게스트', pickup: '픽업게임', match: '연습�
 const WEEK = ['일', '월', '화', '수', '목', '금', '토'];
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const km = (a, b) => { const R = 6371, t = x => x * Math.PI / 180; const h = Math.sin(t(b[2] - a[2]) / 2) ** 2 + Math.cos(t(a[2])) * Math.cos(t(b[2])) * Math.sin(t(b[3] - a[3]) / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); };
+// a, b = [광역, 동네, 슬러그, 위도, 경도]
+const km = (a, b) => { const R = 6371, t = x => x * Math.PI / 180; const h = Math.sin(t(b[3] - a[3]) / 2) ** 2 + Math.cos(t(a[3])) * Math.cos(t(b[3])) * Math.sin(t(b[4] - a[4]) / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); };
+const unent = s => String(s ?? '').replace(/&(amp|lt|gt|quot|#34|#39);/g, (_, k) => ({ amp: '&', lt: '<', gt: '>', quot: '"', '#34': '"', '#39': "'" }[k]));
+const where = p => p.region2 ? label(p.region1, p.region2) : (p.region1 || '');
 const label = (r1, d) => d === '경기광주' ? '경기 광주' : `${r1} ${d}`;
 function dayLabel(ymd, today) {
   if (!ymd) return '날짜 미정';
@@ -26,14 +29,14 @@ function dayLabel(ymd, today) {
   return `${ymd === today ? '오늘 · ' : ymd === t ? '내일 · ' : ''}${m}/${d} (${w})`;
 }
 
-function page({ path, title, desc, h1, intro, posts, today, updated, crumbs, links, cta }) {
+function page({ path, title, desc, h1, intro, posts, today, updated, crumbs, links, cta, home }) {
   const url = `${SITE}${path}`;
   const groups = new Map();
   for (const p of posts) { const k = p.date || ''; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(p); }
-  const list = posts.length ? [...groups].map(([d, ps]) => `<h2>${esc(dayLabel(d, today))} <small>${ps.length}건</small></h2><ul>${ps.map(p => `<li><span class="t">${esc(p.start || p.slot || '시간 미정')}</span><a href="${esc(p.url)}" rel="nofollow noopener" target="_blank">${esc(p.title)}</a><span class="m">${p.src === 'naver' ? '네이버 농심카페' : '다음 BDR 동아리농구방'} · ${BOARD_NAME[p.board] || '게스트'}</span></li>`).join('')}</ul>`).join('')
+  const list = posts.length ? [...groups].map(([d, ps]) => `<h2>${esc(dayLabel(d, today))} <small>${ps.length}건</small></h2><ul>${ps.map(p => `<li><span class="t">${esc(p.start || p.slot || '시간 미정')}</span><a href="${esc(p.url)}" rel="nofollow noopener" target="_blank">${esc(unent(p.title))}</a><span class="m">${home && p.region2 !== home ? `<b class="near">근처 ${esc(where(p))}</b> · ` : ''}${p.src === 'naver' ? '네이버 농심카페' : '다음 BDR 동아리농구방'} · ${BOARD_NAME[p.board] || '게스트'}</span></li>`).join('')}</ul>`).join('')
     : '<p class="empty">지금은 모집 글이 없어요. 가까운 지역이나 전체 목록을 확인해 보세요.</p>';
   const ld = [{ '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: crumbs.map(([n, u], i) => ({ '@type': 'ListItem', position: i + 1, name: n, item: SITE + u })) },
-    { '@context': 'https://schema.org', '@type': 'ItemList', name: h1, numberOfItems: posts.length, itemListElement: posts.slice(0, 30).map((p, i) => ({ '@type': 'ListItem', position: i + 1, name: p.title, url: p.url })) }];
+    { '@context': 'https://schema.org', '@type': 'ItemList', name: h1, numberOfItems: posts.length, itemListElement: posts.slice(0, 30).map((p, i) => ({ '@type': 'ListItem', position: i + 1, name: unent(p.title), url: p.url })) }];
   return `<!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)}</title>
@@ -59,7 +62,7 @@ ul{list-style:none;margin:0;padding:0}
 li{background:var(--card);border:2px solid var(--line);padding:10px 12px;margin-bottom:8px;display:grid;grid-template-columns:auto 1fr;gap:2px 12px}
 li .t{font-weight:700;grid-row:span 2;min-width:44px}
 li a{color:var(--text);text-decoration:none;word-break:keep-all;overflow-wrap:anywhere} li a:hover{text-decoration:underline}
-li .m{font-size:13px;color:var(--sub)}
+li .m{font-size:13px;color:var(--sub)} li .near{color:var(--text)}
 .empty{padding:20px;border:2px dashed var(--line);background:var(--card)}
 .links{margin-top:28px} .links h2{font-size:15px} .links a{display:inline-block;margin:4px 10px 4px 0;color:var(--text)}
 footer{font-size:13px;color:var(--sub);margin-top:28px;line-height:1.6}
@@ -112,11 +115,11 @@ export async function buildPages(data) {
         title: `${nm} 농구 게스트 모집 · 픽업게임 · 교류전 | 훕게스트`,
         desc: `${nm} 농구 게스트 구함·픽업게임·교류전 모집 글을 날짜·시간순으로 모아봐요.${mine.length ? ` 지금 ${mine.length}건` : ''}${nearby.length ? `${mine.length ? ',' : ' 지금'} 근처 지역 ${nearby.length}건` : ''}. 30분마다 갱신.`,
         h1: `${nm} 농구 게스트 · 픽업게임`,
-        intro: mine.length ? `${nm}에서 지금 모집 중인 농구 게스트·픽업게임·교류전 글 ${mine.length}건이에요.` : `${nm}에는 지금 모집 글이 없어요. 아래 근처 지역 글도 확인해 보세요.`,
+        intro: mine.length >= 3 ? `${nm}에서 지금 모집 중인 농구 게스트·픽업게임·교류전 글 ${mine.length}건이에요.` : mine.length ? `${nm} 글 ${mine.length}건과 가까운 지역 글을 함께 보여 드려요.` : `${nm}에는 지금 모집 글이 없어요. 가까운 지역 글을 대신 보여 드려요.`,
         posts: mine.length >= 3 ? mine : [...mine, ...nearby].slice(0, 40),
         crumbs: [['홈', '/'], [r1, `/r/${s1}/`], [nm, `/r/${s1}/${s}/`]],
         links: [['가까운 지역', near.map(([d]) => [label(d[0], d[1]), `/r/${R1[d[0]]}/${d[2]}/`])], ['광역 지역', r1Links]],
-        cta: `/?r=${encodeURIComponent('내 근처')}&h=${encodeURIComponent(n)}&km=10`,
+        cta: `/?r=${encodeURIComponent('내 근처')}&h=${encodeURIComponent(n)}&km=10`, home: n,
       })]);
     }
   }

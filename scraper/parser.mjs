@@ -214,7 +214,7 @@ export function parseTime(title, dateSpan, wdNum = null) {
       explicit = !!(p1 || p2);
       s = toMin(p1, h1, c1 || n1 || (b1 ? 30 : 0));
       e = toMin(p2 || (p1 && PM.test(p1) ? p1 : null), h2, c2 || n2 || (b2 ? 30 : 0));
-      if (s != null && !p1 && +h1 >= 1 && +h1 <= 6) s += 720; // 1~6시 단독 → 오후
+      if (s != null && !p1 && +h1 >= 1 && +h1 <= 6 && !/^0/.test(h1)) s += 720; // 1~6시 단독 → 오후 ('06:00'처럼 0을 붙여 쓴 건 24시간제로 보고 그대로)
       if (s != null && e != null && e <= s) {
         if (+h2 > 0 && +h2 < 12 && e + 720 > s) e += 720; // 12시간제 끝시각
         else e = (e % 720) + 1440; // 자정 넘김
@@ -224,7 +224,7 @@ export function parseTime(title, dateSpan, wdNum = null) {
   if (!m && (m = t.match(one))) {
     const [, p1, h1, c1, n1, b1] = m;
     s = toMin(p1, h1, c1 || n1 || (b1 ? 30 : 0));
-    if (s != null && !p1 && +h1 >= 1 && +h1 <= 6) s += 720;
+    if (s != null && !p1 && +h1 >= 1 && +h1 <= 6 && !/^0/.test(h1)) s += 720;
   }
   if (s == null) return { start: null, end: null };
   // 평일인데 오전/오후 표시 없이 '7시~10시'처럼만 쓴 글은 오전인지 저녁인지 알 수 없음
