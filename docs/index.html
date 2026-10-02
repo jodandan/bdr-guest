@@ -132,6 +132,11 @@ button{font:inherit;color:inherit}
 .compact .sub{margin-top:2px}
 .compact .ics,.compact .rep,.compact .dup{display:none}
 .compact .star{min-width:30px;min-height:30px;font-size:19px}
+.nowbtn{display:flex;align-items:center;gap:10px;width:100%;margin-top:8px;min-height:44px;padding:9px 12px;border:2px solid var(--line);background:var(--card);color:var(--text);font-size:15px;font-weight:700;text-align:left;cursor:pointer;box-shadow:3px 3px 0 var(--line)}
+.nowbtn small{margin-left:auto;font-size:13px;font-weight:500;color:var(--sub)}
+.nowbtn[aria-pressed="true"]{background:var(--accent-strong);color:#fff}
+.nowbtn[aria-pressed="true"] small{color:#fff}
+.nowbtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .tag.soon{background:var(--accent-strong);color:#fff;border-color:#0E0E10}
 .dup{margin-top:6px;font-size:13px}
 .dup summary{cursor:pointer;color:var(--sub);font-weight:700;padding:4px 0;min-height:24px}
@@ -219,6 +224,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     <div class="tools" role="search">
       <input id="q" class="search" type="search" placeholder="체육관·팀명·동네 검색" aria-label="제목 검색">
     </div>
+    <button class="nowbtn" id="btnNow" type="button" aria-pressed="false"><span>⚡ 지금 갈 수 있는 곳</span><small id="nowInfo"></small></button>
     <button class="fsum" id="fToggle" type="button" aria-expanded="true" aria-controls="fpanel">
       <span class="fsum-k">필터</span><span class="fsum-v" id="fsumText">조건 없음</span><span class="fsum-c" aria-hidden="true">▾</span>
     </button>
@@ -296,7 +302,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
   let DATA = [], TODAY = '', BOARDS = DEFAULT_BOARDS;
   const fav = store.get('bdr.fav', null); // {r1, r2:[]}
   const U = new URLSearchParams(location.search);
-  const fromUrl = ['r', 'r2', 'd', 't', 'q', 'w', 'h', 'km', 'g'].some(k => U.get(k));
+  const fromUrl = ['r', 'r2', 'd', 't', 'q', 'w', 'h', 'km', 'g', 'n'].some(k => U.get(k));
   const list = k => (U.get(k) || '').split(',').filter(Boolean);
   const S = {
     board: U.get('b') || 'guest',
@@ -316,6 +322,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     showUnk: false,
     tags: new Set(list('g')),
     map: false,
+    soon: U.get('n') === '1',
     mapPick: null,
     favNote: null,
   };
@@ -448,6 +455,8 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     const tkeys = Object.keys(tcnt).sort((a, b) => tcnt[b] - tcnt[a]);
     $('rowTag').hidden = !tkeys.length;
     fillRow($('rowTag'), [chip('전체', !S.tags.size, () => { S.tags.clear(); render(); }, 'all')].concat(tkeys.map(t => chip(`${t} ${tcnt[t]}`, S.tags.has(t), () => { S.tags.has(t) ? S.tags.delete(t) : S.tags.add(t); track('tag_filter', { tag: t }); render(); }))));
+    $('btnNow').setAttribute('aria-pressed', String(S.soon));
+    { const k = countWith({ soon: true }); $('nowInfo').textContent = S.soon ? '켜짐 · 3시간 안에 시작' : `3시간 안에 시작 ${k}건`; }
     $('tgClosed').setAttribute('aria-pressed', S.hideClosed);
     $('tgSaved').setAttribute('aria-pressed', S.savedOnly);
     $('tgCompact').setAttribute('aria-pressed', S.compact);
@@ -470,6 +479,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     if (st.date !== '전체' && p.date !== st.date) return false;
     if (st.week !== '전체') { if (!p.date) return false; const w = wdOf(p.date); if ((st.week === '주말') !== (w === 0 || w === 6)) return false; }
     if (st.slot.size && !st.slot.has(p.slot) && !(p.amb && (st.slot.has('오전') || st.slot.has('저녁')))) return false; // 오전/저녁 미표기 글은 둘 다에 포함
+    if (st.soon && !startsSoon(p)) return false;
     if (st.tags && st.tags.size) { for (const t of st.tags) if (!(p.tags || []).includes(t)) return false; }
     if (q && !(unent(p.title) + (p.region1 || '') + (p.region2 || '')).replace(/\s+/g, '').toLowerCase().includes(q)) return false;
     return true;
@@ -498,6 +508,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     const cp = o => ({ ...S, r2: new Set(S.r2), slot: new Set(S.slot), ...o });
     const cand = [];
     if (S.r1 === NEARBY && S.home) for (const r of RADII) if (r > S.radius) cand.push([`${r}km로 넓히기`, cp({ radius: r }), () => { S.radius = r; store.set('bdr.radius', r); }]);
+    if (S.soon) cand.push(['시작 시간 제한 풀기', cp({ soon: false }), () => { S.soon = false; }]);
     if (S.tags.size) cand.push(['조건 태그 풀기', cp({ tags: new Set() }), () => S.tags.clear()]);
     if (S.slot.size) cand.push(['시간 전체로', cp({ slot: new Set() }), () => S.slot.clear()]);
     if (S.date !== '전체') cand.push(['날짜 전체로', cp({ date: '전체' }), () => { S.date = '전체'; }]);
@@ -544,11 +555,15 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     return d > 0 && d <= 180;
   }
 
+  function soonLabel(p) {
+    const k = new Date(Date.now() + 9 * 3600e3), d = toMin(p.start) - (k.getUTCHours() * 60 + k.getUTCMinutes());
+    return d < 60 ? `${d}분 뒤 시작` : `${Math.floor(d / 60)}시간${d % 60 ? ` ${d % 60}분` : ''} 뒤 시작`;
+  }
   const srcName = p => p.src === 'naver' ? '네이버 농심' : '다음 BDR';
   function card(p, dup = []) {
     const tags = [];
     if (isNew(p)) tags.push('<span class="newwrap"><span class="tag new">NEW!</span></span>');
-    if (startsSoon(p)) tags.push('<span class="tag soon">곧 시작</span>');
+    if (startsSoon(p)) tags.push(`<span class="tag soon">${soonLabel(p)}</span>`);
     if (p.region1) tags.push(`<span class="tag">${esc(regionLabel(p))}</span>`);
     if (S.r1 === NEARBY && S.home && GEO[p.region2]) { const d = km(S.home, p.region2); tags.push(`<span class="tag g">${d < 2 ? '내 동네' : '약 ' + Math.round(d) + 'km'}</span>`); }
     if (p.free && !(p.tags || []).includes('무료')) tags.push('<span class="tag g">무료</span>');
@@ -587,6 +602,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     if (S.sort === 'new') q.set('s', 'new');
     if (S.src !== '전체') q.set('src', S.src);
     if (S.tags.size) q.set('g', [...S.tags].join(','));
+    if (S.soon) q.set('n', '1');
     return q.toString();
   }
   function syncUrl() {
@@ -613,6 +629,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     if (S.date !== '전체') parts.push(dayLabel(S.date).replace(' · ', ' '));
     if (S.week !== '전체') parts.push(S.week);
     if (S.slot.size) parts.push([...S.slot].join('·'));
+    if (S.soon) parts.push('3시간 안에 시작');
     if (S.tags.size) parts.push([...S.tags].join('·'));
     if (S.savedOnly) parts.push('저장한 글');
     if (S.src !== '전체') parts.push(S.src === 'naver' ? '네이버만' : '다음만');
@@ -695,7 +712,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
   }
 
   function reset() {
-    S.r1 = '전체'; S.r2.clear(); S.date = '전체'; S.week = '전체'; S.slot.clear(); S.tags.clear(); S.q = ''; S.savedOnly = false; S.src = '전체'; $('q').value = '';
+    S.r1 = '전체'; S.r2.clear(); S.date = '전체'; S.week = '전체'; S.slot.clear(); S.tags.clear(); S.soon = false; S.q = ''; S.savedOnly = false; S.src = '전체'; $('q').value = '';
     render();
   }
 
@@ -753,6 +770,13 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
   $('q').addEventListener('input', e => { S.q = e.target.value; render(); });
   $('tgClosed').onclick = () => { S.hideClosed = !S.hideClosed; store.set('bdr.hideClosed', S.hideClosed); render(); };
   $('tgSaved').onclick = () => { S.savedOnly = !S.savedOnly; render(); };
+  $('btnNow').onclick = () => {
+    S.soon = !S.soon; if (S.soon) { S.date = '전체'; S.week = '전체'; S.slot.clear(); }
+    track('now_toggle', { on: S.soon ? 'y' : 'n', region: S.r1 });
+    render();
+    if (S.soon && S.r1 === '전체') toast('📍 내 근처를 고르면 가까운 곳만 볼 수 있어요');
+  };
+  setInterval(() => { if (S.soon && !document.hidden) render(); }, 60000); // 남은 시간 갱신
   // 지도 보기 — 동네별 글 수를 동그라미로. Leaflet(cdnjs) + OpenStreetMap 타일, 처음 열 때만 불러옴
   let LMAP = null, LLAYER = null, leafletP = null;
   function loadLeaflet() {
