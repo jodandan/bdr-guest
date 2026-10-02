@@ -155,6 +155,9 @@ button{font:inherit;color:inherit}
 #map{height:min(55vh,420px);width:100%}
 .mapnote{margin:0;padding:6px 10px;font-size:13px;color:var(--sub)}
 .mpin{display:grid;place-items:center;border-radius:50%;background:#E0201B;color:#fff;font:700 13px/1 var(--f-body);border:2px solid #0E0E10;box-shadow:2px 2px 0 #0E0E10}
+.favnote{margin:0 0 10px;padding:8px 12px;border:2px solid var(--line);border-radius:10px;background:var(--card);color:var(--text);font-size:13px;line-height:1.5}
+.linkbtn{margin-left:6px;padding:0;border:0;background:none;font-weight:700;color:var(--accent);text-decoration:underline;cursor:pointer}
+.linkbtn.x{float:right;margin-left:10px;text-decoration:none;color:var(--sub)}
 .mpin.on{background:#FFE14D;color:#0E0E10}
 .leaflet-container{font-family:inherit}
 .tag.x{background:var(--ink);color:var(--on-ink);border-color:var(--ink)}
@@ -239,6 +242,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
   <div class="count"><span id="count" aria-live="polite"></span>
     <span class="cr"><button class="linkbtn" id="reset" type="button">필터 초기화</button><button class="linkbtn" id="sort" type="button" aria-label="정렬 바꾸기">일정순 ⇅</button><button class="ibtn" id="btnMap" type="button" aria-label="지도로 보기" title="지도로 보기" aria-pressed="false"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg></button><button class="ibtn" id="btnShare" type="button" aria-label="이 조건 링크 공유" title="이 조건 링크 공유"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button><button class="ibtn" id="btnPush" type="button" aria-label="새 글 알림" title="새 글 알림" aria-expanded="false" hidden><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 21h4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/></svg><i class="dot" hidden></i></button></span>
   </div>
+  <p class="favnote" id="favNote" role="status" hidden></p>
   <section class="mapbox" id="mapBox" hidden aria-label="지역별 글 지도"><div id="map"></div><p class="mapnote" id="mapNote"></p></section>
   <main id="list" aria-busy="true" tabindex="-1" aria-label="모집 글 목록">
     <div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div>
@@ -312,7 +316,11 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     showUnk: false,
     tags: new Set(list('g')),
     map: false,
+    mapPick: null,
+    favNote: null,
   };
+  // 지난번 고른 지역을 불러왔으면 알려 주기
+  if (!fromUrl && S.r1 !== '전체') S.favNote = { r1: S.r1, r2: [...S.r2].join() };
   const toKey = v => typeof v === 'number' ? `Dilr:${v}` : v; // 구버전(숫자 id) 호환
   const saved = new Set(store.get('bdr.saved', []).map(toKey));
   const reported = new Set(store.get('bdr.reported', []).map(toKey));
@@ -487,6 +495,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     const cp = o => ({ ...S, r2: new Set(S.r2), slot: new Set(S.slot), ...o });
     const cand = [];
     if (S.r1 === NEARBY && S.home) for (const r of RADII) if (r > S.radius) cand.push([`${r}km로 넓히기`, cp({ radius: r }), () => { S.radius = r; store.set('bdr.radius', r); }]);
+    if (S.tags.size) cand.push(['조건 태그 풀기', cp({ tags: new Set() }), () => S.tags.clear()]);
     if (S.slot.size) cand.push(['시간 전체로', cp({ slot: new Set() }), () => S.slot.clear()]);
     if (S.date !== '전체') cand.push(['날짜 전체로', cp({ date: '전체' }), () => { S.date = '전체'; }]);
     if (S.week !== '전체') cand.push(['요일 전체로', cp({ week: '전체' }), () => { S.week = '전체'; }]);
@@ -539,7 +548,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     if (startsSoon(p)) tags.push('<span class="tag soon">곧 시작</span>');
     if (p.region1) tags.push(`<span class="tag">${esc(regionLabel(p))}</span>`);
     if (S.r1 === NEARBY && S.home && GEO[p.region2]) { const d = km(S.home, p.region2); tags.push(`<span class="tag g">${d < 2 ? '내 동네' : '약 ' + Math.round(d) + 'km'}</span>`); }
-    if (p.free) tags.push('<span class="tag g">무료</span>');
+    if (p.free && !(p.tags || []).includes('무료')) tags.push('<span class="tag g">무료</span>');
     for (const t of p.tags || []) tags.push(`<span class="tag c">${esc(t)}</span>`);
     if (p.closed) tags.push('<span class="tag x">마감</span>');
     const time = p.start
@@ -630,7 +639,11 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
 
   function render() {
     syncUrl();
-    store.set('bdr.fav', { r1: S.r1, r2: [...S.r2] }); // 마지막에 고른 지역을 자동 기억
+    // 마지막에 고른 지역을 자동 기억 — 단, 지도 동그라미로 잠깐 고른 지역은 기억하지 않음
+    if (S.mapPick && !(S.r2.size === 1 && S.r2.has(S.mapPick))) S.mapPick = null;
+    if (!S.mapPick) store.set('bdr.fav', { r1: S.r1, r2: [...S.r2] });
+    if (S.favNote && (S.r1 !== S.favNote.r1 || [...S.r2].join() !== S.favNote.r2)) S.favNote = null;
+    renderFavNote();
     renderTabs();
     renderFilters();
     if (!$('pushBox').hidden) renderPush();
@@ -746,6 +759,15 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
       const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'; s.onload = ok; s.onerror = er; document.head.appendChild(s);
     });
   }
+  function renderFavNote() {
+    const el = $('favNote'); if (!el) return;
+    if (!S.favNote) { el.hidden = true; return; }
+    const name = S.r1 === NEARBY ? '내 근처' : S.r2.size ? [...S.r2].map(shortR2).join('·') : S.r1;
+    el.hidden = false;
+    el.innerHTML = `지난번에 고른 <b>${esc(name)}</b> 지역으로 보고 있어요. <button class="linkbtn" id="favAll" type="button">전체 지역 보기</button><button class="linkbtn x" id="favX" type="button" aria-label="알림 닫기">✕</button>`;
+    $('favAll').onclick = () => { S.r1 = '전체'; S.r2.clear(); track('fav_note_all'); render(); };
+    $('favX').onclick = () => { S.favNote = null; el.hidden = true; };
+  }
   async function renderMap() {
     try { await loadLeaflet(); } catch { $('mapNote').textContent = '지도를 불러오지 못했어요. 잠시 후 다시 눌러 주세요.'; leafletP = null; return; }
     if (!LMAP) {
@@ -765,10 +787,11 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
       const icon = L.divIcon({ className: '', html: `<div class="mpin${on ? ' on' : ''}" style="width:${sz}px;height:${sz}px">${n}</div>`, iconSize: [sz, sz], iconAnchor: [sz / 2, sz / 2] });
       const m = L.marker(GEO[r2], { icon, title: `${shortR2(r2)} ${n}건`, alt: `${shortR2(r2)} ${n}건`, keyboard: true }).addTo(LLAYER);
       m.bindTooltip(`${r1} ${shortR2(r2)} · ${n}건`);
-      m.on('click', () => { S.r1 = r1; S.r2 = new Set([r2]); track('map_pick', { region2: r2 }); render(); $('list').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+      m.on('click', () => { S.r1 = r1; S.r2 = new Set([r2]); S.mapPick = r2; track('map_pick', { region2: r2 }); render(); $('list').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
       pts.push(GEO[r2]);
     }
-    $('mapNote').textContent = `동그라미를 누르면 그 동네 글만 보여요.${none ? ` 동네를 알 수 없는 글 ${none}건은 지도에 없어요.` : ''}`;
+    $('mapNote').innerHTML = `동그라미를 누르면 그 동네 글만 보여요.${none ? ` 동네를 알 수 없는 글 ${none}건은 지도에 없어요.` : ''}${S.r1 !== '전체' ? ' <button class="linkbtn" id="mapAll" type="button">지역 선택 풀기</button>' : ''}`;
+    if ($('mapAll')) $('mapAll').onclick = () => { S.r1 = '전체'; S.r2.clear(); track('map_all'); render(); };
     if (pts.length && !renderMap.fitted) { LMAP.fitBounds(pts, { padding: [30, 30], maxZoom: 11 }); renderMap.fitted = true; }
     setTimeout(() => LMAP.invalidateSize(), 60);
   }
