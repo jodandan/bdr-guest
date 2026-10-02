@@ -327,7 +327,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
   const track = (name, params = {}) => { try { window.gtag && gtag('event', name, params); } catch {} };
 
   function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove('on'), 1600); }
-  const unent = s => String(s ?? '').replace(/&(amp|lt|gt|quot|#39);/g, (_, k) => ({ amp: '&', lt: '<', gt: '>', quot: '"', '#39': "'" }[k])); // 카페 제목의 HTML 엔티티 복원
+  const unent = s => String(s ?? '').replace(/&(amp|lt|gt|quot|#34|#39);/g, (_, k) => ({ amp: '&', lt: '<', gt: '>', quot: '"', '#34': '"', '#39': "'" }[k])); // 카페 제목의 HTML 엔티티 복원
   function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
   function addDays(ymd, n) { const [y, m, d] = ymd.split('-').map(Number); return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10); }
   function wdOf(ymd) { const [y, m, d] = ymd.split('-').map(Number); return new Date(Date.UTC(y, m - 1, d)).getUTCDay(); }
@@ -419,9 +419,8 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
       sel.onchange = () => { S.home = sel.value; store.set('bdr.home', S.home); track('nearby_home', { home: S.home || '-' }); render(); };
       const items = [sel];
       if (S.home) {
-        const live = pool.filter(p => p.region2 && GEO[p.region2] && !(S.hideClosed && p.closed));
         for (const r of RADII) {
-          const n = live.filter(p => km(S.home, p.region2) <= r).length;
+          const n = countWith({ radius: r });
           items.push(chip(`${r}km ${n}`, S.radius === r, () => { S.radius = r; store.set('bdr.radius', r); track('nearby_radius', { km: r }); render(); }, 'sm'));
         }
       }
@@ -429,7 +428,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
       rowR2.hidden = false;
     } else if (S.r1 !== '전체') {
       const cnt = {};
-      pool.filter(p => (p.region1 || '기타') === S.r1 && !(S.hideClosed && p.closed)).forEach(p => { const k = p.region2 || '기타'; cnt[k] = (cnt[k] || 0) + 1; });
+      uniq(pool.filter(p => passes(p, { ...S, r2: new Set() }))).forEach(p => { const k = p.region2 || '기타'; cnt[k] = (cnt[k] || 0) + 1; });
       const keys = Object.keys(cnt).sort((a, b) => (a === '기타') - (b === '기타') || cnt[b] - cnt[a]);
       [...S.r2].forEach(k => { if (!(k in cnt)) { keys.push(k); cnt[k] = 0; } });
       fillRow(rowR2, keys.map(k => chip(`${shortR2(k)} ${cnt[k]}`, S.r2.has(k), () => { S.r2.has(k) ? S.r2.delete(k) : S.r2.add(k); render(); }, 'sm')));
@@ -443,8 +442,9 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     fillRow($('rowSlot'), [chip('전체', !S.slot.size, () => { S.slot.clear(); render(); }, 'all')].concat(['오전', '오후', '저녁'].map(s => chip(s === '오전' ? '오전(~12시)' : s === '오후' ? '오후(12~18시)' : '저녁(18시~)', S.slot.has(s), () => { S.slot.has(s) ? S.slot.delete(s) : S.slot.add(s); render(); }))));
 
     const tcnt = {};
-    groupDupes(sortRows(pool.filter(p => !(S.hideClosed && p.closed)))).forEach(({ p }) => (p.tags || []).forEach(t => { tcnt[t] = (tcnt[t] || 0) + 1; }));
-    [...S.tags].forEach(t => { if (!(t in tcnt)) tcnt[t] = 0; });
+    const allTags = new Set(S.tags); pool.forEach(p => (p.tags || []).forEach(t => allTags.add(t)));
+    allTags.forEach(t => { tcnt[t] = countWith({ tags: new Set([...S.tags, t]) }); });
+    Object.keys(tcnt).forEach(t => { if (!tcnt[t] && !S.tags.has(t)) delete tcnt[t]; });
     const tkeys = Object.keys(tcnt).sort((a, b) => tcnt[b] - tcnt[a]);
     $('rowTag').hidden = !tkeys.length;
     fillRow($('rowTag'), [chip('전체', !S.tags.size, () => { S.tags.clear(); render(); }, 'all')].concat(tkeys.map(t => chip(`${t} ${tcnt[t]}`, S.tags.has(t), () => { S.tags.has(t) ? S.tags.delete(t) : S.tags.add(t); track('tag_filter', { tag: t }); render(); }))));
@@ -471,7 +471,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     if (st.week !== '전체') { if (!p.date) return false; const w = wdOf(p.date); if ((st.week === '주말') !== (w === 0 || w === 6)) return false; }
     if (st.slot.size && !st.slot.has(p.slot) && !(p.amb && (st.slot.has('오전') || st.slot.has('저녁')))) return false; // 오전/저녁 미표기 글은 둘 다에 포함
     if (st.tags && st.tags.size) { for (const t of st.tags) if (!(p.tags || []).includes(t)) return false; }
-    if (q && !p.title.replace(/\s+/g, '').toLowerCase().includes(q)) return false;
+    if (q && !(unent(p.title) + (p.region1 || '') + (p.region2 || '')).replace(/\s+/g, '').toLowerCase().includes(q)) return false;
     return true;
   }
   function sortRows(rows) {
@@ -479,6 +479,9 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     return rows.sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999') || (a.start || '99').localeCompare(b.start || '99') || b.id - a.id);
   }
   function filtered() { return sortRows(base().filter(p => passes(p, S))); }
+  // 재게시 묶음을 1건으로 센 목록 (칩 숫자를 목록 건수와 맞추기 위해)
+  const uniq = rows => groupDupes(sortRows(rows)).map(g => g.p);
+  const countWith = o => uniq(base().filter(p => passes(p, { ...S, ...o }))).length;
   // 지역을 골랐을 때, 제목에 동네가 없어 빠진 글 (다른 조건은 만족)
   function unknownRegion() {
     if (S.r1 === '전체') return [];
@@ -507,7 +510,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     if (S.hideClosed) cand.push(['마감 글도 보기', cp({ hideClosed: false }), () => { S.hideClosed = false; store.set('bdr.hideClosed', false); }]);
     const out = []; const seenN = new Set();
     for (const [label, st, apply] of cand) {
-      const n = base().filter(p => passes(p, st)).length;
+      const n = uniq(base().filter(p => passes(p, st))).length;
       if (n > 0) { out.push({ label, n, apply }); if (out.length >= 3) break; }
       if (S.r1 === NEARBY && label.endsWith('km로 넓히기') && n > 0) break; // 반경은 가장 가까운 것 하나만
     }
@@ -709,7 +712,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
       'BEGIN:VALARM', 'TRIGGER:-PT2H', 'ACTION:DISPLAY', 'DESCRIPTION:농구 일정 2시간 전', 'END:VALARM',
       'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
     const url = URL.createObjectURL(new Blob([ics], { type: 'text/calendar;charset=utf-8' }));
-    const a = document.createElement('a'); a.href = url; a.download = `bdr-${p.date}-${p.start.replace(":", "")}.ics`;
+    const a = document.createElement('a'); a.href = url; a.download = `hoopguest-${p.date}-${p.start.replace(":", "")}.ics`;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 5000);
     track('add_calendar', { post_id: p.key, board: boardOf(p) });
@@ -806,8 +809,8 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
   $('btnShare').onclick = async () => {
     const url = location.origin + location.pathname + (stateQuery() ? `?${stateQuery()}` : '');
     const bn = (BOARDS.find(b => b.key === S.board) || {}).name;
-    const parts = [bn, S.r1 !== '전체' && (S.r1 === NEARBY ? `${shortR2(S.home) || ''} ${S.radius}km 이내` : S.r1), S.r2.size && [...S.r2].join('·'), S.date !== '전체' && dayLabel(S.date), S.week !== '전체' && S.week, S.slot.size && [...S.slot].join('·')].filter(Boolean);
-    const text = `농구 게스트 모아보기 — ${parts.join(' ')}`;
+    const parts = [bn, S.r1 !== '전체' && (S.r1 === NEARBY ? `${shortR2(S.home) || ''} ${S.radius}km 이내` : S.r1), S.r2.size && [...S.r2].join('·'), S.date !== '전체' && dayLabel(S.date), S.week !== '전체' && S.week, S.slot.size && [...S.slot].join('·'), S.tags.size && [...S.tags].join('·')].filter(Boolean);
+    const text = `훕게스트 — ${parts.join(' ')}`;
     track('share', { method: navigator.share ? 'share_sheet' : 'copy', filters: stateQuery() || '-' });
     try { if (navigator.share) { await navigator.share({ title: text, url }); return; } }
     catch (e) { if (e && e.name === 'AbortError') return; }

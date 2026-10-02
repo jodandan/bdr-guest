@@ -1,6 +1,6 @@
 // 앱 껍데기는 캐시 우선, 목록 데이터는 네트워크 우선 (오프라인이면 마지막 목록)
 // + 웹 푸시: 서버는 '새 글 있음' 신호만 보내고, 알림 내용은 여기서 목록을 읽어 만든다
-const CACHE = 'bdr-v6';
+const CACHE = 'bdr-v7';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png', '/ball.svg'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL))); self.skipWaiting(); });
 self.addEventListener('activate', e => {
@@ -51,7 +51,8 @@ self.addEventListener('push', e => {
     await setState({ ...st, notified: [...notified].slice(-500) });
     const label = st.label || '관심 조건';
     const title = hits.length ? `🏀 새 글 ${hits.length}건 · ${label}` : `🏀 ${label}에 새 글이 올라왔어요`;
-    const body = hits.length ? hits.slice(0, 3).map(p => (p.start ? `${p.start} ` : '') + p.title).join('\n') : '눌러서 목록을 확인하세요';
+    const unent = t => String(t).replace(/&(amp|lt|gt|quot|#34|#39);/g, (m, k) => ({ amp: '&', lt: '<', gt: '>', quot: '"', '#34': '"', '#39': "'" })[k]);
+    const body = hits.length ? hits.slice(0, 3).map(p => (p.start ? `${p.start} ` : '') + unent(p.title)).join('\n') : '눌러서 목록을 확인하세요';
     await self.registration.showNotification(title, {
       body, tag: 'bdr-new', renotify: true, icon: '/icon-192.png', badge: '/icon-192.png',
       data: { url: hits.length === 1 ? hits[0].url : '/' + (st.query ? '?' + st.query + '&s=new' : '?s=new') },
