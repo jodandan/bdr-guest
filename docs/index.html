@@ -203,6 +203,11 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
 @media (prefers-reduced-motion:reduce){.skel{animation:none}.tab[aria-selected="true"],.day,.brand .label{transform:none}}
 @media (min-width:720px){.brand h1{font-size:34px}.brand img{width:54px;height:54px}.hero .wrap::before{left:calc(16px + 27px - 1200px);top:calc(26px + 34px - 1200px)}}
 @media (max-width:639px){.card{padding:12px 8px 12px 10px;gap:10px;margin-bottom:12px}.time{width:62px;padding-right:6px}.time .s{font-size:20px}.day{margin:16px 0 10px}.cacts{gap:2px 12px}.tabs{margin-top:12px}.count{padding-top:10px}}
+.nav{background:none;border:0;padding:6px 0;margin:-6px 0;color:var(--accent);font-size:13px;font-weight:700;text-decoration:underline;cursor:pointer}
+.nav:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.cacts{column-gap:8px}
+.navbox{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px;font-size:13px}
+.navbox .chip{font-size:13px;padding:4px 10px;min-height:32px;text-decoration:none;color:var(--text)}
 </style>
 <script>
   window.GA_ID = 'G-0DWSLR5007'; // GA4 측정 ID
@@ -271,7 +276,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     글의 내용·비용·연락처는 반드시 원문에서 확인하세요. 모든 글의 권리는 작성자에게 있습니다.<br>
     지역·날짜·시간은 제목을 자동 분석한 결과라 틀릴 수 있습니다.<br>
     서비스 개선을 위해 Google 애널리틱스로 익명 방문 통계(쿠키)를 수집합니다. 저장·기억 기능은 이 기기 브라우저에만 저장됩니다.<br>
-    게시글 제외 요청: <a href="https://github.com/jodandan/bdr-guest/issues" target="_blank" rel="noopener">문의하기</a>
+    <span id="mapPref" hidden></span>게시글 제외 요청: <a href="https://github.com/jodandan/bdr-guest/issues" target="_blank" rel="noopener">문의하기</a>
   </footer>
 </div>
 <div class="toast" id="toast" role="status"></div>
@@ -588,8 +593,10 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
       : p.slot ? `<div class="unk"><b>${esc(p.slot)}</b><br>시각 미정</div>` : '<div class="unk">시간<br>미정</div>';
     const on = saved.has(p.key);
     const when = S.sort === 'new' && p.date ? `${dayLabel(p.date)} · ` : '';
-    const shr = `<button class="shr" type="button" data-key="${esc(p.key)}" aria-label="같이 갈 사람에게 공유">공유하기</button>`;
+    const shr = `<button class="shr" type="button" data-key="${esc(p.key)}" aria-label="같이 갈 사람에게 공유">공유</button>`;
     const ics = p.date && p.start ? `<button class="ics" type="button" data-key="${esc(p.key)}" aria-label="캘린더에 추가">캘린더</button>` : '';
+    const place = placeOf(unent(p.title), p.region2), app = mapApp();
+    const nav = !place ? '' : app ? `<a class="nav" href="${esc(mapUrl(app, place))}" target="_blank" rel="noopener" data-key="${esc(p.key)}" data-app="${app}" aria-label="${esc(place)} 길찾기 (${MAPS[app]})">길찾기</a>` : `<button class="nav" type="button" data-key="${esc(p.key)}" aria-expanded="false" aria-label="${esc(place)} 길찾기">길찾기</button>`;
     const rep = reported.has(p.key) ? '<span>신고됨</span>' : `<button class="rep" type="button" data-key="${esc(p.key)}" aria-expanded="false" aria-label="정보가 틀렸나요? 알려주기">정보 오류</button>`;
     const seen = seenPosts.has(p.key) && !saved.has(p.key);
     const dupHtml = dup.length ? `<details class="dup"><summary>비슷한 글 ${dup.length}건 더</summary>${dup.map(q => `<a href="${esc(q.url)}" target="_blank" rel="noopener" class="title dupt" data-key="${esc(q.key)}">${esc(unent(q.title))}</a><span class="dupm"><b class="srcm ${q.src === 'naver' ? 'nv' : 'dm'}">${srcName(q)}</b> · ${ago(q.posted)} · 조회 ${q.views ?? 0}</span>`).join('')}</details>` : '';
@@ -598,10 +605,42 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
       <div class="body">
         <div class="tags">${tags.join('')}</div>
         <a class="title" href="${esc(p.url)}" target="_blank" rel="noopener" data-key="${esc(p.key)}">${esc(unent(p.title))}<span class="sr">(새 창)</span></a>
-        <div class="sub"><span>${seen ? '<b class="seenmark">읽음</b> · ' : ''}<b class="srcm ${p.src === 'naver' ? 'nv' : 'dm'}">${srcName(p)}</b> · ${when}${ago(p.posted)} · 조회 ${p.views ?? 0}</span></div><div class="cacts">${p.closed ? '' : shr}${ics}${rep}</div>${dupHtml}
+        <div class="sub"><span>${seen ? '<b class="seenmark">읽음</b> · ' : ''}<b class="srcm ${p.src === 'naver' ? 'nv' : 'dm'}">${srcName(p)}</b> · ${when}${ago(p.posted)} · 조회 ${p.views ?? 0}</span></div><div class="cacts">${p.closed ? '' : nav}${p.closed ? '' : shr}${ics}${rep}</div>${dupHtml}
       </div>
       <button class="star" type="button" data-key="${esc(p.key)}" aria-pressed="${on}" aria-label="${on ? '저장 해제' : '저장'}">${on ? '★' : '☆'}</button>
     </article>`;
+  }
+
+  // ---- 길찾기: 제목 속 체육관 이름으로 지도 앱 검색 (장소를 모르면 버튼 없음) ----
+  function placeOf(title, region2) {
+    const t = String(title).replace(/&#\d+;|&[a-z]+;/g, ' ').replace(/\[[^\]]*\]|\([^)]*\)/g, m => /체육|센터|학교|관$|중\)|고\)|짐/.test(m) ? ' ' + m.slice(1, -1) + ' ' : ' ').replace(/\s+/g, ' ');
+    const SUF = '국민체육센터|문화체육센터|생활체육관|체육센터|체육관|스포츠센터|스포츠센타|청소년센터|청소년수련관|수련관|복지관|행정복지센터|복지센터|문화센터|회관|체육공원|아레나|농구교실|농구장|초등학교|중학교|고등학교|대학교|YMCA|짐|GYM';
+    const re = new RegExp(`(?:([가-힣A-Za-z0-9]{2,})\\s)?([가-힣A-Za-z0-9]*(?:${SUF}))(?=에서|에|으로|[^가-힣A-Za-z0-9]|$)`, 'i');
+    let m = t.match(re), p = null;
+    if (m) {
+      p = m[2];
+      const bare = new RegExp(`^(${SUF})$`, 'i').test(p);
+      if (bare) p = m[1] && !/^\d/.test(m[1]) && m[1] !== region2 && !/(구|시|동|역|인근|근처|주변)$/.test(m[1]) ? `${m[1]} ${p}` : null;
+      else if (/^제?\d/.test(p) && m[1]) p = `${m[1]} ${p}`;
+      if (p && /인근|근처|주변/.test(p)) p = null;
+    }
+    if (!p) { // '송례중', '선유중' 같은 학교 줄임말
+      const s = t.match(/(?:^|\s|-)([가-힣]{2,4}(?:중|고|초))(?=\s|$|에서|으로|,|\.)/);
+      if (s && !/(모집|구인|진행|구하는|최|가능|이|제)(중|고|초)$|^(오후|오전)/.test(s[1])) p = s[1];
+    }
+    if (!p) return null;
+    p = p.replace(/^\d+/, '');
+    if (p.length < 3) return null;
+    const q = region2 && !p.includes(region2) ? `${region2} ${p}` : p;
+    return q;
+  }
+  const MAPS = { kakao: '카카오맵', naver: '네이버 지도' };
+  function mapApp() { const a = store.get('bdr.mapApp', null); return MAPS[a] ? a : null; }
+  function mapUrl(app, q) { return app === 'naver' ? `https://map.naver.com/p/search/${encodeURIComponent(q)}` : `https://map.kakao.com/link/search/${encodeURIComponent(q)}`; }
+  function renderMapPref() {
+    const el = $('mapPref'); if (!el) return; const a = mapApp(); el.hidden = !a;
+    el.innerHTML = a ? `길찾기 지도: ${MAPS[a]} <button class="linkbtn" id="mapPrefReset" type="button">바꾸기</button><br>` : '';
+    const b = $('mapPrefReset'); if (b) b.onclick = () => { store.set('bdr.mapApp', null); renderMapPref(); render(); toast('다음에 길찾기를 누르면 지도를 다시 고를 수 있어요'); };
   }
 
   function stateQuery() {
@@ -782,6 +821,19 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
       reported.add(f.dataset.key); store.set('bdr.reported', [...reported].slice(-200));
       toast('알려주셔서 고마워요'); render(); return;
     }
+    const nv = e.target.closest('.nav');
+    if (nv) {
+      const p = byKey(nv.dataset.key); const place = placeOf(unent(p.title), p.region2);
+      if (nv.tagName === 'A') { track('directions', { post_id: nv.dataset.key, app: nv.dataset.app }); return; }
+      const art = nv.closest('.card'); const open = art.querySelector('.navbox');
+      if (open) { open.remove(); nv.setAttribute('aria-expanded', 'false'); return; }
+      const box = document.createElement('div'); box.className = 'navbox'; box.setAttribute('role', 'group'); box.setAttribute('aria-label', '지도 앱 선택');
+      box.innerHTML = `<span>'${esc(place)}' 어디서 볼까요?</span>` + Object.keys(MAPS).map(a => `<a class="chip" href="${esc(mapUrl(a, place))}" target="_blank" rel="noopener" data-app="${a}" data-key="${esc(p.key)}">${MAPS[a]}</a>`).join('');
+      art.querySelector('.body').appendChild(box); nv.setAttribute('aria-expanded', 'true'); box.querySelector('a').focus();
+      return;
+    }
+    const na = e.target.closest('.navbox a');
+    if (na) { store.set('bdr.mapApp', na.dataset.app); track('directions', { post_id: na.dataset.key, app: na.dataset.app, first: 1 }); setTimeout(() => { render(); renderMapPref(); toast(`다음부터 ${MAPS[na.dataset.app]}${na.dataset.app === 'kakao' ? '으로' : '로'} 바로 열려요`); }, 300); return; }
     const sh = e.target.closest('.shr');
     if (sh) { sharePost(byKey(sh.dataset.key)); return; }
     const ic = e.target.closest('.ics');
@@ -876,6 +928,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     toast(done ? '링크를 복사했어요' : '주소창의 링크를 복사해 주세요');
   };
 
+  renderMapPref();
   // ---- 웹 푸시 알림 ----
   const PUSH_API = 'https://bdrguest-push.kiss970322.workers.dev'; // Cloudflare Worker 알림 서버
   const PUSH_KEY = 'bdr.push';
