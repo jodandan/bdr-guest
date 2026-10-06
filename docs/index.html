@@ -184,6 +184,7 @@ button{font:inherit;color:inherit}
 .star[aria-pressed="true"]{color:#F59F00;text-shadow:0 0 1px #0E0E10}
 .state{text-align:center;padding:48px 16px;color:var(--sub);background:var(--card);border:3px dashed var(--line)}
 .state button{margin-top:12px}
+.ssr h2{font-size:16px;margin:18px 0 8px}.ssr ul{list-style:none;margin:0;padding:0}.ssr li{padding:8px 0;border-bottom:1px solid var(--line);font-size:14px;overflow-wrap:anywhere}.ssr li b{margin-right:6px}.ssr a{color:var(--text)}
 .skel{height:84px;border:3px solid var(--line);background:linear-gradient(90deg,var(--card),var(--bg),var(--card));background-size:200% 100%;animation:sh 1.2s infinite;margin-bottom:14px}
 @keyframes sh{to{background-position:-200% 0}}
 footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;border-top:3px solid var(--line);margin-top:28px}
@@ -208,6 +209,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     gtag('js', new Date()); gtag('config', GA_ID);
   }
 </script>
+<link rel="alternate" type="application/rss+xml" title="훕게스트" href="https://hoopguest.kro.kr/rss.xml">
 </head>
 <body>
 <a class="skip" href="#list">글 목록으로 바로가기</a>
@@ -254,7 +256,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
   <p class="favnote" id="favNote" role="status" hidden></p>
   <section class="mapbox" id="mapBox" hidden aria-label="지역별 글 지도"><div id="map"></div><p class="mapnote" id="mapNote"></p></section>
   <main id="list" aria-busy="true" tabindex="-1" aria-label="모집 글 목록">
-    <div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div>
+    <!--ssr--><div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div><!--/ssr-->
   </main>
 
   <button class="totop" id="toTop" type="button" aria-label="맨 위로" hidden>▲<br>위로</button>
