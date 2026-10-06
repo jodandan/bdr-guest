@@ -98,8 +98,10 @@ button{font:inherit;color:inherit}
 .search{flex:1;min-width:0;border:2px solid var(--line);background:var(--card);border-radius:0;padding:9px 12px;font-size:16px;color:var(--text)}
 .count{font-size:14px;font-weight:700;color:var(--text);padding:14px 0 4px;display:flex;justify-content:space-between;align-items:center;gap:8px}
 .cr{display:flex;align-items:center;gap:4px}
-.cr .linkbtn{min-height:36px;padding:0 4px}
-.ibtn{position:relative;display:inline-grid;place-items:center;width:36px;height:36px;border:2px solid var(--line);background:var(--card);color:var(--text);cursor:pointer;padding:0}
+.cr .linkbtn{min-height:36px;padding:0 4px;white-space:nowrap}
+#count{white-space:nowrap}
+.ibtn{position:relative;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:42px;height:42px;border:2px solid var(--line);background:var(--card);color:var(--text);cursor:pointer;padding:0;font:inherit;font-size:11px;font-weight:700;line-height:1;white-space:nowrap}
+.ibtn svg{width:16px;height:16px;flex:none}
 .ibtn[aria-pressed="true"]{background:var(--yellow);color:#111}
 .ibtn .dot{position:absolute;top:-4px;right:-4px;width:10px;height:10px;border-radius:50%;background:var(--accent-strong);border:2px solid var(--bg)}
 .ibtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
@@ -251,7 +253,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
   </div>
 
   <div class="count"><span id="count" aria-live="polite"></span>
-    <span class="cr"><button class="linkbtn" id="reset" type="button">필터 초기화</button><button class="linkbtn" id="sort" type="button" aria-label="정렬 바꾸기">일정순 ⇅</button><button class="ibtn" id="btnMap" type="button" aria-label="지도로 보기" title="지도로 보기" aria-pressed="false"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg></button><button class="ibtn" id="btnShare" type="button" aria-label="이 조건 링크 공유" title="이 조건 링크 공유"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button><button class="ibtn" id="btnPush" type="button" aria-label="새 글 알림" title="새 글 알림" aria-expanded="false" hidden><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 21h4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/></svg><i class="dot" hidden></i></button></span>
+    <span class="cr"><button class="linkbtn" id="reset" type="button">필터 초기화</button><button class="linkbtn" id="sort" type="button" aria-label="정렬 바꾸기">일정순 ⇅</button><button class="ibtn" id="btnMap" type="button" aria-label="지도로 보기" title="지도로 보기" aria-pressed="false"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg><span>지도</span></button><button class="ibtn" id="btnShare" type="button" aria-label="이 조건 링크 공유" title="이 조건 링크 공유"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg><span>공유</span></button><button class="ibtn" id="btnPush" type="button" aria-label="새 글 알림" title="새 글 알림" aria-expanded="false" hidden><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 21h4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/></svg><span>알림</span><i class="dot" hidden></i></button></span>
   </div>
   <p class="favnote" id="favNote" role="status" hidden></p>
   <section class="mapbox" id="mapBox" hidden aria-label="지역별 글 지도"><div id="map"></div><p class="mapnote" id="mapNote"></p></section>
@@ -458,7 +460,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     allTags.forEach(t => { tcnt[t] = countWith({ tags: new Set([...S.tags, t]) }); });
     Object.keys(tcnt).forEach(t => { if (!tcnt[t] && !S.tags.has(t)) delete tcnt[t]; });
     const tkeys = Object.keys(tcnt).sort((a, b) => tcnt[b] - tcnt[a]);
-    $('rowTag').hidden = !tkeys.length;
+    $('rowTag').hidden = !S.tags.size; // 조건 태그는 해당 글이 적어 필터에서 뺌(글 카드에만 표시). 예전 공유 링크로 들어온 경우만 풀 수 있게 보여줌
     fillRow($('rowTag'), [chip('전체', !S.tags.size, () => { S.tags.clear(); render(); }, 'all')].concat(tkeys.map(t => chip(`${t} ${tcnt[t]}`, S.tags.has(t), () => { S.tags.has(t) ? S.tags.delete(t) : S.tags.add(t); track('tag_filter', { tag: t }); render(); }))));
     $('btnNow').setAttribute('aria-pressed', String(S.soon));
     { const k = countWith({ soon: true }); $('nowInfo').textContent = S.soon ? '켜짐 · 3시간 안에 시작' : `3시간 안에 시작 ${k}건`; }
