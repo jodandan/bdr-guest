@@ -1,9 +1,10 @@
 // 검색엔진용 지역별 정적 페이지 + 사이트맵 생성 (수집 때마다 갱신)
 // docs/r/<광역>/index.html, docs/r/<광역>/<동네>/index.html, docs/sitemap.xml
-import { mkdir, writeFile, rm } from 'node:fs/promises';
+import { mkdir, writeFile, rm, readFile } from 'node:fs/promises';
 
 const SITE = 'https://hoopguest.kro.kr';
 const DOCS = new URL('../docs/', import.meta.url);
+const HIST = new URL('../data/history.json', import.meta.url); // 지역 페이지 '최근 경향' 통계용 누적 기록(공개 안 됨)
 const GA_ID = 'G-0DWSLR5007';
 
 export const R1 = { 서울: 'seoul', 경기: 'gyeonggi', 인천: 'incheon' };
@@ -29,13 +30,14 @@ function dayLabel(ymd, today) {
   return `${ymd === today ? '오늘 · ' : ymd === t ? '내일 · ' : ''}${m}/${d} (${w})`;
 }
 
-function page({ path, title, desc, h1, intro, posts, today, updated, crumbs, links, cta, home }) {
+function page({ path, title, desc, h1, intro, posts, today, updated, crumbs, links, cta, home, trend = '' }) {
   const url = `${SITE}${path}`;
   const groups = new Map();
   for (const p of posts) { const k = p.date || ''; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(p); }
   const list = posts.length ? [...groups].map(([d, ps]) => `<h2>${esc(dayLabel(d, today))} <small>${ps.length}건</small></h2><ul>${ps.map(p => `<li><span class="t">${esc(p.start || p.slot || '시간 미정')}</span><a href="${esc(p.url)}" rel="nofollow noopener" target="_blank">${esc(unent(p.title))}</a><span class="m">${home && p.region2 !== home ? `<b class="near">근처 ${esc(where(p))}</b> · ` : ''}${p.src === 'naver' ? '네이버 농심카페' : '다음 BDR 동아리농구방'} · ${BOARD_NAME[p.board] || '게스트'}</span></li>`).join('')}</ul>`).join('')
     : '<p class="empty">지금은 모집 글이 없어요. 가까운 지역이나 전체 목록을 확인해 보세요.</p>';
-  const ld = [{ '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: crumbs.map(([n, u], i) => ({ '@type': 'ListItem', position: i + 1, name: n, item: SITE + u })) },
+  const ld = [{ '@context': 'https://schema.org', '@type': 'WebSite', name: '훕게스트', alternateName: ['hoopguest', '농구 게스트 모아보기'], url: SITE + '/' },
+    { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: crumbs.map(([n, u], i) => ({ '@type': 'ListItem', position: i + 1, name: n, item: SITE + u })) },
     { '@context': 'https://schema.org', '@type': 'ItemList', name: h1, numberOfItems: posts.length, itemListElement: posts.slice(0, 30).map((p, i) => ({ '@type': 'ListItem', position: i + 1, name: unent(p.title), url: p.url })) }];
   return `<!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -63,6 +65,7 @@ li{background:var(--card);border:2px solid var(--line);padding:10px 12px;margin-
 li .t{font-weight:700;grid-row:span 2;min-width:44px}
 li a{color:var(--text);text-decoration:none;word-break:keep-all;overflow-wrap:anywhere} li a:hover{text-decoration:underline}
 li .m{font-size:13px;color:var(--sub)} li .near{color:var(--text)}
+.trend{margin-top:26px;padding:12px 14px;border:2px solid var(--line);background:var(--card)} .trend h2{margin-top:0;border:0;font-size:16px} .trend p{margin:0}
 .empty{padding:20px;border:2px dashed var(--line);background:var(--card)}
 .links{margin-top:28px} .links h2{font-size:15px} .links a{display:inline-block;margin:4px 10px 4px 0;color:var(--text)}
 footer{font-size:13px;color:var(--sub);margin-top:28px;line-height:1.6}
@@ -77,6 +80,7 @@ a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 <p class="intro">${esc(intro)}</p>
 <a class="cta" href="${esc(cta)}">날짜·시간 필터로 보기 →</a>
 ${list}
+${trend}
 <section class="links">${links.map(([t, ls]) => `<h2>${esc(t)}</h2><p>${ls.map(([n, u]) => `<a href="${u}">${esc(n)}</a>`).join('')}</p>`).join('')}</section>
 <footer>다음카페 [BDR]동아리농구방과 네이버 카페 NSB 농심카페(운영진 허락)의 공개 글 제목만 모아 30분마다 갱신하는 비공식 사이트입니다. 비용·장소·연락처는 원문에서 확인하세요. 마지막 갱신: ${esc(new Date(Date.parse(updated) + 9 * 3600e3).toISOString().slice(0, 16).replace('T', ' '))} (KST)</footer>
 </main></body></html>`;
@@ -148,11 +152,65 @@ ${p.closed ? '<p class="x">마감됐다고 표시된 글이에요. 아래에서 
 </main></body></html>`;
 }
 
+// 제목 속 장소 이름 (체육관·센터 등) — 지역 페이지 '자주 나온 장소'용
+const VENUE = /([가-힣A-Za-z]{2,12}(?:다목적체육관|국민체육센터|문화체육센터|체육관|체육센터|스포츠센터|레포츠센터|청소년수련관))/;
+export function venueOf(title) {
+  const t = unent(title).replace(/\d+\s*(시|분|반)?|에서|부터|까지|[~\-:().,\[\]/]/g, ' ');
+  const m = t.match(VENUE);
+  if (!m) return null;
+  const v = m[1].replace(/^(오전|오후|저녁|아침|새벽|밤|팀)/, '');
+  return /^(인근|근처|주변)/.test(v) || v.length < 4 ? null : v;
+}
+const SLOT_WORD = { 오전: '오전', 오후: '오후', 저녁: '저녁' };
+// 누적 기록 갱신: 글 키별로 지역·요일·시간대·장소만 남기고, 최근 28일만 유지
+async function updateHistory(posts, today) {
+  let h = {};
+  try { h = JSON.parse(await readFile(HIST, 'utf8')); } catch {}
+  const since = h._since || today; delete h._since;
+  for (const p of posts) {
+    if (!p.key || !p.region1) continue;
+    const d = p.date || String(p.posted || '').slice(0, 10);
+    if (!d) continue;
+    h[p.key] = { r1: p.region1, r2: p.region2 || '', d, s: p.slot || '', b: p.board || 'guest', v: venueOf(p.title) || '' };
+  }
+  const cut = new Date(Date.parse(today + 'T00:00:00Z') - 28 * 864e5).toISOString().slice(0, 10);
+  for (const k of Object.keys(h)) if (h[k].d < cut) delete h[k];
+  await mkdir(new URL('.', HIST), { recursive: true });
+  const rows = Object.values(h);
+  await writeFile(HIST, JSON.stringify({ _since: since, ...h }));
+  rows.since = since;
+  return rows;
+}
+// 지역 '최근 경향' 문단 (글이 3건 이상 쌓였을 때만)
+const hasBatchim = w => { const c = String(w).charCodeAt(String(w).length - 1); return c >= 0xAC00 && c <= 0xD7A3 && (c - 0xAC00) % 28 > 0; };
+const iga = w => w + (hasBatchim(w) ? '이' : '가');
+const ieyo = w => w + (hasBatchim(w) ? '이에요' : '예요');
+function trendHtml(rows, name, today, since) {
+  if (rows.length < 3) return '';
+  const days = Math.max(1, Math.min(28, Math.round((Date.parse(today) - Date.parse(since || today)) / 864e5) + 1));
+  const span = days >= 7 ? `최근 ${days}일` : '최근 모은 글';
+  const top = (arr, n) => Object.entries(arr.reduce((m, x) => (x && (m[x] = (m[x] || 0) + 1), m), {})).sort((a, b) => b[1] - a[1]).slice(0, n);
+  const wd = top(rows.map(r => WEEK[new Date(r.d + 'T00:00:00Z').getUTCDay()]), 2).map(([k]) => k + '요일');
+  const sl = top(rows.map(r => SLOT_WORD[r.s]), 1).map(([k]) => k);
+  const vs = top(rows.map(r => r.v), 3).map(([k]) => k);
+  const kinds = top(rows.map(r => BOARD_NAME[r.b]), 3).map(([k, n]) => `${k} ${n}건`).join(', ');
+  return `<section class="trend"><h2>${esc(name)} 농구 모집 경향</h2><p>${span} 기준 ${esc(name)} 농구 모집 글은 ${rows.length}건(${esc(kinds)})이에요.${wd.length ? ` 요일은 ${esc(iga(wd.join('·')))} 가장 많았고` : ''}${sl.length ? `${wd.length ? ',' : ''} 시간대는 ${esc(iga(sl[0]))} 가장 많았어요.` : wd.length ? '요.' : ''}${vs.length ? ` 자주 나온 장소는 ${esc(ieyo(vs.join(', ')))}.` : ''}</p></section>`;
+}
+// 첫 화면(docs/index.html)에 오늘·내일 글 목록을 미리 심어 둠 — 검색 로봇이 스크립트 없이도 내용을 읽도록
+function ssrList(live, today) {
+  const rows = live.filter(p => p.date && p.date >= today).slice(0, 80);
+  if (!rows.length) return '<p class="ssr-empty">지금은 모집 글이 없어요.</p>';
+  const groups = new Map();
+  for (const p of rows) { if (!groups.has(p.date)) groups.set(p.date, []); groups.get(p.date).push(p); }
+  const r2url = p => { const s1 = R1[p.region1]; const d = s1 && (DISTRICTS[p.region1] || []).find(x => x[0] === p.region2); return d ? `/r/${s1}/${d[1]}/` : s1 ? `/r/${s1}/` : ''; };
+  return [...groups].map(([d, ps]) => `<section class="ssr"><h2>${esc(dayLabel(d, '1970-01-01'))} 수도권 농구 게스트·픽업 모집 ${ps.length}건</h2><ul>${ps.map(p => { const u = r2url(p); const w = where(p); return `<li><b>${esc(p.start || p.slot || '시간 미정')}</b> ${w ? (u ? `<a href="${u}">${esc(w)}</a>` : esc(w)) : ''} ${esc(BOARD_NAME[p.board] || '게스트')} · <a href="${esc(p.url)}" rel="nofollow noopener" target="_blank">${esc(unent(p.title))}</a></li>`; }).join('')}</ul></section>`).join('');
+}
 export async function buildPages(data) {
   const today = data.today, updated = data.updated;
   const live = data.posts.filter(p => !p.closed && (p.date ? p.date >= today : (Date.parse(updated) - Date.parse(p.posted)) / 864e5 <= 2))
     .sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999') || (a.start || '99').localeCompare(b.start || '99'));
   const ymdK = today.replace(/-/g, '.');
+  const hist = await updateHistory(data.posts, today);
   const out = []; // [path, html]
   const all = Object.entries(DISTRICTS).flatMap(([r1, ds]) => ds.map(d => [r1, ...d]));
   const r1Links = Object.entries(R1).map(([r, s]) => [`${r} 농구 게스트`, `/r/${s}/`]);
@@ -168,6 +226,7 @@ export async function buildPages(data) {
       posts: ps, crumbs: [['홈', '/'], [`${r1}`, `/r/${s1}/`]],
       links: [[`${r1} 동네별`, byD], ['다른 지역', r1Links.filter(([, u]) => u !== `/r/${s1}/`)]],
       cta: `/?r=${encodeURIComponent(r1)}`,
+      trend: trendHtml(hist.filter(h => h.r1 === r1), r1, today, hist.since),
     })]);
     for (const [n, s, la, lo] of DISTRICTS[r1]) {
       const me = [r1, n, s, la, lo];
@@ -186,6 +245,7 @@ export async function buildPages(data) {
         crumbs: [['홈', '/'], [r1, `/r/${s1}/`], [nm, `/r/${s1}/${s}/`]],
         links: [['가까운 지역', near.map(([d]) => [label(d[0], d[1]), `/r/${R1[d[0]]}/${d[2]}/`])], ['광역 지역', r1Links]],
         cta: `/?r=${encodeURIComponent('내 근처')}&h=${encodeURIComponent(n)}&km=10`, home: n,
+        trend: trendHtml(hist.filter(h => h.r1 === r1 && h.r2 === n), nm, today, hist.since),
       })]);
     }
   }
@@ -206,5 +266,21 @@ export async function buildPages(data) {
   const lastmod = updated.slice(0, 10);
   const sm = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>${SITE}/</loc><lastmod>${lastmod}</lastmod><changefreq>hourly</changefreq><priority>1.0</priority></url>\n${out.map(([p]) => `  <url><loc>${SITE}${p}</loc><lastmod>${lastmod}</lastmod><changefreq>hourly</changefreq><priority>${p.split('/').length === 4 ? '0.8' : '0.6'}</priority></url>`).join('\n')}\n</urlset>\n`;
   await writeFile(new URL('sitemap.xml', DOCS), sm);
+  // RSS: 오늘 모집 글이 있는 지역 페이지 목록 (네이버 서치어드바이저 RSS 제출용)
+  const pub = new Date(updated).toUTCString();
+  const items = [[`훕게스트 — 오늘 수도권 농구 모집 ${live.filter(p => p.date === today).length}건`, '/', '서울·경기·인천 농구 게스트·픽업게임·교류전 모집 글 모아보기']];
+  for (const [r1, s1] of Object.entries(R1)) for (const [n, s] of DISTRICTS[r1]) {
+    const k = live.filter(p => p.region1 === r1 && p.region2 === n).length;
+    if (k) items.push([`${label(r1, n)} 농구 게스트 모집 ${k}건 (${ymdK})`, `/r/${s1}/${s}/`, `${label(r1, n)} 농구 게스트 구함·픽업게임·교류전 모집 글 ${k}건`]);
+  }
+  const rss = `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0"><channel><title>훕게스트 — 수도권 농구 게스트 모아보기</title><link>${SITE}/</link><description>서울·경기·인천 농구 게스트 구함·픽업게임·교류전 모집 글을 지역·날짜·시간대별로 모아봐요</description><language>ko</language><lastBuildDate>${pub}</lastBuildDate>\n${items.map(([t, u, d]) => `<item><title>${esc(t)}</title><link>${SITE}${u}</link><guid isPermaLink="false">${SITE}${u}#${today}</guid><description>${esc(d)}</description><pubDate>${pub}</pubDate></item>`).join('\n')}\n</channel></rss>\n`;
+  await writeFile(new URL('rss.xml', DOCS), rss);
+  // 첫 화면에 글 목록 심기 (<!--ssr--> … <!--/ssr--> 사이만 교체)
+  try {
+    const idxUrl = new URL('index.html', DOCS);
+    const idx = await readFile(idxUrl, 'utf8');
+    const a = idx.indexOf('<!--ssr-->'), b = idx.indexOf('<!--/ssr-->');
+    if (a > 0 && b > a) await writeFile(idxUrl, idx.slice(0, a + 10) + ssrList(live, today) + idx.slice(b));
+  } catch {}
   return out.length;
 }
