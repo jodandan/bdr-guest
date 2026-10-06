@@ -89,6 +89,32 @@ ${trend}
 
 // 글 하나 공유용 페이지 /p/<키>/ — 카톡 등에 링크를 보내면 미리보기에 일시·동네가 보이게
 export const postSlug = key => String(key).replace(/[^A-Za-z0-9]/g, '-');
+// 제목 속 체육관 이름 → 지도 검색어 (docs/index.html의 placeOf와 같은 규칙. 고치면 둘 다 고칠 것)
+export function placeOf(title, region2) {
+  const t = String(title).replace(/&#\d+;|&[a-z]+;/g, ' ').replace(/\[[^\]]*\]|\([^)]*\)/g, m => /체육|센터|학교|관[\])]$|(중|고|초)[\])]$|짐/.test(m) ? ' ' + m.slice(1, -1) + ' ' : ' ').replace(/\s+/g, ' ');
+  const SUF = '국민체육센터|문화체육센터|생활체육관|체육센터|체육관|스포츠센터|스포츠센타|청소년센터|청소년수련관|수련관|복지관|행정복지센터|복지센터|문화센터|회관|체육공원|아레나|농구교실|농구장|초등학교|중학교|고등학교|대학교|YMCA|짐|GYM|\\d관';
+  const re = new RegExp(`(?:([가-힣A-Za-z0-9]{2,})\\s)?([가-힣A-Za-z0-9]*(?:${SUF}))(?=에서|에|으로|[^가-힣A-Za-z0-9]|$)`, 'i');
+  let m = t.match(re), p = null;
+  if (m) {
+    p = m[2];
+    const bare = new RegExp(`^(${SUF})$`, 'i').test(p);
+    const gen = /^(실내|보조|다목적|종합|대)?(체육관|체육센터)$/.test(p);
+    if (gen && m[1] && /(학교|[가-힣]{2}(중|고|초))$/.test(m[1])) p = m[1]; // '보성여고 실내체육관' → 학교 이름으로 검색
+    else if (bare || gen) p = m[1] && !/^\d/.test(m[1]) && m[1] !== region2 && !/^[가-힣]{1,3}(구|시|동)$|(역|인근|근처|주변)$/.test(m[1]) ? `${m[1]} ${p}` : null;
+    else if (/^제?\d/.test(p) && m[1] && !/^\d|[시분]$/.test(m[1])) p = `${m[1]} ${p}`;
+    if (p && /인근|근처|주변/.test(p)) p = null;
+  }
+  if (!p) { // '송례중', '선유중' 같은 학교 줄임말
+    const s = t.match(/(?:^|\s|-)([가-힣]{2,4}(?:중|고|초))(?=\s|$|에서|으로|,|\.)/);
+    if (s && !/(모집|구인|진행|구하는|최|가능|이|제)(중|고|초)$|^(오후|오전)/.test(s[1])) p = s[1];
+  }
+  if (!p) return null;
+  p = p.replace(/^\d+/, '');
+  if (p.length < 3) return null;
+  const q = region2 && !p.includes(region2) ? `${region2} ${p}` : p;
+  return q;
+}
+
 function postPage(p, today) {
   const path = `/p/${postSlug(p.key)}/`, url = `${SITE}${path}`;
   const t = unent(p.title);
@@ -107,6 +133,8 @@ function postPage(p, today) {
   if (p.date && p.date >= today && !p.closed) q.set('d', p.date); // 마감 글은 날짜까지 좁히면 0건이 되기 쉬워 지역만
   if (p.board && p.board !== 'guest') q.set('b', p.board);
   const more = `/?${q}`;
+  const spot = !p.closed && !(p.date && p.date < today) ? placeOf(t, p.region2) : null;
+  const navHtml = spot ? `<div class="nv"><span>📍 ${esc(spot)} 길찾기</span><a href="https://map.kakao.com/link/search/${encodeURIComponent(spot)}" target="_blank" rel="noopener" data-app="kakao">카카오맵<span class="sr"> (새 창)</span></a><a href="https://map.naver.com/p/search/${encodeURIComponent(spot)}" target="_blank" rel="noopener" data-app="naver">네이버 지도<span class="sr"> (새 창)</span></a></div><script>document.querySelectorAll('.nv a').forEach(function(a){a.addEventListener('click',function(){gtag('event','directions',{post_id:${JSON.stringify(p.key)},app:a.dataset.app,from:'share'})})})</script>` : '';
   return `<!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(ogTitle)} | 훕게스트</title>
@@ -134,6 +162,10 @@ header a{color:#fff;font-weight:700;text-decoration:none}
 .b2{background:var(--card);color:var(--text)}
 p.f{font-size:13px;color:var(--sub);margin-top:22px;line-height:1.6}
 a:focus-visible{outline:3px solid #E0201B;outline-offset:2px}
+.nv{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px;padding-top:12px;border-top:2px dashed var(--line);font-size:14px}
+.nv>span{font-weight:700;flex-basis:100%}
+.nv a{display:inline-flex;align-items:center;min-height:40px;padding:0 12px;border:2px solid var(--line);color:var(--text);font-weight:700;text-decoration:none}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 </style>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}if(location.hostname==='hoopguest.kro.kr'){const s=document.createElement('script');s.async=1;s.src='https://www.googletagmanager.com/gtag/js?id=${GA_ID}';document.head.appendChild(s);gtag('js',new Date());gtag('config','${GA_ID}');gtag('event','shared_post_view',{post_id:'${esc(p.key)}'})}</script>
 </head><body>
@@ -144,7 +176,7 @@ ${p.closed ? '<p class="x">마감됐다고 표시된 글이에요. 아래에서 
 <span class="where">${esc(place)} · ${esc(kind)}</span>
 <p class="t">${esc(t)}</p>
 <div class="m">${esc(src)} 글 · 비용·장소·연락처는 원문에서 확인하세요</div>
-</div>
+${navHtml}</div>
 <a class="b b1" id="go" href="${esc(p.url)}" rel="nofollow noopener">${p.closed || (p.date && p.date < today) ? '카페 원문 보기' : '카페 원문 보고 신청하기 →'}</a>
 <a class="b b2" href="${esc(more)}">${esc(p.region2 ? place : p.region1 || '수도권')} 다른 모집 글 더 보기</a>
 <script>(function(){var d=${JSON.stringify(p.date || '')},s=${JSON.stringify(p.start || '')},e=${JSON.stringify(p.end || '')};if(!d||!s||${p.closed || (p.date && p.date < today) ? 'true' : 'false'})return;function t(hm,add){var a=d.split('-').map(Number),b=hm.split(':').map(Number);return Date.UTC(a[0],a[1]-1,a[2],b[0]+(add||0),b[1])-324e5;}var st=t(s),en=e?t(e,e<s?24:0):st+72e5,n=Date.now(),o=document.getElementById('over');if(n>=en){o.textContent='이미 끝난 일정이에요. 아래에서 다른 글을 찾아보세요.';o.hidden=false;document.getElementById('go').textContent='카페 원문 보기';}else if(n>=st){o.textContent='이미 시작한 일정이에요. 늦참이 되는지 원문에서 확인하세요.';o.hidden=false;}})();</script>
