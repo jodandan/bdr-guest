@@ -621,7 +621,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
       p = m[2];
       const bare = new RegExp(`^(${SUF})$`, 'i').test(p);
       if (bare) p = m[1] && !/^\d/.test(m[1]) && m[1] !== region2 && !/(구|시|동|역|인근|근처|주변)$/.test(m[1]) ? `${m[1]} ${p}` : null;
-      else if (/^제?\d/.test(p) && m[1]) p = `${m[1]} ${p}`;
+      else if (/^제?\d/.test(p) && m[1] && !/^\d|[시분]$/.test(m[1])) p = `${m[1]} ${p}`;
       if (p && /인근|근처|주변/.test(p)) p = null;
     }
     if (!p) { // '송례중', '선유중' 같은 학교 줄임말
