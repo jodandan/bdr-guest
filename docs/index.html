@@ -214,6 +214,9 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
 .dayh{position:sticky;top:0;z-index:3;margin:10px -16px 4px;padding:8px 16px 8px;background:var(--bg)}
 .dayh .day{position:static;margin:0}
 .row.more{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 56px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 56px),transparent)}
+.cafebox{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px;padding:10px;border:2px dashed var(--line);font-size:13px}
+.cafebox p{margin:0 0 2px;flex-basis:100%;line-height:1.5}
+.cafebox .chip{display:inline-flex;align-items:center;min-height:36px;padding:0 12px;text-decoration:none;color:var(--text)}
 </style>
 <script>
   window.GA_ID = 'G-0DWSLR5007'; // GA4 측정 ID
@@ -656,6 +659,20 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     const b = $('mapPrefReset'); if (b) b.onclick = () => { store.set('bdr.mapApp', null); renderMapPref(); render(); toast('다음에 길찾기를 누르면 지도를 다시 고를 수 있어요'); };
   }
 
+  // ---- 카페 회원 안내: 다음 BDR 글을 처음 누를 때 한 번만 (원문이 정회원 전용) ----
+  let cafeHint = store.get('bdr.cafeHint', false);
+  function cafeHintFirst(e, a) {
+    const p = byKey(a.dataset.key);
+    if (cafeHint || !p || p.src === 'naver') return false;
+    e.preventDefault(); cafeHint = true; store.set('bdr.cafeHint', true);
+    track('cafe_hint', { step: 'shown', post_id: p.key });
+    const art = a.closest('.card'); art.querySelector('.cafebox')?.remove();
+    const box = document.createElement('div'); box.className = 'cafebox'; box.setAttribute('role', 'group'); box.setAttribute('aria-label', '카페 회원 안내');
+    box.innerHTML = `<p>원문은 다음 카페 <b>[BDR]동아리농구방</b> 회원만 볼 수 있어요. 아직 회원이 아니면 먼저 가입해 주세요. (이 안내는 한 번만 보여요)</p><a class="chip" href="${esc(p.url)}" target="_blank" rel="noopener" data-act="open" data-key="${esc(p.key)}">원문 열기<span class="sr"> (새 창)</span></a><a class="chip" href="https://m.cafe.daum.net/dongarry" target="_blank" rel="noopener" data-act="join" data-key="${esc(p.key)}">카페 가입하러 가기<span class="sr"> (새 창)</span></a>`;
+    art.querySelector('.body').appendChild(box); box.querySelector('a').focus();
+    return true;
+  }
+
   function stateQuery() {
     const q = new URLSearchParams();
     if (S.board !== 'guest') q.set('b', S.board);
@@ -818,8 +835,8 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
   }
   $('list').addEventListener('keydown', e => { // Esc로 길찾기·정보 오류 선택창 닫기
     if (e.key !== 'Escape') return;
-    const box = e.target.closest('.card')?.querySelector('.navbox, .repbox'); if (!box) return;
-    const btn = box.closest('.card').querySelector(box.classList.contains('navbox') ? 'button.nav' : '.rep');
+    const box = e.target.closest('.card')?.querySelector('.navbox, .repbox, .cafebox'); if (!box) return;
+    const btn = box.closest('.card').querySelector(box.classList.contains('navbox') ? 'button.nav' : box.classList.contains('cafebox') ? 'a.title' : '.rep');
     box.remove(); if (btn) { btn.setAttribute('aria-expanded', 'false'); btn.focus(); }
   });
   $('list').addEventListener('click', e => {
@@ -858,6 +875,9 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     const ic = e.target.closest('.ics');
     if (ic) { downloadIcs(byKey(ic.dataset.key)); return; }
     const a = e.target.closest('a.title');
+    if (a && cafeHintFirst(e, a)) return;
+    const cb = e.target.closest('.cafebox a');
+    if (cb) { track('cafe_hint', { step: cb.dataset.act, post_id: cb.dataset.key }); if (cb.dataset.act === 'open') markSeen(cb.dataset.key); setTimeout(render, 300); return; }
     if (a) { markSeen(a.dataset.key); setTimeout(render, 300); const p = byKey(a.dataset.key); track('open_post', { post_id: a.dataset.key, board: boardOf(p), region1: p.region1 || '기타', slot: p.slot || '미정' }); return; }
     const b = e.target.closest('.star'); if (!b) return;
     const k = b.dataset.key;
@@ -877,7 +897,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     render();
     if (S.soon && S.r1 === '전체') toast('📍 내 근처를 고르면 가까운 곳만 볼 수 있어요');
   };
-  setInterval(() => { if (S.soon && !document.hidden && !document.querySelector('.navbox, .repbox')) render(); }, 60000); // 남은 시간 갱신
+  setInterval(() => { if (S.soon && !document.hidden && !document.querySelector('.navbox, .repbox, .cafebox')) render(); }, 60000); // 남은 시간 갱신
   // 지도 보기 — 동네별 글 수를 동그라미로. Leaflet(cdnjs) + OpenStreetMap 타일, 처음 열 때만 불러옴
   let LMAP = null, LLAYER = null, leafletP = null;
   function loadLeaflet() {
