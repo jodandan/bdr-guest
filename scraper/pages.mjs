@@ -54,8 +54,8 @@ function page({ path, title, desc, h1, intro, posts, today, updated, crumbs, lin
 body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 "Noto Sans KR",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif}
 .w{max-width:720px;margin:0 auto;padding:0 16px 40px}
 header{background:#E0201B;color:#fff;padding:18px 0 16px;border-bottom:3px solid #0E0E10}
-header a{color:#fff;font-weight:700;text-decoration:none}
-nav.bc{font-size:13px;margin:14px 0 4px;color:var(--sub)} nav.bc a{color:var(--sub)}
+header a{color:#fff;font-weight:700;text-decoration:none;display:inline-block;padding:4px 0}
+nav.bc{font-size:13px;margin:14px 0 4px;color:var(--sub)} nav.bc a{color:var(--sub);display:inline-block;padding:4px 2px}
 h1{font-size:24px;line-height:1.3;margin:6px 0 8px}
 .intro{color:var(--sub);margin:0 0 14px}
 .cta{display:inline-block;background:#C8161B;color:#fff;font-weight:700;padding:11px 16px;border:3px solid var(--line);text-decoration:none;box-shadow:4px 4px 0 var(--line);margin:4px 0 8px}
@@ -150,7 +150,7 @@ function postPage(p, today) {
 body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 "Noto Sans KR",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif}
 .w{max-width:560px;margin:0 auto;padding:0 16px 40px}
 header{background:#E0201B;color:#fff;padding:16px 0;border-bottom:3px solid #0E0E10}
-header a{color:#fff;font-weight:700;text-decoration:none}
+header a{color:#fff;font-weight:700;text-decoration:none;display:inline-block;padding:4px 0}
 .c{margin:20px 0 14px;background:var(--card);border:3px solid var(--line);box-shadow:5px 5px 0 var(--line);padding:16px}
 .when{font-size:22px;font-weight:800;line-height:1.3}
 .where{display:inline-block;margin:8px 0 10px;background:#FFE14D;color:#0E0E10;font-weight:700;font-size:14px;padding:2px 8px;border:2px solid #0E0E10}
@@ -270,7 +270,7 @@ export async function buildPages(data) {
       out.push([`/r/${s1}/${s}/`, page({
         path: `/r/${s1}/${s}/`, today, updated,
         title: `${nm} 농구 게스트 모집 · 픽업게임 · 교류전 | 훕게스트`,
-        desc: `${nm} 농구 게스트 구함·픽업게임·교류전 모집 글을 날짜·시간순으로 모아봐요.${mine.length ? ` 지금 ${mine.length}건` : ''}${nearby.length ? `${mine.length ? ',' : ' 지금'} 근처 지역 ${nearby.length}건` : ''}. 30분마다 갱신.`,
+        desc: `${nm} 농구 게스트 구함·픽업게임·교류전 모집 글을 날짜·시간순으로 모아봐요.${mine.length ? ` 지금 ${mine.length}건` : ''}${mine.length < 3 && nearby.length ? `${mine.length ? ',' : ' 지금'} 근처 지역 ${nearby.length}건` : ''}. 30분마다 갱신.`,
         h1: `${nm} 농구 게스트 · 픽업게임`,
         intro: mine.length >= 3 ? `${nm}에서 지금 모집 중인 농구 게스트·픽업게임·교류전 글 ${mine.length}건이에요.` : mine.length ? `${nm} 글 ${mine.length}건과 가까운 지역 글을 함께 보여 드려요.` : `${nm}에는 지금 모집 글이 없어요. 가까운 지역 글을 대신 보여 드려요.`,
         posts: mine.length >= 3 ? mine : [...mine, ...nearby].slice(0, 40),
