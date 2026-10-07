@@ -663,15 +663,17 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
   let cafeHint = store.get('bdr.cafeHint', false);
   function cafeHintFirst(e, a) {
     const p = byKey(a.dataset.key);
-    if (cafeHint || !p || p.src === 'naver') return false;
-    e.preventDefault(); cafeHint = true; store.set('bdr.cafeHint', true);
+    if (cafeHint || !p || p.src === 'naver' || e.ctrlKey || e.metaKey || e.shiftKey || e.button) return false; // Ctrl·Cmd 클릭(새 탭)은 막지 않음
+    if (document.querySelector('.cafebox')) { cafeHintDone(); return false; } // 안내를 본 채로 다른 글을 누르면 확인한 걸로
+    e.preventDefault(); // '본 것'으로 기록하는 건 안내 속 버튼을 누르거나 Esc로 닫을 때 (다른 조작으로 화면이 다시 그려져 사라지면 다음에 또 보여줌)
     track('cafe_hint', { step: 'shown', post_id: p.key });
     const art = a.closest('.card'); art.querySelector('.cafebox')?.remove();
-    const box = document.createElement('div'); box.className = 'cafebox'; box.setAttribute('role', 'group'); box.setAttribute('aria-label', '카페 회원 안내');
-    box.innerHTML = `<p>원문은 다음 카페 <b>[BDR]동아리농구방</b> 회원만 볼 수 있어요. 아직 회원이 아니면 먼저 가입해 주세요. (이 안내는 한 번만 보여요)</p><a class="chip" href="${esc(p.url)}" target="_blank" rel="noopener" data-act="open" data-key="${esc(p.key)}">원문 열기<span class="sr"> (새 창)</span></a><a class="chip" href="https://m.cafe.daum.net/dongarry" target="_blank" rel="noopener" data-act="join" data-key="${esc(p.key)}">카페 가입하러 가기<span class="sr"> (새 창)</span></a>`;
+    const box = document.createElement('div'); box.className = 'cafebox'; box.setAttribute('role', 'group'); box.setAttribute('aria-label', '카페 회원 안내'); box.setAttribute('aria-describedby', 'cafeMsg');
+    box.innerHTML = `<p id="cafeMsg">원문은 다음 카페 <b>[BDR]동아리농구방</b> 회원만 볼 수 있어요. 아직 회원이 아니면 먼저 가입해 주세요. (이 안내는 한 번만 보여요)</p><a class="chip" href="${esc(p.url)}" target="_blank" rel="noopener" data-act="open" data-key="${esc(p.key)}" aria-describedby="cafeMsg">원문 열기<span class="sr"> (새 창)</span></a><a class="chip" href="https://m.cafe.daum.net/dongarry" target="_blank" rel="noopener" data-act="join" data-key="${esc(p.key)}">카페 가입하러 가기<span class="sr"> (새 창)</span></a>`;
     art.querySelector('.body').appendChild(box); box.querySelector('a').focus();
     return true;
   }
+  function cafeHintDone() { cafeHint = true; store.set('bdr.cafeHint', true); }
 
   function stateQuery() {
     const q = new URLSearchParams();
@@ -837,6 +839,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     if (e.key !== 'Escape') return;
     const box = e.target.closest('.card')?.querySelector('.navbox, .repbox, .cafebox'); if (!box) return;
     const btn = box.closest('.card').querySelector(box.classList.contains('navbox') ? 'button.nav' : box.classList.contains('cafebox') ? 'a.title' : '.rep');
+    if (box.classList.contains('cafebox')) { cafeHintDone(); track('cafe_hint', { step: 'close' }); }
     box.remove(); if (btn) { btn.setAttribute('aria-expanded', 'false'); btn.focus(); }
   });
   $('list').addEventListener('click', e => {
@@ -877,7 +880,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     const a = e.target.closest('a.title');
     if (a && cafeHintFirst(e, a)) return;
     const cb = e.target.closest('.cafebox a');
-    if (cb) { track('cafe_hint', { step: cb.dataset.act, post_id: cb.dataset.key }); if (cb.dataset.act === 'open') markSeen(cb.dataset.key); setTimeout(render, 300); return; }
+    if (cb) { cafeHintDone(); track('cafe_hint', { step: cb.dataset.act, post_id: cb.dataset.key }); if (cb.dataset.act === 'open') markSeen(cb.dataset.key); setTimeout(render, 300); return; }
     if (a) { markSeen(a.dataset.key); setTimeout(render, 300); const p = byKey(a.dataset.key); track('open_post', { post_id: a.dataset.key, board: boardOf(p), region1: p.region1 || '기타', slot: p.slot || '미정' }); return; }
     const b = e.target.closest('.star'); if (!b) return;
     const k = b.dataset.key;
