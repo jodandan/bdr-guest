@@ -108,6 +108,10 @@ export function placeOf(title, region2) {
     const s = t.match(/(?:^|\s|-)([가-힣]{2,4}(?:중|고|초))(?=\s|$|에서|으로|,|\.)/);
     if (s && !/(모집|구인|진행|구하는|최|가능|이|제)(중|고|초)$|^(오후|오전)/.test(s[1])) p = s[1];
   }
+  if (!p) { // 제목에 '체육관' 같은 말 없이 이름만 쓰는 곳 (카카오맵으로 위치 확인한 곳만)
+    const k = [[/스킬존/, '고양 스킬존'], [/원스포츠/, '하남 원스포츠아카데미'], [/농구연구소/, '인천 농구연구소'], [/(동백|용인)\s*kcc|kcc\s*(주니어|이지스)/i, 'KCC이지스주니어 용인점']].find(([re]) => re.test(t));
+    if (k) return k[1];
+  }
   if (!p) return null;
   p = p.replace(/^\d+/, '');
   if (p.length < 3) return null;
