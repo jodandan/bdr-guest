@@ -217,6 +217,9 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
 .cafebox{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px;padding:10px;border:2px dashed var(--line);font-size:13px}
 .cafebox p{margin:0 0 2px;flex-basis:100%;line-height:1.5}
 .cafebox .chip{display:inline-flex;align-items:center;min-height:36px;padding:0 12px;text-decoration:none;color:var(--text)}
+.notice{position:relative;margin-top:12px;padding:10px 40px 10px 12px;background:var(--ink);color:var(--on-ink);border:2px solid var(--line);font-size:14px;line-height:1.5}
+.notice a{color:var(--yellow);font-weight:700;margin-left:4px}
+.noticex{position:absolute;top:2px;right:2px;width:36px;height:36px;background:none;border:0;color:var(--on-ink);font-size:16px;cursor:pointer}
 </style>
 <script>
   window.GA_ID = 'G-0DWSLR5007'; // GA4 측정 ID
@@ -240,6 +243,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
   </div>
 </header>
 <div class="wrap">
+  <div class="notice" id="notice" role="status" hidden></div>
   <div class="stale" id="stale" role="status" hidden></div>
 
   <div class="tabs" id="tabs" role="tablist" aria-label="게시판"></div>
@@ -643,6 +647,10 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     if (!p) { // '송례중', '선유중' 같은 학교 줄임말
       const s = t.match(/(?:^|\s|-)([가-힣]{2,4}(?:중|고|초))(?=\s|$|에서|으로|,|\.)/);
       if (s && !/(모집|구인|진행|구하는|최|가능|이|제)(중|고|초)$|^(오후|오전)/.test(s[1])) p = s[1];
+    }
+    if (!p) { // 제목에 '체육관' 같은 말 없이 이름만 쓰는 곳 (카카오맵으로 위치 확인한 곳만)
+      const k = [[/스킬존/, '고양 스킬존'], [/원스포츠/, '하남 원스포츠아카데미'], [/농구연구소/, '인천 농구연구소'], [/(동백|용인)\s*kcc|kcc\s*(주니어|이지스)/i, 'KCC이지스주니어 용인점']].find(([re]) => re.test(t));
+      if (k) return k[1];
     }
     if (!p) return null;
     p = p.replace(/^\d+/, '');
@@ -1056,6 +1064,15 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
   renderPushBtn();
 
   $('q').value = S.q;
+  // ---- 공지 띠 (예: BDR '동방' 출시). docs/notice.json만 바꿔 올리면 켜짐/꺼짐 — {"on":true,"id":"고유값","text":"문구","link":"주소","linkText":"버튼 글자"}
+  fetch('notice.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : null).then(n => {
+    if (!n || !n.on || !n.text || store.get('bdr.noticeX', '') === n.id) return;
+    const el = $('notice');
+    el.innerHTML = `<span>${esc(n.text)}</span>${n.link ? ` <a href="${esc(n.link)}" target="_blank" rel="noopener" id="noticeLink">${esc(n.linkText || '바로가기')}<span class="sr"> (새 창)</span></a>` : ''}<button class="noticex" type="button" id="noticeX" aria-label="공지 닫기">✕</button>`;
+    el.hidden = false; track('notice', { id: n.id, act: 'view' });
+    $('noticeX').onclick = () => { el.hidden = true; store.set('bdr.noticeX', n.id); track('notice', { id: n.id, act: 'close' }); };
+    $('noticeLink')?.addEventListener('click', () => track('notice', { id: n.id, act: 'click' }));
+  }).catch(() => {});
   fetch('data.json', { cache: 'no-cache' })
     .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
     .then(d => {
