@@ -89,7 +89,7 @@ button{font:inherit;color:inherit}
 .fsum[aria-expanded="true"] .fsum-c{transform:rotate(180deg)}
 .fpanel{padding-top:4px}
 .chk:focus-visible,.fsum:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-@media (max-width:639px){.fsum{display:flex}.fpanel[hidden]{display:none}}
+@media (max-width:639px),(max-height:500px){.fsum{display:flex}.fpanel[hidden]{display:none}}
 .chip{flex:none;border:2px solid var(--line);background:var(--chip);border-radius:0;padding:6px 12px;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;min-height:36px}
 .chip[aria-pressed="true"]{background:var(--chip-on);color:var(--chip-on-text);font-weight:700}
 .chip.sm{padding:4px 10px;font-size:13px;min-height:32px}
@@ -222,6 +222,12 @@ footer>a{padding:8px 0}
 .notice{position:relative;margin-top:12px;padding:10px 40px 10px 12px;background:var(--ink);color:var(--on-ink);border:2px solid var(--line);font-size:14px;line-height:1.5}
 .notice a{color:var(--yellow);font-weight:700;margin-left:4px}
 .noticex{position:absolute;top:2px;right:2px;width:36px;height:36px;background:none;border:0;color:var(--on-ink);font-size:16px;cursor:pointer}
+@media (max-width:639px),(max-height:500px){.hero .wrap{padding-top:12px;padding-bottom:10px}.brand{gap:10px}.brand img{width:34px;height:34px;box-shadow:0 0 0 3px #FFFDF6,0 0 0 5px #0E0E10}.brand h1{font-size:21px;padding:5px 9px 7px;border-width:2.5px;box-shadow:3px 3px 0 #0E0E10;margin-bottom:4px}.brand .label{font-size:13px;right:-10px;bottom:-13px}.hero .wrap::before{left:calc(16px + 17px - 1200px);top:calc(12px + 17px - 1200px)}.hero .intro{margin-top:20px;line-height:1.5}.hero .meta{font-size:12px}#meta{margin-top:2px}.tabs{margin-top:10px}.tab{min-height:38px;padding:6px 11px;font-size:14px}.search{padding:7px 12px}.nowbtn,.fsum{min-height:40px;padding-top:7px;padding-bottom:7px;margin-top:6px}.count{padding-top:8px}.dayh{margin-top:4px}.dayh .day{margin:2px 0 2px}}
+.nowbtn span{white-space:nowrap}.nowbtn small{text-align:right}
+@media (max-width:359px){.nowbtn{font-size:14px}.nowbtn small{font-size:12px}}
+@supports (-webkit-touch-callout:none){.chip.homesel{font-size:16px}}
+.wrap{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+.totop{bottom:calc(20px + env(safe-area-inset-bottom))}.toast{bottom:calc(24px + env(safe-area-inset-bottom))}
 </style>
 <script>
   window.GA_ID = 'G-0DWSLR5007'; // GA4 측정 ID
@@ -749,7 +755,7 @@ footer>a{padding:8px 0}
   }
   document.querySelectorAll('.bar .row').forEach(r => r.addEventListener('scroll', markScroll, { passive: true }));
   addEventListener('resize', markScroll);
-  const mqMobile = matchMedia('(max-width:639px)');
+  const mqMobile = matchMedia('(max-width:639px),(max-height:500px)');
   function setPanel(open) {
     $('fpanel').hidden = mqMobile.matches && !open;
     $('fToggle').setAttribute('aria-expanded', String(!$('fpanel').hidden));
