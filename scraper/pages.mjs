@@ -30,6 +30,18 @@ function dayLabel(ymd, today) {
   return `${ymd === today ? '오늘 · ' : ymd === t ? '내일 · ' : ''}${m}/${d} (${w})`;
 }
 
+// 같은 글을 여러 번 올린 경우(같은 날짜·시작 시각·동네에 제목이 거의 같음) 지역 페이지에는 최신 1건만
+function bigrams(t) { t = String(t).replace(/[\s\[\]()]/g, ''); const r = new Set(); for (let i = 0; i < t.length - 1; i++) r.add(t.slice(i, i + 2)); return r; }
+function similar(a, b) { const A = bigrams(a), B = bigrams(b); let n = 0; A.forEach(x => B.has(x) && n++); return n / Math.max(1, Math.max(A.size, B.size)); }
+function dedupe(rows) {
+  const newest = [...rows].sort((a, b) => Date.parse(b.posted) - Date.parse(a.posted)), drop = new Set();
+  newest.forEach((p, i) => {
+    if (drop.has(p.key) || !p.date || !p.start) return;
+    for (const q of newest.slice(i + 1)) if (!drop.has(q.key) && q.date === p.date && q.start === p.start && (q.region2 || q.region1) === (p.region2 || p.region1) && similar(p.title, q.title) >= 0.85) drop.add(q.key);
+  });
+  return rows.filter(p => !drop.has(p.key));
+}
+const CAFE_NOTE = '<p class="cm">글을 누르면 카페 원문으로 가요. 원문은 카페 회원만 볼 수 있으니, 회원이 아니면 먼저 가입해 주세요: <a href="https://m.cafe.daum.net/dongarry" target="_blank" rel="noopener">[BDR]동아리농구방</a> · <a href="https://m.cafe.naver.com/cornrow" target="_blank" rel="noopener">NSB 농심카페</a></p>';
 function page({ path, title, desc, h1, intro, posts, today, updated, crumbs, links, cta, home, trend = '' }) {
   const url = `${SITE}${path}`;
   const groups = new Map();
@@ -67,6 +79,7 @@ li a{color:var(--text);text-decoration:none;word-break:keep-all;overflow-wrap:an
 li .m{font-size:13px;color:var(--sub)} li .near{color:var(--text)}
 .trend{margin-top:26px;padding:12px 14px;border:2px solid var(--line);background:var(--card)} .trend h2{margin-top:0;border:0;font-size:16px} .trend p{margin:0}
 .empty{padding:20px;border:2px dashed var(--line);background:var(--card)}
+.cm{font-size:13px;color:var(--sub);margin:4px 0 0;line-height:1.6} .cm a{color:var(--text);font-weight:700}
 .links{margin-top:28px} .links h2{font-size:15px} .links a{display:inline-block;margin:4px 10px 4px 0;color:var(--text)}
 footer{font-size:13px;color:var(--sub);margin-top:28px;line-height:1.6}
 a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
@@ -79,7 +92,7 @@ a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 <h1>${esc(h1)}</h1>
 <p class="intro">${esc(intro)}</p>
 <a class="cta" href="${esc(cta)}">날짜·시간 필터로 보기 →</a>
-${list}
+${posts.length ? CAFE_NOTE : ''}${list}
 ${trend}
 <section class="links">${links.map(([t, ls]) => `<h2>${esc(t)}</h2><p>${ls.map(([n, u]) => `<a href="${u}">${esc(n)}</a>`).join('')}</p>`).join('')}</section>
 <footer>다음카페 [BDR]동아리농구방과 네이버 카페 NSB 농심카페(운영진 허락)의 공개 글 제목만 모아 30분마다 갱신하는 비공식 사이트입니다. 비용·장소·연락처는 원문에서 확인하세요. 마지막 갱신: ${esc(new Date(Date.parse(updated) + 9 * 3600e3).toISOString().slice(0, 16).replace('T', ' '))} (KST)</footer>
@@ -246,7 +259,7 @@ function ssrList(live, today) {
 }
 export async function buildPages(data) {
   const today = data.today, updated = data.updated;
-  const live = data.posts.filter(p => !p.closed && (p.date ? p.date >= today : (Date.parse(updated) - Date.parse(p.posted)) / 864e5 <= 2))
+  const live = dedupe(data.posts.filter(p => !p.closed && (p.date ? p.date >= today : (Date.parse(updated) - Date.parse(p.posted)) / 864e5 <= 2)))
     .sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999') || (a.start || '99').localeCompare(b.start || '99'));
   const ymdK = today.replace(/-/g, '.');
   const hist = await updateHistory(data.posts, today);
