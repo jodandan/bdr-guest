@@ -191,9 +191,11 @@ button{font:inherit;color:inherit}
 .ssr h2{font-size:16px;margin:18px 0 8px}.ssr ul{list-style:none;margin:0;padding:0}.ssr li{padding:8px 0;border-bottom:1px solid var(--line);font-size:14px;overflow-wrap:anywhere}.ssr li b{margin-right:6px}.ssr a{color:var(--text)}
 .skel{height:84px;border:3px solid var(--line);background:linear-gradient(90deg,var(--card),var(--bg),var(--card));background-size:200% 100%;animation:sh 1.2s infinite;margin-bottom:14px}
 @keyframes sh{to{background-position:-200% 0}}
-footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;border-top:3px solid var(--line);margin-top:28px}
+footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 84px;border-top:3px solid var(--line);margin-top:28px}
+footer>a{padding:8px 0}
+.repq{width:100%;font-size:13px;color:var(--sub)}
 .areas{margin-bottom:16px;font-size:13px}.areas p{margin:4px 0}.areas a{color:var(--sub);display:inline-block;padding:5px 5px;margin:0 1px 1px 0}.areas b{color:var(--text)}
-.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--on-ink);border:2px solid var(--line);padding:10px 16px;font-size:14px;font-weight:700;opacity:0;transition:opacity .2s;pointer-events:none;box-shadow:4px 4px 0 var(--accent)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);width:max-content;max-width:calc(100vw - 32px);background:var(--ink);color:var(--on-ink);border:2px solid var(--line);padding:10px 16px;font-size:14px;font-weight:700;opacity:0;transition:opacity .2s;pointer-events:none;box-shadow:4px 4px 0 var(--accent)}
 .toast.on{opacity:1}
 .pushbox{margin-top:10px;padding:12px;border:3px solid var(--line);background:var(--card);font-size:14px;line-height:1.55;box-shadow:5px 5px 0 var(--shadow-c)}
 .pushbox b{color:var(--accent)}
@@ -361,7 +363,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
   const reported = new Set(store.get('bdr.reported', []).map(toKey));
   const track = (name, params = {}) => { try { window.gtag && gtag('event', name, params); } catch {} };
 
-  function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove('on'), 1600); }
+  function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove('on'), Math.max(2500, msg.length * 110)); }
   const unent = s => String(s ?? '').replace(/&(amp|lt|gt|quot|#34|#39);/g, (_, k) => ({ amp: '&', lt: '<', gt: '>', quot: '"', '#34': '"', '#39': "'" }[k])); // 카페 제목의 HTML 엔티티 복원
   function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
   function addDays(ymd, n) { const [y, m, d] = ymd.split('-').map(Number); return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10); }
@@ -439,7 +441,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
   function renderFilters() {
     const pool = base();
     const r1s = [...new Set(pool.map(p => p.region1 || '기타'))]
-      .sort((a, b) => (R1_ORDER.indexOf(a) + 1 || 99) - (R1_ORDER.indexOf(b) + 1 || 99) || a.localeCompare(b));
+      .sort((a, b) => (a === '기타') - (b === '기타') || (R1_ORDER.indexOf(a) + 1 || 99) - (R1_ORDER.indexOf(b) + 1 || 99) || a.localeCompare(b));
     if (S.r1 !== '전체' && S.r1 !== NEARBY && !r1s.includes(S.r1)) r1s.push(S.r1);
     const r1Chips = ['전체', ...r1s].map(r => chip(r, S.r1 === r, () => { S.r1 = r; S.r2.clear(); render(); }, r === '전체' ? 'all' : ''));
     r1Chips.splice(1, 0, chip('📍 ' + NEARBY, S.r1 === NEARBY, () => { S.r1 = NEARBY; S.r2.clear(); track('nearby_open', { home: S.home || '-' }); render(); }, 'nearby'));
@@ -862,7 +864,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
       const art = rep.closest('.card'); const open = art.querySelector('.repbox');
       if (open) { open.remove(); rep.setAttribute('aria-expanded', 'false'); return; }
       const box = document.createElement('div'); box.className = 'repbox'; box.setAttribute('role', 'group'); box.setAttribute('aria-label', '틀린 항목 선택');
-      box.innerHTML = ['지역', '날짜', '시간', '해당 글 아님'].map(f => `<button class="chip" type="button" data-field="${f}" data-key="${esc(rep.dataset.key)}">${f}</button>`).join('');
+      box.innerHTML = '<span class="repq">어떤 정보가 틀렸나요?</span>' + ['지역', '날짜', '시간', '해당 글 아님'].map(f => `<button class="chip" type="button" data-field="${f}" data-key="${esc(rep.dataset.key)}">${f}</button>`).join('');
       art.querySelector('.body').appendChild(box); rep.setAttribute('aria-expanded', 'true');
       box.querySelector('button').focus();
       return;
@@ -900,7 +902,7 @@ footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 40px;borde
     const k = b.dataset.key;
     saved.has(k) ? saved.delete(k) : saved.add(k);
     store.set('bdr.saved', [...saved]);
-    toast(saved.has(k) ? '저장했어요' : '저장을 해제했어요');
+    toast(saved.has(k) ? '저장했어요 · 필터의 “저장한 글만”으로 모아 볼 수 있어요' : '저장을 해제했어요');
     track(saved.has(k) ? 'save_post' : 'unsave_post', { post_id: k });
     render();
   });
