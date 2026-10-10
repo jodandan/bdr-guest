@@ -4,6 +4,7 @@
 // - cron(10분마다)                : 사이트 data.json의 새 글 확인 → 조건 맞는 구독자에게 푸시
 //                                   + 매시 0·30분엔 GitHub 수집 워크플로 실행 요청
 // 바인딩: KV "SUBS" / 시크릿: GH_TOKEN(선택, 워크플로 실행 권한)
+import { handleAccount } from './account.js'; // 카카오 로그인·기기 동기화 (/auth/kakao, /me, /logout)
 const SITE = 'https://hoopguest.kro.kr';
 const REPO = 'jodandan/bdr-guest';
 const WORKFLOW = 'scrape.yml';
@@ -19,8 +20,8 @@ function cors(req) {
   const o = req.headers.get('Origin');
   return {
     'Access-Control-Allow-Origin': ORIGINS.includes(o) ? o : SITE,
-    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'GET,POST,PUT,OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Vary': 'Origin',
   };
 }
@@ -141,6 +142,8 @@ export default {
         if (endpoint) await env.SUBS.delete('sub:' + await sha(endpoint));
         return json(req, { ok: true });
       }
+      const acc = await handleAccount(req, env, url, json);
+      if (acc) return acc;
       if (url.pathname === '/health') return json(req, { ok: true });
       return json(req, { error: 'not found' }, 404);
     } catch (e) { return json(req, { error: 'server error' }, 500); }
