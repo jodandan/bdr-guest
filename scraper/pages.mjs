@@ -58,8 +58,9 @@ function page({ path, title, desc, h1, intro, posts, today, updated, crumbs, lin
 <link rel="canonical" href="${url}">
 <meta property="og:type" content="website"><meta property="og:locale" content="ko_KR"><meta property="og:site_name" content="훕게스트">
 <meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:url" content="${url}"><meta property="og:image" content="${SITE}/og.png">
-<meta name="theme-color" content="#E0201B"><link rel="icon" href="/ball.svg" type="image/svg+xml">
+<meta name="theme-color" content="#CF3326"><link rel="icon" href="/ball.svg" type="image/svg+xml">
 <script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>
+<script>try{var t=JSON.parse(localStorage.getItem('bdr.theme')||'null');if(t==='dark'||t==='light')document.documentElement.dataset.theme=t}catch(e){}</script>
 <style>
 :root{--bg:#FFFDF6;--text:#0E0E10;--sub:#4E4E55;--line:#0E0E10;--accent:#C8161B;--card:#fff}
 @media (prefers-color-scheme:dark){:root{--bg:#121214;--text:#F4F1E8;--sub:#B4B0A8;--line:#F4F1E8;--accent:#FF7A6E;--card:#1C1C20}}
@@ -83,6 +84,30 @@ li .m{font-size:13px;color:var(--sub)} li .near{color:var(--text)}
 .links{margin-top:28px} .links h2{font-size:15px} .links a{display:inline-block;margin:4px 10px 4px 0;color:var(--text)}
 footer{font-size:13px;color:var(--sub);margin-top:28px;line-height:1.6}
 a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* 10-10 디자인 개편: 밝은 화면 = 정돈된 코트, 어두운 화면 = 야간 코트 (첫 화면과 같은 색, html[data-theme]로 고정 가능) */
+:root{--bg:#F4F2EE;--text:#17181A;--sub:#5E5A53;--line:#E3DED5;--accent:#B4231A;--card:#fff;--hero:#CF3326;--hero-text:#fff;--pill:#F1EEE8;--btn:#CF3326;--btn-text:#fff;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111316;--text:#F4F4F2;--sub:#A3A7AE;--line:#2A2E35;--accent:#FF8A33;--card:#1B1E23;--hero:#16181C;--hero-text:#F4F4F2;--pill:#262A30;--btn:#FF7A1A;--btn-text:#111316;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#111316;--text:#F4F4F2;--sub:#A3A7AE;--line:#2A2E35;--accent:#FF8A33;--card:#1B1E23;--hero:#16181C;--hero-text:#F4F4F2;--pill:#262A30;--btn:#FF7A1A;--btn-text:#111316;color-scheme:dark}
+body{background:var(--bg);color:var(--text)}
+header{background:var(--hero);color:var(--hero-text);border-bottom:1px solid var(--line)}
+header a{color:var(--hero-text);font-size:18px;font-weight:800;letter-spacing:-.01em}
+h2{border-bottom:1px solid var(--line)}
+.cta{background:var(--btn);color:var(--btn-text);border:0;border-radius:12px;box-shadow:none;transition:transform .12s ease}
+.cta:active,.b:active{transform:scale(.98)}
+li{border:1px solid var(--line);border-radius:12px}
+.trend{border:1px solid var(--line);border-radius:14px}
+.empty{border:1px dashed var(--line);border-radius:14px}
+.c{border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 18px rgba(0,0,0,.06)}
+.where{background:var(--pill);color:var(--text);border:0;border-radius:6px}
+.x{border:1px dashed var(--line);border-radius:10px}
+.b{border:1px solid var(--line);border-radius:12px;transition:transform .12s ease}
+.b1{background:var(--btn);color:var(--btn-text);border-color:transparent;box-shadow:none}
+.b2{background:var(--card);color:var(--text)}
+.nv{border-top:1px dashed var(--line)}
+.nv a{border:1px solid var(--line);border-radius:999px}
+a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.cta,.b{transition:none}}
 </style>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}if(location.hostname==='hoopguest.kro.kr'){const s=document.createElement('script');s.async=1;s.src='https://www.googletagmanager.com/gtag/js?id=${GA_ID}';document.head.appendChild(s);gtag('js',new Date());gtag('config','${GA_ID}')}</script>
 </head><body>
@@ -169,7 +194,8 @@ function postPage(p, today) {
 <meta property="og:type" content="website"><meta property="og:locale" content="ko_KR"><meta property="og:site_name" content="훕게스트">
 <meta property="og:title" content="${esc(ogTitle)}"><meta property="og:description" content="${esc(t)}"><meta property="og:url" content="${url}"><meta property="og:image" content="${SITE}/og.png">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#E0201B"><link rel="icon" href="/ball.svg" type="image/svg+xml">
+<meta name="theme-color" content="#CF3326"><link rel="icon" href="/ball.svg" type="image/svg+xml">
+<script>try{var t=JSON.parse(localStorage.getItem('bdr.theme')||'null');if(t==='dark'||t==='light')document.documentElement.dataset.theme=t}catch(e){}</script>
 <style>
 :root{--bg:#FFFDF6;--text:#0E0E10;--sub:#4E4E55;--line:#0E0E10;--card:#fff}
 @media (prefers-color-scheme:dark){:root{--bg:#121214;--text:#F4F1E8;--sub:#B4B0A8;--line:#F4F1E8;--card:#1C1C20}}
@@ -194,6 +220,30 @@ a:focus-visible{outline:3px solid #E0201B;outline-offset:2px}
 .nv>span{font-weight:700;flex-basis:100%}
 .nv a{display:inline-flex;align-items:center;min-height:40px;padding:0 12px;border:2px solid var(--line);color:var(--text);font-weight:700;text-decoration:none}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* 10-10 디자인 개편: 밝은 화면 = 정돈된 코트, 어두운 화면 = 야간 코트 (첫 화면과 같은 색, html[data-theme]로 고정 가능) */
+:root{--bg:#F4F2EE;--text:#17181A;--sub:#5E5A53;--line:#E3DED5;--accent:#B4231A;--card:#fff;--hero:#CF3326;--hero-text:#fff;--pill:#F1EEE8;--btn:#CF3326;--btn-text:#fff;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111316;--text:#F4F4F2;--sub:#A3A7AE;--line:#2A2E35;--accent:#FF8A33;--card:#1B1E23;--hero:#16181C;--hero-text:#F4F4F2;--pill:#262A30;--btn:#FF7A1A;--btn-text:#111316;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#111316;--text:#F4F4F2;--sub:#A3A7AE;--line:#2A2E35;--accent:#FF8A33;--card:#1B1E23;--hero:#16181C;--hero-text:#F4F4F2;--pill:#262A30;--btn:#FF7A1A;--btn-text:#111316;color-scheme:dark}
+body{background:var(--bg);color:var(--text)}
+header{background:var(--hero);color:var(--hero-text);border-bottom:1px solid var(--line)}
+header a{color:var(--hero-text);font-size:18px;font-weight:800;letter-spacing:-.01em}
+h2{border-bottom:1px solid var(--line)}
+.cta{background:var(--btn);color:var(--btn-text);border:0;border-radius:12px;box-shadow:none;transition:transform .12s ease}
+.cta:active,.b:active{transform:scale(.98)}
+li{border:1px solid var(--line);border-radius:12px}
+.trend{border:1px solid var(--line);border-radius:14px}
+.empty{border:1px dashed var(--line);border-radius:14px}
+.c{border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 18px rgba(0,0,0,.06)}
+.where{background:var(--pill);color:var(--text);border:0;border-radius:6px}
+.x{border:1px dashed var(--line);border-radius:10px}
+.b{border:1px solid var(--line);border-radius:12px;transition:transform .12s ease}
+.b1{background:var(--btn);color:var(--btn-text);border-color:transparent;box-shadow:none}
+.b2{background:var(--card);color:var(--text)}
+.nv{border-top:1px dashed var(--line)}
+.nv a{border:1px solid var(--line);border-radius:999px}
+a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.cta,.b{transition:none}}
 </style>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}if(location.hostname==='hoopguest.kro.kr'){const s=document.createElement('script');s.async=1;s.src='https://www.googletagmanager.com/gtag/js?id=${GA_ID}';document.head.appendChild(s);gtag('js',new Date());gtag('config','${GA_ID}');gtag('event','shared_post_view',{post_id:'${esc(p.key)}'})}</script>
 </head><body>
