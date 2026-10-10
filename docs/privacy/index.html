@@ -10,9 +10,9 @@
 <meta name="theme-color" content="#CF3326">
 <script>try{var t=JSON.parse(localStorage.getItem('bdr.theme')||'null');if(t==='dark'||t==='light')document.documentElement.dataset.theme=t}catch(e){}</script>
 <style>
-:root{--bg:#F4F2EE;--fg:#17181A;--sub:#5E5A53;--line:#E3DED5;--acc:#B4231A;color-scheme:light}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111316;--fg:#F4F4F2;--sub:#A3A7AE;--line:#2A2E35;--acc:#FF8A33;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#111316;--fg:#F4F4F2;--sub:#A3A7AE;--line:#2A2E35;--acc:#FF8A33;color-scheme:dark}
+:root{--bg:#F6F2EC;--fg:#17181A;--sub:#5E5A53;--line:#E8E2D8;--acc:#B4231A;--cs:0 1px 2px rgba(70,50,20,.05),0 3px 12px rgba(70,50,20,.06);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111316;--fg:#F4F4F2;--sub:#A3A7AE;--line:#2A2E35;--acc:#FF8A33;--cs:none;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#111316;--fg:#F4F4F2;--sub:#A3A7AE;--line:#2A2E35;--acc:#FF8A33;--cs:none;color-scheme:dark}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.7 -apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;word-break:keep-all;overflow-wrap:anywhere}
 main{max-width:720px;margin:0 auto;padding:24px max(16px,env(safe-area-inset-right)) 64px max(16px,env(safe-area-inset-left))}
