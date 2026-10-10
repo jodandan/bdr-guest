@@ -11,6 +11,12 @@ crons = ["*/10 * * * *"]
 binding = "SUBS"
 id = "bf4b5bc23efe498b83f54693a63030fd"
 
+# 카카오 로그인 회원 데이터 (account.js)
+[[d1_databases]]
+binding = "DB"
+database_name = "hoopguest-accounts"
+database_id = "90e3b8f1-d457-4e59-8671-d5f4ad329697"
+
 
 [observability.logs]
 enabled = true
