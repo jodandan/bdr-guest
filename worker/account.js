@@ -4,7 +4,9 @@
 //                                                   (탈퇴 모드면 카카오 연결 끊기 + 데이터 삭제 → #withdrawn=1)
 // - GET  /me · PUT /me                             : 내 데이터 읽기·저장 (Authorization: Bearer <토큰>)
 // - POST /logout                                   : 이 기기 로그인 토큰 삭제
-// 저장소: D1 "DB" — users(uid, data, updated, created) · sessions(th, uid, created) · logins(state, ret, mode, created) · meta(k, v)
+// 맞춤 알림: 로그인한 채 알림을 켠 기기는 devices(sid → uid)로 계정에 묶이고, 계정의 알림 조건(data.alert)이 바뀌면
+//           worker.js가 넘겨준 onAlert로 묶인 기기 구독 조건을 모두 바꾼다
+// 저장소: D1 "DB" — users(uid, data, updated, created) · sessions(th, uid, created) · logins(state, ret, mode, created) · devices(sid, uid, th, created) · meta(k, v)
 // 개인정보: 카카오에서 받는 건 회원번호뿐. 서버엔 '비밀 소금 + 회원번호'의 SHA-256 값(uid)만 저장하고,
 //           회원번호 원문·이름·이메일·카카오 토큰은 저장하지 않는다. 로그인 토큰도 해시로만 보관.
 // 시크릿: KAKAO_REST_KEY(로그인에 쓸 REST API 키) / 선택: KAKAO_CLIENT_SECRET(카카오 콘솔에서 켰을 때만)
@@ -23,6 +25,7 @@ function init(env) {
     env.DB.prepare('CREATE TABLE IF NOT EXISTS users (uid TEXT PRIMARY KEY, data TEXT NOT NULL, updated INTEGER NOT NULL, created INTEGER NOT NULL)'),
     env.DB.prepare('CREATE TABLE IF NOT EXISTS sessions (th TEXT PRIMARY KEY, uid TEXT NOT NULL, created INTEGER NOT NULL)'),
     env.DB.prepare('CREATE TABLE IF NOT EXISTS logins (state TEXT PRIMARY KEY, ret TEXT NOT NULL, mode TEXT NOT NULL, created INTEGER NOT NULL)'),
+    env.DB.prepare('CREATE TABLE IF NOT EXISTS devices (sid TEXT PRIMARY KEY, uid TEXT NOT NULL, th TEXT NOT NULL, created INTEGER NOT NULL)'),
   ]).catch(e => { ready = null; throw e; });
   return ready;
 }
@@ -46,8 +49,24 @@ async function who(req, env) {
   return { uid: row.uid, th: await sha(m[1]) };
 }
 
+// 알림 구독(sid = 'sub:…' KV 키)을 계정에 묶거나 푼다 — 로그인 토큰이 있으면 묶고, 없으면 풀기
+export async function linkDevice(req, env, sid) {
+  if (!env.DB) return null;
+  await init(env);
+  const u = await who(req, env);
+  if (u) await env.DB.prepare('INSERT OR REPLACE INTO devices (sid, uid, th, created) VALUES (?, ?, ?, ?)').bind(sid, u.uid, u.th, Date.now()).run();
+  else await env.DB.prepare('DELETE FROM devices WHERE sid = ?').bind(sid).run();
+  return !!u;
+}
+export async function unlinkDevice(env, sid) {
+  if (!env.DB) return;
+  await init(env);
+  await env.DB.prepare('DELETE FROM devices WHERE sid = ?').bind(sid).run();
+}
+
 // 계정 경로가 아니면 null을 돌려준다 (worker.js의 나머지 경로로 넘어감)
-export async function handleAccount(req, env, url, json) {
+// hooks.onAlert(sids, alert): 계정 알림 조건이 바뀌었을 때 묶인 기기 구독을 고치는 함수 (worker.js 제공)
+export async function handleAccount(req, env, url, json, hooks = {}) {
   const p = url.pathname;
   if (!['/auth/kakao', '/auth/kakao/callback', '/me', '/logout'].includes(p)) return null;
   if (!env.DB || !env.KAKAO_REST_KEY) return json(req, { error: 'login not configured' }, 503);
@@ -79,7 +98,7 @@ export async function handleAccount(req, env, url, json) {
     const uid = await sha(`${await salt(env)}:${me.id}`);
     if (st.mode === 'withdraw') {
       await fetch('https://kapi.kakao.com/v1/user/unlink', { method: 'POST', headers: auth }).catch(() => {});
-      await env.DB.batch([env.DB.prepare('DELETE FROM users WHERE uid = ?').bind(uid), env.DB.prepare('DELETE FROM sessions WHERE uid = ?').bind(uid)]);
+      await env.DB.batch([env.DB.prepare('DELETE FROM users WHERE uid = ?').bind(uid), env.DB.prepare('DELETE FROM sessions WHERE uid = ?').bind(uid), env.DB.prepare('DELETE FROM devices WHERE uid = ?').bind(uid)]);
       return back(st.ret, 'withdrawn=1');
     }
     const now = Date.now(), t = rand(32);
@@ -96,7 +115,8 @@ export async function handleAccount(req, env, url, json) {
   if (p === '/me' && req.method === 'GET') {
     const row = await env.DB.prepare('SELECT data, updated FROM users WHERE uid = ?').bind(u.uid).first();
     if (!row) return json(req, { error: 'login required' }, 401);
-    return json(req, { data: JSON.parse(row.data || '{}'), updated: row.updated });
+    const dv = await env.DB.prepare('SELECT COUNT(*) AS n FROM devices WHERE uid = ?').bind(u.uid).first();
+    return json(req, { data: JSON.parse(row.data || '{}'), updated: row.updated, devices: dv ? dv.n : 0 });
   }
   if (p === '/me' && req.method === 'PUT') {
     const text = await req.text();
@@ -104,11 +124,18 @@ export async function handleAccount(req, env, url, json) {
     let body; try { body = JSON.parse(text); } catch { return json(req, { error: 'bad request' }, 400); }
     if (!body || typeof body.data !== 'object' || Array.isArray(body.data)) return json(req, { error: 'bad request' }, 400);
     const now = Date.now();
+    const old = await env.DB.prepare('SELECT data FROM users WHERE uid = ?').bind(u.uid).first();
     await env.DB.prepare('UPDATE users SET data = ?, updated = ? WHERE uid = ?').bind(JSON.stringify(body.data), now, u.uid).run();
-    return json(req, { ok: true, updated: now });
+    let synced = 0;
+    const alert = body.data.alert, oldAlert = old ? (JSON.parse(old.data || '{}').alert || null) : null;
+    if (hooks.onAlert && alert && typeof alert === 'object' && alert.filters && JSON.stringify(alert) !== JSON.stringify(oldAlert)) {
+      const { results } = await env.DB.prepare('SELECT sid FROM devices WHERE uid = ?').bind(u.uid).all();
+      synced = await hooks.onAlert((results || []).map(r => r.sid), alert);
+    }
+    return json(req, { ok: true, updated: now, synced });
   }
   if (p === '/logout' && req.method === 'POST') {
-    await env.DB.prepare('DELETE FROM sessions WHERE th = ?').bind(u.th).run();
+    await env.DB.batch([env.DB.prepare('DELETE FROM sessions WHERE th = ?').bind(u.th), env.DB.prepare('DELETE FROM devices WHERE th = ?').bind(u.th)]);
     return json(req, { ok: true });
   }
   return json(req, { error: 'not found' }, 404);

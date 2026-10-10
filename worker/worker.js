@@ -1,10 +1,11 @@
 // 훕게스트(hoopguest) — 알림 서버 (Cloudflare Workers 무료 플랜)
 // - POST /subscribe, /unsubscribe : 웹 푸시 구독 저장/삭제 (알림 주소 + 조건만 저장)
 // - GET  /vapid                   : 푸시 공개키 (최초 요청 때 자동 생성해 KV에 보관)
+// - POST /sub-state               : 구독 주소로 지금 알림 조건(조건·이름·링크) 조회 — 서비스워커가 알림 만들 때 사용
 // - cron(10분마다)                : 사이트 data.json의 새 글 확인 → 조건 맞는 구독자에게 푸시
 //                                   + 매시 0·30분엔 GitHub 수집 워크플로 실행 요청
 // 바인딩: KV "SUBS" / 시크릿: GH_TOKEN(선택, 워크플로 실행 권한)
-import { handleAccount } from './account.js'; // 카카오 로그인·기기 동기화 (/auth/kakao, /me, /logout)
+import { handleAccount, linkDevice, unlinkDevice } from './account.js'; // 카카오 로그인·기기 동기화 (/auth/kakao, /me, /logout)
 const SITE = 'https://hoopguest.kro.kr';
 const REPO = 'jodandan/bdr-guest';
 const WORKFLOW = 'scrape.yml';
@@ -62,10 +63,11 @@ export function matches(f, p) {
   if (f.regions?.length) { if (!f.regions.includes(p.region2 || '기타')) return false; }
   else if (f.r1 && f.r1 !== '전체' && (p.region1 || '기타') !== f.r1) return false;
   if (f.slots?.length && !f.slots.includes(p.slot) && !(p.amb && (f.slots.includes('오전') || f.slots.includes('저녁')))) return false;
-  if (f.week && f.week !== '전체') {
+  if ((f.week && f.week !== '전체') || f.days?.length) {
     if (!p.date) return false;
     const w = new Date(p.date + 'T00:00:00Z').getUTCDay();
-    if ((f.week === '주말') !== (w === 0 || w === 6)) return false;
+    if (f.week && f.week !== '전체' && (f.week === '주말') !== (w === 0 || w === 6)) return false;
+    if (f.days?.length && !f.days.includes(w)) return false; // 요일 지정(0=일 … 6=토)
   }
   return true;
 }
@@ -74,7 +76,20 @@ function cleanFilters(f = {}) {
   return {
     boards: arr(f.boards, 3), r1: typeof f.r1 === 'string' ? f.r1.slice(0, 10) : '전체',
     regions: arr(f.regions, 80), slots: arr(f.slots, 3), week: ['주말', '평일'].includes(f.week) ? f.week : '전체',
+    days: Array.isArray(f.days) ? [...new Set(f.days.filter(d => Number.isInteger(d) && d >= 0 && d <= 6))] : [],
   };
+}
+const str = (v, n) => typeof v === 'string' ? v.slice(0, n) : '';
+// 계정 알림 조건이 바뀌면 그 계정에 묶인 기기 구독을 모두 같은 조건으로 (KV 쓰기 = 기기 수)
+async function applyAlert(env, sids, alert) {
+  let n = 0;
+  for (const sid of sids.slice(0, 20)) {
+    const v = await env.SUBS.get(sid, 'json');
+    if (!v) { await unlinkDevice(env, sid).catch(() => {}); continue; }
+    await env.SUBS.put(sid, JSON.stringify({ ...v, filters: cleanFilters(alert.filters), label: str(alert.label, 80), query: str(alert.query, 300), at: Date.now() }));
+    n++;
+  }
+  return n;
 }
 
 async function listSubs(env) {
@@ -134,15 +149,22 @@ export default {
         const sub = body.subscription;
         if (!sub?.endpoint || !/^https:\/\//.test(sub.endpoint) || JSON.stringify(body).length > 4000) return json(req, { error: 'bad request' }, 400);
         const id = 'sub:' + await sha(sub.endpoint);
-        await env.SUBS.put(id, JSON.stringify({ sub: { endpoint: sub.endpoint }, filters: cleanFilters(body.filters), at: Date.now() }));
-        return json(req, { ok: true });
+        await env.SUBS.put(id, JSON.stringify({ sub: { endpoint: sub.endpoint }, filters: cleanFilters(body.filters), label: str(body.label, 80), query: str(body.query, 300), at: Date.now() }));
+        const linked = await linkDevice(req, env, id).catch(() => null); // 로그인 중이면 계정에 묶음
+        return json(req, { ok: true, linked: !!linked });
       }
       if (url.pathname === '/unsubscribe' && req.method === 'POST') {
         const { endpoint } = await req.json();
-        if (endpoint) await env.SUBS.delete('sub:' + await sha(endpoint));
+        if (endpoint) { const id = 'sub:' + await sha(endpoint); await env.SUBS.delete(id); await unlinkDevice(env, id).catch(() => {}); }
         return json(req, { ok: true });
       }
-      const acc = await handleAccount(req, env, url, json);
+      if (url.pathname === '/sub-state' && req.method === 'POST') {
+        const { endpoint } = await req.json();
+        const v = typeof endpoint === 'string' && /^https:\/\//.test(endpoint) ? await env.SUBS.get('sub:' + await sha(endpoint), 'json') : null;
+        if (!v) return json(req, { error: 'not found' }, 404);
+        return json(req, { filters: v.filters || {}, label: v.label || '', query: v.query || '' });
+      }
+      const acc = await handleAccount(req, env, url, json, { onAlert: (sids, alert) => applyAlert(env, sids, alert) });
       if (acc) return acc;
       if (url.pathname === '/health') return json(req, { ok: true });
       return json(req, { error: 'not found' }, 404);
