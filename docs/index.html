@@ -233,8 +233,13 @@ footer>a{padding:8px 0}
 .cafebox .chip,.navbox .chip{white-space:normal;max-width:100%;flex:0 1 auto}@media (max-width:359px){.cafebox{padding:8px}}
 .fmorebtn{display:flex;align-items:center;gap:4px;background:none;border:0;padding:6px 0 6px 62px;min-height:36px;font-size:13px;font-weight:700;color:var(--sub);cursor:pointer}.fmorebtn .n{color:var(--accent)}.fmorebtn[aria-expanded="true"] .ar{transform:rotate(180deg)}.fmorebtn .ar{display:inline-block;transition:transform .15s}.fmorebtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .chip.all[aria-pressed="true"]{background:none;border-color:transparent;box-shadow:none;font-weight:500;color:var(--sub)}
+.kakao{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 18px;background:#FEE500;color:rgba(0,0,0,.85);border-radius:10px;font-weight:700;text-decoration:none}.kakao:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 </style>
 <script>
+  // 카카오 로그인에서 돌아오면 주소의 #login=… 을 GA보다 먼저 꺼내 저장하고 주소에서 지운다
+  (function () { var m = /^#(login|withdrawn|login_error)=([A-Za-z0-9_-]{1,80})$/.exec(location.hash); if (!m) return;
+    try { if (m[1] === 'login') localStorage.setItem('bdr.auth', JSON.stringify(m[2])); if (m[1] === 'withdrawn') localStorage.removeItem('bdr.auth'); localStorage.setItem('bdr.authMsg', JSON.stringify(m[1] === 'login' ? 'login' : m[1] + ':' + m[2])); } catch (e) {}
+    history.replaceState(null, '', location.pathname + location.search); })();
   window.GA_ID = 'G-0DWSLR5007'; // GA4 측정 ID
   window.dataLayer = window.dataLayer || [];
   function gtag(){ dataLayer.push(arguments); }
@@ -287,10 +292,11 @@ footer>a{padding:8px 0}
       </div>
     </div>
     <div class="pushbox" id="pushBox" hidden></div>
+    <div class="pushbox" id="acctBox" hidden></div>
   </div>
 
   <div class="count"><span id="count" aria-live="polite"></span>
-    <span class="cr"><button class="linkbtn" id="reset" type="button">필터 초기화</button><button class="linkbtn" id="sort" type="button" aria-label="정렬 바꾸기">일정순 ⇅</button><button class="ibtn" id="btnMap" type="button" aria-label="지도로 보기" title="지도로 보기" aria-pressed="false"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg><span>지도</span></button><button class="ibtn" id="btnShare" type="button" aria-label="이 조건 링크 공유" title="이 조건 링크 공유"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg><span>공유</span></button><button class="ibtn" id="btnPush" type="button" aria-label="새 글 알림" title="새 글 알림" aria-expanded="false" hidden><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 21h4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/></svg><span>알림</span><i class="dot" hidden></i></button></span>
+    <span class="cr"><button class="linkbtn" id="reset" type="button">필터 초기화</button><button class="linkbtn" id="sort" type="button" aria-label="정렬 바꾸기">일정순 ⇅</button><button class="ibtn" id="btnMap" type="button" aria-label="지도로 보기" title="지도로 보기" aria-pressed="false"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg><span>지도</span></button><button class="ibtn" id="btnShare" type="button" aria-label="이 조건 링크 공유" title="이 조건 링크 공유"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg><span>공유</span></button><button class="ibtn" id="btnPush" type="button" aria-label="새 글 알림" title="새 글 알림" aria-expanded="false" hidden><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 21h4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/></svg><span>알림</span><i class="dot" hidden></i></button><button class="ibtn" id="btnAcct" type="button" aria-label="로그인 — 기기끼리 동기화" title="로그인 — 기기끼리 동기화" aria-expanded="false" hidden><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2.3"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/></svg><span>로그인</span><i class="dot" hidden></i></button></span>
   </div>
   <p class="favnote" id="favNote" role="status" hidden></p>
   <section class="mapbox" id="mapBox" hidden aria-label="지역별 글 지도"><div id="map"></div><p class="mapnote" id="mapNote"></p></section>
@@ -304,8 +310,8 @@ footer>a{padding:8px 0}
     이 사이트는 다음카페 <a href="https://m.cafe.daum.net/dongarry" target="_blank" rel="noopener">[BDR]동아리농구방</a>의 게스트 구인·픽업게임·연습경기 게시판과 네이버 카페 <a href="https://cafe.naver.com/cornrow" target="_blank" rel="noopener">NSB 농심카페</a>의 수도권 게스트 게시판(운영진 허락)에서 <b>공개된 글 제목</b>만 모아 보여주는 <b>비공식</b> 사이트입니다. 작성자 정보는 모으지 않고, 제목 속 연락처는 가려서 보여줍니다.
     글의 내용·비용·연락처는 반드시 원문에서 확인하세요. 모든 글의 권리는 작성자에게 있습니다.<br>
     지역·날짜·시간은 제목을 자동 분석한 결과라 틀릴 수 있습니다.<br>
-    서비스 개선을 위해 Google 애널리틱스로 익명 방문 통계(쿠키)를 수집합니다. 저장·기억 기능은 이 기기 브라우저에만 저장됩니다.<br>
-    <span id="mapPref" hidden></span>게시글 제외 요청: <a href="https://github.com/jodandan/bdr-guest/issues" target="_blank" rel="noopener">문의하기</a>
+    서비스 개선을 위해 Google 애널리틱스로 익명 방문 통계(쿠키)를 수집합니다. 저장·기억 기능은 이 기기 브라우저에 저장되고, 카카오 로그인(선택)을 하면 계정에도 저장되어 다른 기기에서 같이 쓸 수 있습니다.<br>
+    <span id="mapPref" hidden></span><a href="/privacy/">개인정보 처리방침</a> · 게시글 제외 요청: <a href="https://github.com/jodandan/bdr-guest/issues" target="_blank" rel="noopener">문의하기</a>
   </footer>
 </div>
 <div class="toast" id="toast" role="status"></div>
@@ -1036,7 +1042,7 @@ footer>a{padding:8px 0}
     if (on) on.onclick = subscribePush;
     if (off) off.onclick = unsubscribePush;
   }
-  async function subscribePush() {
+  async function subscribePush(preset) { // preset: 계정에 저장된 알림 조건으로 켤 때
     try {
       const perm = await Notification.requestPermission();
       if (perm !== 'granted') { toast('알림 권한이 필요해요'); return renderPush(); }
@@ -1045,11 +1051,13 @@ footer>a{padding:8px 0}
       const pad = '='.repeat((4 - key.length % 4) % 4);
       const raw = Uint8Array.from(atob((key + pad).replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
       const sub = (await reg.pushManager.getSubscription()) || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: raw });
-      const filters = pushFilters(), label = pushLabel();
+      const pre = preset && preset.filters ? preset : null;
+      const filters = pre ? pre.filters : pushFilters(), label = pre ? pre.label : pushLabel(), query = pre ? pre.query || '' : stateQuery();
       const r = await fetch(PUSH_API + '/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subscription: sub.toJSON(), filters }) });
       if (!r.ok) throw new Error(r.status);
-      await saveSwState({ filters, label, query: stateQuery() });
+      await saveSwState({ filters, label, query });
       store.set(PUSH_KEY, { label, at: Date.now() });
+      store.set('bdr.alert', { filters, label, query }); // 로그인 중이면 계정에도 저장 → 다른 기기에서 같은 조건으로 켤 수 있음
       track('push_subscribe', { board: S.board, region1: S.r1, regions: filters.regions.join(',') || '-', slot: filters.slots.join(',') || '-', week: S.week });
       toast('알림을 켰어요');
     } catch (e) { toast('알림을 켜지 못했어요. 잠시 후 다시 시도해 주세요'); }
@@ -1077,6 +1085,87 @@ footer>a{padding:8px 0}
     if (!box.hidden) { renderPush(); track('push_panel_open'); }
   };
   renderPushBtn();
+
+  // ---- 계정(카카오 로그인, 선택) — 저장한 글·설정·알림 조건을 기기끼리 동기화 (서버: 알림 서버 /auth/kakao, /me)
+  const AUTH_KEY = 'bdr.auth';
+  const SYNC_KEYS = ['bdr.saved', 'bdr.fav', 'bdr.home', 'bdr.radius', 'bdr.mapApp', 'bdr.compact', 'bdr.hideClosed', 'bdr.alert'];
+  let acctOn = false, acctApplying = false, acctTimer = 0, acctLast = 0, acctBye = false;
+  const authTok = () => store.get(AUTH_KEY, null);
+  const localData = () => Object.fromEntries(SYNC_KEYS.map(k => [k.slice(4), store.get(k, null)]));
+  const storeSet0 = store.set;
+  store.set = (k, v) => { storeSet0(k, v); if (!acctApplying && SYNC_KEYS.includes(k) && authTok()) { clearTimeout(acctTimer); acctTimer = setTimeout(pushSync, 1200); } };
+  async function acctApi(path, opt = {}) {
+    const r = await fetch(PUSH_API + path, { ...opt, headers: { ...(opt.headers || {}), Authorization: 'Bearer ' + authTok() } });
+    if (r.status === 401) { store.set(AUTH_KEY, null); renderAcct(); throw new Error('401'); }
+    if (!r.ok) throw new Error(r.status);
+    return r.json();
+  }
+  function applyData(d) { // 계정 값을 이 기기에 반영
+    acctApplying = true;
+    try {
+      for (const k of SYNC_KEYS) { const v = d[k.slice(4)]; if (v !== undefined && v !== null) storeSet0(k, v); }
+      saved.clear(); (store.get('bdr.saved', []) || []).map(toKey).forEach(k => saved.add(k));
+      const h = store.get('bdr.home', ''); if (h === '' || GEO[h]) S.home = h;
+      const km = store.get('bdr.radius', 10); if (RADII.includes(km)) S.radius = km;
+      S.compact = !!store.get('bdr.compact', false); S.hideClosed = store.get('bdr.hideClosed', true);
+    } finally { acctApplying = false; }
+    render(); renderMapPref();
+  }
+  async function pushSync() {
+    if (!authTok()) return;
+    try { await acctApi('/me', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: localData() }) }); acctLast = Date.now(); if (!$('acctBox').hidden) renderAcct(); } catch {}
+  }
+  async function pullSync(first) {
+    if (!authTok()) return;
+    try {
+      const { data } = await acctApi('/me');
+      if (!data || !Object.keys(data).length) return pushSync(); // 비어 있는 새 계정 → 이 기기 값 올리기
+      if (first) { // 로그인 직후: 저장한 글은 합치고, 계정에 없는 설정은 이 기기 값 유지
+        const loc = localData(), merged = { ...loc };
+        for (const [k, v] of Object.entries(data)) if (v !== null && v !== undefined) merged[k] = v;
+        merged.saved = [...new Set([...(data.saved || []), ...(loc.saved || [])])].slice(-500);
+        applyData(merged); await pushSync();
+      } else { applyData(data); acctLast = Date.now(); }
+      renderAcct();
+    } catch {}
+  }
+  function renderAcctBtn() {
+    const b = $('btnAcct'); b.hidden = !acctOn; const on = !!authTok();
+    b.querySelector('span').textContent = on ? '내 계정' : '로그인';
+    b.querySelector('.dot').hidden = !on;
+    b.setAttribute('aria-label', on ? '내 계정 — 로그인됨' : '로그인 — 기기끼리 동기화'); b.title = b.getAttribute('aria-label');
+  }
+  function renderAcct() {
+    renderAcctBtn(); const box = $('acctBox'); if (box.hidden) return;
+    const ret = encodeURIComponent(location.origin + location.pathname + location.search);
+    const note = '<div class="note">카카오에서는 회원번호만 받고 이름·이메일은 받지 않아요. 서버에는 저장한 글 목록과 사이트 설정만 보관해요. <a href="/privacy/">개인정보 처리방침</a></div>';
+    if (!authTok()) {
+      box.innerHTML = `<b>카카오로 로그인하면</b> 저장한 글(☆)과 내 동네·보기 설정·알림 조건을 폰과 PC에서 같이 쓸 수 있어요. 로그인은 선택이에요.<div class="acts"><a class="kakao" id="acctLogin" href="${PUSH_API}/auth/kakao?return=${ret}">카카오 로그인</a></div>${note}`;
+      $('acctLogin').onclick = () => track('login', { step: 'start' });
+      return;
+    }
+    const al = store.get('bdr.alert', null), pushOn = !!store.get(PUSH_KEY, null);
+    box.innerHTML = `카카오 계정으로 <b>로그인돼 있어요.</b> 저장한 글 ${saved.size}개와 설정이 계정에 저장돼 다른 기기에서도 보여요.${acctLast ? ` <span class="note">(${new Date(acctLast).toTimeString().slice(0, 5)} 동기화)</span>` : ''}`
+      + (al && al.filters && !pushOn ? `<div class="acts"><span>계정에 저장된 알림 조건: <b>${esc(al.label || '')}</b></span><button class="chip primary" id="acctAlert" type="button">이 기기에서도 알림 받기</button></div>` : '')
+      + `<div class="acts"><button class="chip" id="acctOut" type="button">로그아웃</button><button class="chip" id="acctBye" type="button">${acctBye ? '한 번 더 누르면 카카오 확인 후 계정 데이터를 지워요' : '탈퇴하고 데이터 지우기'}</button></div>${note}`;
+    $('acctOut').onclick = async () => { try { await acctApi('/logout', { method: 'POST' }); } catch {} store.set(AUTH_KEY, null); track('login', { step: 'logout' }); toast('로그아웃했어요. 이 기기의 저장 글·설정은 그대로 남아요'); renderAcct(); };
+    $('acctBye').onclick = () => { if (!acctBye) { acctBye = true; return renderAcct(); } track('login', { step: 'withdraw' }); location.href = `${PUSH_API}/auth/kakao?mode=withdraw&return=${ret}`; };
+    const aa = $('acctAlert'); if (aa) aa.onclick = async () => { await subscribePush(al); renderAcct(); };
+  }
+  $('btnAcct').onclick = () => {
+    const box = $('acctBox'); box.hidden = !box.hidden; acctBye = false;
+    $('btnAcct').setAttribute('aria-expanded', String(!box.hidden));
+    if (!box.hidden) { renderAcct(); track('account_panel_open', { in: authTok() ? 'y' : 'n' }); }
+  };
+  (async () => { // 로그인 서버가 준비돼 있을 때만 버튼 표시 (설정 전엔 503/404)
+    try { const r = await fetch(PUSH_API + '/me', { headers: authTok() ? { Authorization: 'Bearer ' + authTok() } : {} }); acctOn = r.status === 401 || r.ok; } catch { acctOn = false; }
+    renderAcctBtn(); if (!acctOn) return;
+    const msg = store.get('bdr.authMsg', null); storeSet0('bdr.authMsg', null);
+    if (msg === 'login') { toast('로그인했어요. 이 기기의 저장 글·설정을 계정과 합쳤어요'); track('login', { step: 'done' }); await pullSync(true); }
+    else if (msg === 'withdrawn:1') { toast('탈퇴했어요. 계정에 보관된 데이터를 모두 지웠어요'); track('login', { step: 'withdrawn' }); }
+    else if (msg) toast('로그인하지 못했어요. 다시 시도해 주세요');
+    else if (authTok()) await pullSync(false);
+  })();
 
   $('q').value = S.q;
   // ---- 공지 띠 (예: BDR '동방' 출시). docs/notice.json만 바꿔 올리면 켜짐/꺼짐 — {"on":true,"id":"고유값","text":"문구","link":"주소","linkText":"버튼 글자"}
