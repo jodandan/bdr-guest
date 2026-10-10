@@ -233,6 +233,7 @@ footer>a{padding:8px 0}
 .cafebox .chip,.navbox .chip{white-space:normal;max-width:100%;flex:0 1 auto}@media (max-width:359px){.cafebox{padding:8px}}
 .fmorebtn{display:flex;align-items:center;gap:4px;background:none;border:0;padding:6px 0 6px 62px;min-height:36px;font-size:13px;font-weight:700;color:var(--sub);cursor:pointer}.fmorebtn .n{color:var(--accent)}.fmorebtn[aria-expanded="true"] .ar{transform:rotate(180deg)}.fmorebtn .ar{display:inline-block;transition:transform .15s}.fmorebtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .chip.all[aria-pressed="true"]{background:none;border-color:transparent;box-shadow:none;font-weight:500;color:var(--sub)}
+.acctal{margin-top:10px;padding-top:10px;border-top:2px dashed var(--line)}.alrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px}.alk{flex:0 0 100%;font-size:12px;font-weight:700;color:var(--sub)}
 .kakao{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 18px;background:#FEE500;color:rgba(0,0,0,.85);border-radius:10px;font-weight:700;text-decoration:none}.kakao:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 </style>
 <script>
@@ -1035,16 +1036,16 @@ footer>a{padding:8px 0}
       html = cur ? `지금 <b>${esc(cur.label)}</b> 조건으로 알림을 받고 있어요.` : '지금 고른 조건에 맞는 새 글이 올라오면 알려드려요.';
       html += `<br>알림 조건: <b>${esc(pushLabel())}</b>`;
       html += `<div class="acts"><button class="chip primary" id="pushOn" type="button">${cur ? '이 조건으로 바꾸기' : '이 조건으로 알림 받기'}</button>${cur ? '<button class="chip" id="pushOff" type="button">알림 끄기</button>' : ''}</div>`;
-      html += '<div class="note">밤 12시~아침 7시에 올라온 글은 아침 7시에 한 번에 알려드려요. 위 필터를 바꾼 뒤 누르면 조건이 바뀌어요. 서버에는 알림 주소와 조건만 저장되고, 이름·연락처는 저장하지 않아요.</div>';
+      html += '<div class="note">밤 12시~아침 7시에 올라온 글은 아침 7시에 한 번에 알려드려요. 위 필터를 바꾼 뒤 누르면 조건이 바뀌어요. 서버에는 알림 주소와 조건만 저장되고, 이름·연락처는 저장하지 않아요.' + (store.get('bdr.auth', null) ? ' 로그인 중이라 알림을 켠 내 모든 기기에 같은 조건이 적용돼요. 내 동네·시간대·요일로 따로 정하려면 [내 계정 → 맞춤 알림]을 쓰세요.' : '') + '</div>';
     }
     box.innerHTML = html;
     const on = $('pushOn'), off = $('pushOff');
     if (on) on.onclick = subscribePush;
     if (off) off.onclick = unsubscribePush;
   }
-  async function subscribePush(preset) { // preset: 계정에 저장된 알림 조건으로 켤 때
+  async function subscribePush(preset, opt = {}) { // preset: 계정에 저장된 알림 조건으로 켤 때 / opt.silent: 안내 없이(로그인 직후 기기 연결 등)
     try {
-      const perm = await Notification.requestPermission();
+      const perm = opt.silent ? Notification.permission : await Notification.requestPermission();
       if (perm !== 'granted') { toast('알림 권한이 필요해요'); return renderPush(); }
       const reg = await navigator.serviceWorker.ready;
       const { key } = await fetch(PUSH_API + '/vapid').then(r => r.json());
@@ -1053,14 +1054,15 @@ footer>a{padding:8px 0}
       const sub = (await reg.pushManager.getSubscription()) || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: raw });
       const pre = preset && preset.filters ? preset : null;
       const filters = pre ? pre.filters : pushFilters(), label = pre ? pre.label : pushLabel(), query = pre ? pre.query || '' : stateQuery();
-      const r = await fetch(PUSH_API + '/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subscription: sub.toJSON(), filters }) });
+      const tok = typeof authTok === 'function' ? authTok() : null; // 로그인 중이면 이 기기를 계정에 묶어 맞춤 알림 조건을 같이 받음
+      const r = await fetch(PUSH_API + '/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(tok ? { Authorization: 'Bearer ' + tok } : {}) }, body: JSON.stringify({ subscription: sub.toJSON(), filters, label, query }) });
       if (!r.ok) throw new Error(r.status);
       await saveSwState({ filters, label, query });
       store.set(PUSH_KEY, { label, at: Date.now() });
-      store.set('bdr.alert', { filters, label, query }); // 로그인 중이면 계정에도 저장 → 다른 기기에서 같은 조건으로 켤 수 있음
-      track('push_subscribe', { board: S.board, region1: S.r1, regions: filters.regions.join(',') || '-', slot: filters.slots.join(',') || '-', week: S.week });
-      toast('알림을 켰어요');
-    } catch (e) { toast('알림을 켜지 못했어요. 잠시 후 다시 시도해 주세요'); }
+      store.set('bdr.alert', pre && pre.pref ? { filters, label, query, pref: pre.pref } : { filters, label, query }); // 로그인 중이면 계정에도 저장 → 알림 켠 내 다른 기기도 같은 조건
+      track('push_subscribe', { board: S.board, region1: S.r1, regions: filters.regions.join(',') || '-', slot: filters.slots.join(',') || '-', week: S.week, via: pre ? (opt.silent ? 'account_link' : 'account') : 'filters' });
+      if (!opt.silent) toast('알림을 켰어요');
+    } catch (e) { if (!opt.silent) toast('알림을 켜지 못했어요. 잠시 후 다시 시도해 주세요'); }
     renderPush(); renderPushBtn();
   }
   async function unsubscribePush() {
@@ -1089,7 +1091,7 @@ footer>a{padding:8px 0}
   // ---- 계정(카카오 로그인, 선택) — 저장한 글·설정·알림 조건을 기기끼리 동기화 (서버: 알림 서버 /auth/kakao, /me)
   const AUTH_KEY = 'bdr.auth';
   const SYNC_KEYS = ['bdr.saved', 'bdr.fav', 'bdr.home', 'bdr.radius', 'bdr.mapApp', 'bdr.compact', 'bdr.hideClosed', 'bdr.alert'];
-  let acctOn = false, acctApplying = false, acctTimer = 0, acctLast = 0, acctBye = false;
+  let acctOn = false, acctApplying = false, acctTimer = 0, acctLast = 0, acctBye = false, acctDevices = 0, acctEdit = null;
   const authTok = () => store.get(AUTH_KEY, null);
   const localData = () => Object.fromEntries(SYNC_KEYS.map(k => [k.slice(4), store.get(k, null)]));
   const storeSet0 = store.set;
@@ -1108,6 +1110,8 @@ footer>a{padding:8px 0}
       const h = store.get('bdr.home', ''); if (h === '' || GEO[h]) S.home = h;
       const km = store.get('bdr.radius', 10); if (RADII.includes(km)) S.radius = km;
       S.compact = !!store.get('bdr.compact', false); S.hideClosed = store.get('bdr.hideClosed', true);
+      const al = store.get('bdr.alert', null), on = store.get(PUSH_KEY, null); // 다른 기기에서 바꾼 맞춤 알림 → 이 기기 알림 표시도 맞춤
+      if (on && al && al.label && on.label !== al.label) { storeSet0(PUSH_KEY, { ...on, label: al.label }); saveSwState({ filters: al.filters, label: al.label, query: al.query || '' }); }
     } finally { acctApplying = false; }
     render(); renderMapPref();
   }
@@ -1118,13 +1122,15 @@ footer>a{padding:8px 0}
   async function pullSync(first) {
     if (!authTok()) return;
     try {
-      const { data } = await acctApi('/me');
+      const { data, devices } = await acctApi('/me'); acctDevices = devices || 0;
       if (!data || !Object.keys(data).length) return pushSync(); // 비어 있는 새 계정 → 이 기기 값 올리기
       if (first) { // 로그인 직후: 저장한 글은 합치고, 계정에 없는 설정은 이 기기 값 유지
         const loc = localData(), merged = { ...loc };
         for (const [k, v] of Object.entries(data)) if (v !== null && v !== undefined) merged[k] = v;
         merged.saved = [...new Set([...(data.saved || []), ...(loc.saved || [])])].slice(-500);
         applyData(merged); await pushSync();
+        const al = store.get('bdr.alert', null); // 이 기기가 이미 알림을 켜 둔 상태면 계정에 묶어 맞춤 알림을 같이 받게 함
+        if (store.get(PUSH_KEY, null) && al && al.filters) { await subscribePush(al, { silent: true }); try { acctDevices = (await acctApi('/me')).devices || acctDevices; } catch {} }
       } else { applyData(data); acctLast = Date.now(); }
       renderAcct();
     } catch {}
@@ -1146,11 +1152,85 @@ footer>a{padding:8px 0}
     }
     const al = store.get('bdr.alert', null), pushOn = !!store.get(PUSH_KEY, null);
     box.innerHTML = `카카오 계정으로 <b>로그인돼 있어요.</b> 저장한 글 ${saved.size}개와 설정이 계정에 저장돼 다른 기기에서도 보여요.${acctLast ? ` <span class="note">(${new Date(acctLast).toTimeString().slice(0, 5)} 동기화)</span>` : ''}`
-      + (al && al.filters && !pushOn ? `<div class="acts"><span>계정에 저장된 알림 조건: <b>${esc(al.label || '')}</b></span><button class="chip primary" id="acctAlert" type="button">이 기기에서도 알림 받기</button></div>` : '')
+      + '<div class="acctal" id="acctAl"></div>'
       + `<div class="acts"><button class="chip" id="acctOut" type="button">로그아웃</button><button class="chip" id="acctBye" type="button">${acctBye ? '한 번 더 누르면 카카오 확인 후 계정 데이터를 지워요' : '탈퇴하고 데이터 지우기'}</button></div>${note}`;
-    $('acctOut').onclick = async () => { try { await acctApi('/logout', { method: 'POST' }); } catch {} store.set(AUTH_KEY, null); track('login', { step: 'logout' }); toast('로그아웃했어요. 이 기기의 저장 글·설정은 그대로 남아요'); renderAcct(); };
+    $('acctOut').onclick = async () => { try { await acctApi('/logout', { method: 'POST' }); } catch {} store.set(AUTH_KEY, null); acctEdit = null; acctDevices = 0; track('login', { step: 'logout' }); toast('로그아웃했어요. 이 기기의 저장 글·설정은 그대로 남아요'); renderAcct(); };
     $('acctBye').onclick = () => { if (!acctBye) { acctBye = true; return renderAcct(); } track('login', { step: 'withdraw' }); location.href = `${PUSH_API}/auth/kakao?mode=withdraw&return=${ret}`; };
-    const aa = $('acctAlert'); if (aa) aa.onclick = async () => { await subscribePush(al); renderAcct(); };
+    renderAlertBox(al, pushOn);
+  }
+
+  // ---- 맞춤 알림(로그인 사용자): 글 종류·내 동네+반경·시간대·요일을 계정에 저장 → 알림 켠 내 모든 기기에 같은 조건 적용
+  const DAYS = [[1, '월'], [2, '화'], [3, '수'], [4, '목'], [5, '금'], [6, '토'], [0, '일']], WEEKDAYS = [1, 2, 3, 4, 5], WEEKEND = [0, 6];
+  const sameSet = (a, b) => a.length === b.length && b.every(x => a.includes(x));
+  function alertPrefOf(al) { // 저장된 조건 → 편집 값 (필터로 켠 알림이면 그 조건에서 최대한 가져옴)
+    const p = al && al.pref;
+    if (p) return { boards: new Set(p.boards || ['guest']), home: GEO[p.home] ? p.home : '', km: RADII.includes(p.km) ? p.km : 10, slots: new Set(p.slots || []), days: new Set(p.days || []) };
+    const f = (al && al.filters) || {};
+    const days = f.days && f.days.length ? f.days : f.week === '평일' ? WEEKDAYS : f.week === '주말' ? WEEKEND : [];
+    return { boards: new Set(f.boards && f.boards.length ? f.boards : [S.board]), home: S.home || '', km: S.radius || 10, slots: new Set(f.slots || []), days: new Set(days) };
+  }
+  const daysLabel = ds => !ds.length ? '' : sameSet(ds, WEEKDAYS) ? '평일' : sameSet(ds, WEEKEND) ? '주말' : DAYS.filter(([d]) => ds.includes(d)).map(([, n]) => n).join('·');
+  function buildAlert(e) {
+    const bs = BOARDS.map(b => b.key).filter(k => e.boards.has(k)); if (!bs.length) bs.push('guest');
+    const regions = e.home ? Object.keys(GEO).filter(n => km(e.home, n) <= e.km) : [];
+    const slots = ['오전', '오후', '저녁'].filter(x => e.slots.has(x));
+    let days = DAYS.map(([d]) => d).filter(d => e.days.has(d)); if (days.length === 7) days = [];
+    const week = sameSet(days, WEEKDAYS) ? '평일' : sameSet(days, WEEKEND) ? '주말' : '전체';
+    const filters = { boards: bs, r1: e.home ? NEARBY : '전체', regions, slots, week, days: week === '전체' ? days : [] };
+    const label = [bs.map(k => (BOARDS.find(b => b.key === k) || {}).name || k).join('·'), e.home ? `${shortR2(e.home)} ${e.km}km 이내` : '전 지역', slots.join('·'), daysLabel(days)].filter(Boolean).join(' · ');
+    const q = new URLSearchParams(); if (bs[0] !== 'guest') q.set('b', bs[0]);
+    if (e.home) { q.set('r', NEARBY); q.set('h', e.home); q.set('km', e.km); }
+    if (week !== '전체') q.set('w', week); if (slots.length) q.set('t', slots.join(','));
+    return { filters, label, query: q.toString(), pref: { boards: bs, home: e.home, km: e.km, slots, days } };
+  }
+  function alertHits(f) { // 지금 목록에서 이 조건에 맞는 글 수 (알림 서버와 같은 규칙)
+    const ds = f.days.length ? f.days : f.week === '평일' ? WEEKDAYS : f.week === '주말' ? WEEKEND : [];
+    return groupDupes(DATA.filter(p => !p.closed && !isOver(p) && f.boards.includes(boardOf(p))
+      && (!f.regions.length || f.regions.includes(p.region2 || '기타'))
+      && (!f.slots.length || f.slots.includes(p.slot) || (p.amb && (f.slots.includes('오전') || f.slots.includes('저녁'))))
+      && (!ds.length || (p.date && ds.includes(new Date(p.date + 'T00:00:00Z').getUTCDay()))))).length;
+  }
+  function renderAlertBox(al, pushOn) {
+    const el = $('acctAl'); if (!el) return;
+    const has = !!(al && al.filters);
+    if (!acctEdit) {
+      el.innerHTML = '<b>맞춤 알림</b> ' + (has ? esc(al.label || '') : '<span class="note">아직 없어요. 내 동네·시간대·요일을 정해 두면 맞는 새 글만 알려드려요.</span>')
+        + (has && acctDevices ? `<div class="note">알림을 켠 내 기기 ${acctDevices}대에 이 조건이 적용돼 있어요.</div>` : '')
+        + `<div class="acts"><button class="chip" id="acctAlEdit" type="button">${has ? '조건 바꾸기' : '맞춤 알림 만들기'}</button>${has && !pushOn ? '<button class="chip primary" id="acctAlert" type="button">이 기기에서도 알림 받기</button>' : ''}</div>`;
+      $('acctAlEdit').onclick = () => { acctEdit = alertPrefOf(al); track('alert_custom', { step: 'open' }); renderAlertBox(al, pushOn); $('acctAl').querySelector('[data-g]')?.focus(); };
+      const aa = $('acctAlert'); if (aa) aa.onclick = async () => { await subscribePush(al); renderAcct(); };
+      return;
+    }
+    const e = acctEdit, a = buildAlert(e);
+    const ch = (g, v, label, on) => `<button class="chip sm" type="button" data-g="${g}" data-v="${esc(String(v))}" aria-pressed="${on ? 'true' : 'false'}">${esc(label)}</button>`;
+    const dl = [...e.days];
+    el.innerHTML = '<b>맞춤 알림 조건</b>'
+      + `<div class="alrow" role="group" aria-label="글 종류"><span class="alk">글 종류</span>${BOARDS.map(b => ch('b', b.key, b.name, e.boards.has(b.key))).join('')}</div>`
+      + `<div class="alrow" role="group" aria-label="지역"><span class="alk">지역 (내 동네 기준 거리)</span><select class="chip sm homesel" id="alHome" aria-label="맞춤 알림 내 동네"><option value="">전 지역</option>${Object.entries(GEO_R1).map(([r1, ns]) => `<optgroup label="${r1}">${ns.map(n => `<option value="${esc(n)}"${n === e.home ? ' selected' : ''}>${esc(shortR2(n))}</option>`).join('')}</optgroup>`).join('')}</select>${e.home ? RADII.map(r => ch('k', r, `${r}km`, e.km === r)).join('') : ''}</div>`
+      + `<div class="alrow" role="group" aria-label="시간대"><span class="alk">시간대</span>${[['오전', '오전(~12시)'], ['오후', '오후(12~18시)'], ['저녁', '저녁(18시~)']].map(([v, l]) => ch('s', v, l, e.slots.has(v))).join('')}</div>`
+      + `<div class="alrow" role="group" aria-label="요일"><span class="alk">요일</span>${ch('w', '평일', '평일', sameSet(dl, WEEKDAYS))}${ch('w', '주말', '주말', sameSet(dl, WEEKEND))}${DAYS.map(([d, l]) => ch('d', d, l, e.days.has(d))).join('')}</div>`
+      + `<div class="note">고르지 않은 항목은 모두 받아요. 지금 목록 기준 <b>${alertHits(a.filters)}건</b>이 맞아요.<br>알림 이름: ${esc(a.label)}</div>`
+      + `<div class="acts"><button class="chip primary" id="alSave" type="button">${pushOn ? '저장하고 알림에 적용' : '저장'}</button><button class="chip" id="alCancel" type="button">취소</button></div>`;
+    el.querySelectorAll('[data-g]').forEach(b => b.onclick = () => {
+      const g = b.dataset.g, v = b.dataset.v;
+      if (g === 'b') { if (!e.boards.has(v)) e.boards.add(v); else if (e.boards.size > 1) e.boards.delete(v); }
+      else if (g === 'k') e.km = +v;
+      else if (g === 's') { if (e.slots.has(v)) e.slots.delete(v); else e.slots.add(v); }
+      else if (g === 'd') { const d = +v; if (e.days.has(d)) e.days.delete(d); else e.days.add(d); }
+      else if (g === 'w') { const set = v === '평일' ? WEEKDAYS : WEEKEND; e.days = new Set(sameSet([...e.days], set) ? [] : set); }
+      renderAlertBox(al, pushOn); $('acctAl').querySelector(`[data-g="${g}"][data-v="${CSS.escape(v)}"]`)?.focus();
+    });
+    $('alHome').onchange = ev => { e.home = ev.target.value; renderAlertBox(al, pushOn); $('alHome').focus(); };
+    $('alCancel').onclick = () => { acctEdit = null; renderAlertBox(al, pushOn); $('acctAlEdit')?.focus(); };
+    $('alSave').onclick = async () => {
+      const na = buildAlert(e); acctEdit = null;
+      store.set('bdr.alert', na); // 계정에 저장 → 알림 서버가 이 계정에 묶인 기기 구독 조건을 모두 바꿈
+      track('alert_custom', { step: 'save', boards: na.pref.boards.join(','), km: na.pref.home ? na.pref.km : 0, slot: na.pref.slots.join(',') || '-', days: na.pref.days.join(',') || '-' });
+      const on = !!store.get(PUSH_KEY, null);
+      if (on) await subscribePush(na, { silent: true });
+      toast(on ? '맞춤 알림을 저장했어요. 알림을 켠 내 기기에 모두 적용돼요' : '맞춤 알림을 저장했어요. [이 기기에서도 알림 받기]를 누르면 알림이 와요');
+      renderAcct(); $('acctAlEdit')?.focus();
+    };
   }
   $('btnAcct').onclick = () => {
     const box = $('acctBox'); box.hidden = !box.hidden; acctBye = false;

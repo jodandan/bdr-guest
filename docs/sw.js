@@ -1,6 +1,7 @@
 // 앱 껍데기는 캐시 우선, 목록 데이터는 네트워크 우선 (오프라인이면 마지막 목록)
 // + 웹 푸시: 서버는 '새 글 있음' 신호만 보내고, 알림 내용은 여기서 목록을 읽어 만든다
-const CACHE = 'bdr-v7';
+const CACHE = 'bdr-v8';
+const PUSH_API = 'https://bdrguest-push.kiss970322.workers.dev';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png', '/ball.svg'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL))); self.skipWaiting(); });
 self.addEventListener('activate', e => {
@@ -28,16 +29,25 @@ function matches(f, p) {
   if (f.regions && f.regions.length) { if (!f.regions.includes(p.region2 || '기타')) return false; }
   else if (f.r1 && f.r1 !== '전체' && (p.region1 || '기타') !== f.r1) return false;
   if (f.slots && f.slots.length && !f.slots.includes(p.slot) && !(p.amb && (f.slots.includes('오전') || f.slots.includes('저녁')))) return false;
-  if (f.week && f.week !== '전체') {
+  if ((f.week && f.week !== '전체') || (f.days && f.days.length)) {
     if (!p.date) return false;
     const w = new Date(p.date + 'T00:00:00Z').getUTCDay();
-    if ((f.week === '주말') !== (w === 0 || w === 6)) return false;
+    if (f.week && f.week !== '전체' && (f.week === '주말') !== (w === 0 || w === 6)) return false;
+    if (f.days && f.days.length && !f.days.includes(w)) return false;
   }
   return true;
 }
 self.addEventListener('push', e => {
   e.waitUntil((async () => {
-    const st = await getState();
+    let st = await getState();
+    // 계정 맞춤 알림은 다른 기기에서 조건을 바꿀 수 있어 서버의 지금 조건을 먼저 읽는다 (실패하면 이 기기에 저장된 조건)
+    try {
+      const sub = await self.registration.pushManager.getSubscription();
+      if (sub) {
+        const r = await fetch(PUSH_API + '/sub-state', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ endpoint: sub.endpoint }) });
+        if (r.ok) { const v = await r.json(); if (v && v.filters) st = { ...st, filters: v.filters, label: v.label || st.label, query: v.query || st.query || '' }; }
+      }
+    } catch {}
     const f = st.filters || {};
     const notified = new Set(st.notified || []);
     let hits = [];
@@ -48,7 +58,7 @@ self.addEventListener('push', e => {
         && now - Date.parse(p.posted) < 9 * 3600e3 && matches(f, p));
     } catch {}
     hits.forEach(p => notified.add(p.key));
-    await setState({ ...st, notified: [...notified].slice(-500) });
+    await setState({ ...st, notified: [...notified].slice(-500) }); // 서버에서 받은 조건도 같이 저장
     const label = st.label || '관심 조건';
     const title = hits.length ? `🏀 새 글 ${hits.length}건 · ${label}` : `🏀 ${label}에 새 글이 올라왔어요`;
     const unent = t => String(t).replace(/&(amp|lt|gt|quot|#34|#39);/g, (m, k) => ({ amp: '&', lt: '<', gt: '>', quot: '"', '#34': '"', '#39': "'" })[k]);
