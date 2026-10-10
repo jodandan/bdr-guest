@@ -222,6 +222,9 @@ button{font:inherit;color:inherit}
 .mapnote{margin:0;padding:6px 10px;font-size:13px;color:var(--sub)}
 .mpin{display:grid;place-items:center;border-radius:50%;background:var(--accent-strong);color:var(--on-accent);font:700 13px/1 var(--f-body);border:2px solid var(--card);box-shadow:0 2px 6px rgba(0,0,0,.25)}
 .mpin.on{background:var(--hl);color:var(--hl-text)}
+.mpin.grp{box-shadow:0 0 0 4px color-mix(in srgb,var(--accent-strong) 28%,transparent),0 2px 6px rgba(0,0,0,.25)}
+.mpin{animation:pinin .25s cubic-bezier(.3,1.4,.5,1)}
+@keyframes pinin{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
 .leaflet-container{font-family:inherit}
 .favnote{margin:0 0 10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--text);font-size:13px;line-height:1.5}
 .linkbtn{margin-left:6px;padding:0;border:0;background:none;font-weight:700;color:var(--accent);text-decoration:underline;cursor:pointer}
@@ -1007,24 +1010,36 @@ footer>a{padding:8px 0}
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 17, attribution: '&copy; OpenStreetMap' }).addTo(LMAP);
       LLAYER = L.layerGroup().addTo(LMAP);
     }
-    LLAYER.clearLayers();
     const rows = groupDupes(sortRows(base().filter(p => passes(p, S, false)))).map(g => g.p);
     const cnt = {}; let none = 0;
     for (const p of rows) { if (p.region2 && GEO[p.region2]) cnt[p.region2] = (cnt[p.region2] || 0) + 1; else none++; }
-    const pts = [];
-    for (const [r2, n] of Object.entries(cnt)) {
-      const r1 = Object.keys(GEO_R1).find(r => GEO_R1[r].includes(r2));
-      const on = S.r2.has(r2) || (S.r1 === NEARBY && S.home === r2);
-      const sz = Math.round(26 + Math.min(n, 30) * 1.2);
-      const icon = L.divIcon({ className: '', html: `<div class="mpin${on ? ' on' : ''}" style="width:${sz}px;height:${sz}px">${n}</div>`, iconSize: [sz, sz], iconAnchor: [sz / 2, sz / 2] });
-      const m = L.marker(GEO[r2], { icon, title: `${shortR2(r2)} ${n}건`, alt: `${shortR2(r2)} ${n}건`, keyboard: true }).addTo(LLAYER);
-      m.bindTooltip(`${r1} ${shortR2(r2)} · ${n}건`);
-      m.on('click', () => { S.r1 = r1; S.r2 = new Set([r2]); S.mapPick = r2; track('map_pick', { region2: r2 }); render(); $('list').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
-      pts.push(GEO[r2]);
-    }
+    const items = Object.entries(cnt).map(([r2, n]) => ({ r2, n, ll: GEO[r2], r1: Object.keys(GEO_R1).find(r => GEO_R1[r].includes(r2)) })).sort((a, b) => b.n - a.n);
+    const pts = items.map(x => x.ll), sizeOf = n => Math.round(26 + Math.min(n, 30) * 1.2);
+    const draw = () => { // 화면에서 겹치는 동네 동그라미는 하나로 묶음 → 누르면 확대해서 풀림
+      LLAYER.clearLayers();
+      const groups = [];
+      for (const it of items) {
+        const pt = LMAP.latLngToLayerPoint(it.ll), s = sizeOf(it.n);
+        const g = LMAP.getZoom() < 13 && groups.find(g => g.pt.distanceTo(pt) < (g.s + s) / 2 + 2);
+        if (g) { g.list.push(it); g.n += it.n; } else groups.push({ pt, s, n: it.n, list: [it] });
+      }
+      for (const g of groups) {
+        const it = g.list[0], one = g.list.length === 1, sz = sizeOf(g.n), names = g.list.map(x => shortR2(x.r2));
+        const on = g.list.some(x => S.r2.has(x.r2) || (S.r1 === NEARBY && S.home === x.r2));
+        const label = one ? `${names[0]} ${g.n}건` : `${names.slice(0, 3).join('·')}${names.length > 3 ? ` 외 ${names.length - 3}곳` : ''} ${g.n}건, 누르면 확대`;
+        const icon = L.divIcon({ className: '', html: `<div class="mpin${on ? ' on' : ''}${one ? '' : ' grp'}" style="width:${sz}px;height:${sz}px">${g.n}</div>`, iconSize: [sz, sz], iconAnchor: [sz / 2, sz / 2] });
+        const m = L.marker(it.ll, { icon, title: label, alt: label, keyboard: true }).addTo(LLAYER);
+        m.bindTooltip(one ? `${it.r1} ${names[0]} · ${g.n}건` : `${names.join('·')} · ${g.n}건 (누르면 확대)`);
+        if (one) m.on('click', () => { S.r1 = it.r1; S.r2 = new Set([it.r2]); S.mapPick = it.r2; track('map_pick', { region2: it.r2 }); render(); $('list').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+        else m.on('click', () => { track('map_zoom_group', { n: g.list.length }); LMAP.fitBounds(g.list.map(x => x.ll), { padding: [48, 48], maxZoom: Math.min(LMAP.getZoom() + 3, 14) }); });
+      }
+    };
+    if (LMAP._hgDraw) LMAP.off('zoomend', LMAP._hgDraw);
+    LMAP._hgDraw = draw; LMAP.on('zoomend', draw);
     $('mapNote').innerHTML = `동그라미를 누르면 그 동네 글만 보여요.${none ? ` 동네를 알 수 없는 글 ${none}건은 지도에 없어요.` : ''}${S.r1 !== '전체' ? ' <button class="linkbtn" id="mapAll" type="button">지역 선택 풀기</button>' : ''}`;
     if ($('mapAll')) $('mapAll').onclick = () => { S.r1 = '전체'; S.r2.clear(); track('map_all'); render(); };
     if (pts.length && !renderMap.fitted) { LMAP.fitBounds(pts, { padding: [30, 30], maxZoom: 11 }); renderMap.fitted = true; }
+    draw();
     setTimeout(() => LMAP.invalidateSize(), 60);
   }
   $('btnMap').onclick = () => {
