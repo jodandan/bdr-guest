@@ -37,7 +37,7 @@
   --bg:#F4F2EE;--card:#fff;--text:#17181A;--sub:#5E5A53;--muted:#7A766E;--line:#E3DED5;--line2:#D3CDC2;
   --accent:#B4231A;--accent-strong:#CF3326;--on-accent:#fff;--hero:#CF3326;--hero-text:#fff;--hero-sub:rgba(255,255,255,.92);
   --ink:#17181A;--on-ink:#fff;--chip:#fff;--chip-on:#17181A;--chip-on-text:#fff;--pill:#F1EEE8;--pill-text:#17181A;
-  --hl:#FFE7A3;--hl-text:#3D2F00;--star:#B07D00;--field:#8F887B;--track:#E6E2DA;--seg-on:#fff;--soft:#FBEDEB;--shadow:0 6px 18px rgba(23,24,26,.08);
+  --hl:#FFE7A3;--hl-text:#3D2F00;--star:#B07D00;--field:#8F887B;--fresh:#FFF1C2;--fresh-line:#F0D27A;--track:#E6E2DA;--seg-on:#fff;--soft:#FBEDEB;--shadow:0 6px 18px rgba(23,24,26,.08);
   --yellow:var(--hl);--shadow-c:transparent;
   --f-display:"Black Han Sans","Noto Sans KR",sans-serif;
   --f-head:"Black Han Sans","Noto Sans KR",sans-serif;
@@ -48,12 +48,12 @@
   --bg:#111316;--card:#1B1E23;--text:#F4F4F2;--sub:#A3A7AE;--muted:#8F949C;--line:#2A2E35;--line2:#383D45;
   --accent:#FF8A33;--accent-strong:#FF7A1A;--on-accent:#111316;--hero:#16181C;--hero-text:#F4F4F2;--hero-sub:#A3A7AE;
   --ink:#F4F4F2;--on-ink:#111316;--chip:#1E2126;--chip-on:#FF7A1A;--chip-on-text:#111316;--pill:#262A30;--pill-text:#E3E4E6;
-  --hl:#FFC48F;--hl-text:#2A1500;--star:#FF7A1A;--field:#6B717A;--track:#1E2126;--seg-on:#2C3037;--soft:#2A1D12;--shadow:0 6px 18px rgba(0,0,0,.35);color-scheme:dark}}
+  --hl:#FFC48F;--hl-text:#2A1500;--star:#FF7A1A;--field:#6B717A;--fresh:#33280F;--fresh-line:#7A5A1E;--track:#1E2126;--seg-on:#2C3037;--soft:#2A1D12;--shadow:0 6px 18px rgba(0,0,0,.35);color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#111316;--card:#1B1E23;--text:#F4F4F2;--sub:#A3A7AE;--muted:#8F949C;--line:#2A2E35;--line2:#383D45;
   --accent:#FF8A33;--accent-strong:#FF7A1A;--on-accent:#111316;--hero:#16181C;--hero-text:#F4F4F2;--hero-sub:#A3A7AE;
   --ink:#F4F4F2;--on-ink:#111316;--chip:#1E2126;--chip-on:#FF7A1A;--chip-on-text:#111316;--pill:#262A30;--pill-text:#E3E4E6;
-  --hl:#FFC48F;--hl-text:#2A1500;--star:#FF7A1A;--field:#6B717A;--track:#1E2126;--seg-on:#2C3037;--soft:#2A1D12;--shadow:0 6px 18px rgba(0,0,0,.35);color-scheme:dark}
+  --hl:#FFC48F;--hl-text:#2A1500;--star:#FF7A1A;--field:#6B717A;--fresh:#33280F;--fresh-line:#7A5A1E;--track:#1E2126;--seg-on:#2C3037;--soft:#2A1D12;--shadow:0 6px 18px rgba(0,0,0,.35);color-scheme:dark}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 var(--f-body);transition:background-color .25s ease,color .25s ease}
@@ -265,6 +265,11 @@ footer>a{padding:8px 0}
 @media (min-width:1080px){.wrap{max-width:1040px}.dayg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:12px;align-items:start}.dayg>.dayh{grid-column:1/-1}.compact .dayg{grid-template-columns:repeat(3,minmax(0,1fr))}.pushbox{max-width:640px}}
 :root[data-theme="dark"] .chk[aria-pressed="true"]::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='10'%3E%3Cpath d='M1 5l3.5 3.5L11 1' stroke='%23111316' stroke-width='2.4' fill='none'/%3E%3C/svg%3E")}:root[data-theme="dark"] .leaflet-tile-pane{filter:brightness(.72) saturate(.85)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .chk[aria-pressed="true"]::before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='10'%3E%3Cpath d='M1 5l3.5 3.5L11 1' stroke='%23111316' stroke-width='2.4' fill='none'/%3E%3C/svg%3E")}:root:not([data-theme="light"]) .leaflet-tile-pane{filter:brightness(.72) saturate(.85)}}
+.card.fresh{animation:fresh 2.6s ease-out both}.anim .card.fresh{animation:cardin .35s ease both,fresh 2.6s ease-out both}
+@keyframes fresh{0%,45%{background-color:var(--fresh);border-color:var(--fresh-line)}100%{background-color:var(--card);border-color:var(--line)}}
+#list.swap{animation:listswap .22s ease}
+@keyframes listswap{from{opacity:.35;transform:translateY(4px)}to{opacity:1;transform:none}}
+.fpanel:not([hidden]),#fmore:not([hidden]),.mapbox:not([hidden]),.dup[open]>:not(summary){animation:boxin .22s ease}
 @supports (-webkit-touch-callout:none){.chip.homesel{font-size:16px}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
@@ -384,6 +389,7 @@ footer>a{padding:8px 0}
   }
 
   let DATA = [], TODAY = '', BOARDS = DEFAULT_BOARDS;
+  const FRESH = new Set(); // 지난 방문 이후(또는 열어 둔 사이) 새로 올라온 글 → 카드가 잠깐 노랗게
   const fav = store.get('bdr.fav', null); // {r1, r2:[]}
   const U = new URLSearchParams(location.search);
   const fromUrl = ['r', 'r2', 'd', 't', 'q', 'w', 'h', 'km', 'g', 'n'].some(k => U.get(k));
@@ -676,7 +682,7 @@ footer>a{padding:8px 0}
     const rep = reported.has(p.key) ? '<span>신고됨</span>' : `<button class="rep" type="button" data-key="${esc(p.key)}" aria-expanded="false" aria-label="정보가 틀렸나요? 알려주기">정보 오류</button>`;
     const seen = seenPosts.has(p.key) && !saved.has(p.key);
     const dupHtml = dup.length ? `<details class="dup"><summary>비슷한 글 ${dup.length}건 더</summary>${dup.map(q => `<a href="${esc(q.url)}" target="_blank" rel="noopener" class="title dupt" data-key="${esc(q.key)}">${esc(unent(q.title))}</a><span class="dupm"><b class="srcm ${q.src === 'naver' ? 'nv' : 'dm'}">${srcName(q)}</b> · ${ago(q.posted)} · 조회 ${q.views ?? 0}</span>`).join('')}</details>` : '';
-    return `<article class="card${p.closed ? ' closed' : ''}${seen ? ' seen' : ''}">
+    return `<article class="card${p.closed ? ' closed' : ''}${seen ? ' seen' : ''}${FRESH.has(p.key) ? ' fresh' : ''}">
       <div class="time">${time}</div>
       <div class="body">
         <div class="tags">${tags.join('')}</div>
@@ -825,6 +831,10 @@ footer>a{padding:8px 0}
 
   function render() {
     if (!render.done && DATA.length) { render.done = true; setTimeout(() => $('list').classList.remove('anim'), 1200); } // 첫 목록만 차례로 나타나는 효과
+    { const qs = stateQuery(), l = $('list'); // 필터·탭을 바꾸면 목록이 살짝 바뀌는 효과 (검색어 입력 중엔 안 함)
+      if (render.qs !== undefined && qs !== render.qs && S.q === render.q && !l.classList.contains('anim')) { l.classList.remove('swap'); void l.offsetWidth; l.classList.add('swap'); }
+      render.qs = qs; render.q = S.q; }
+    if (FRESH.size) { clearTimeout(render.fresh); render.fresh = setTimeout(() => FRESH.clear(), 3000); } // 새 글 표시는 한 번만
     syncUrl();
     // 마지막에 고른 지역을 자동 기억 — 단, 지도 동그라미로 잠깐 고른 지역은 기억하지 않음
     if (S.mapPick && !(S.r2.size === 1 && S.r2.has(S.mapPick))) S.mapPick = null;
@@ -1314,7 +1324,10 @@ footer>a{padding:8px 0}
       if (Array.isArray(d.boards) && d.boards.length) BOARDS = d.boards;
       if (!BOARDS.some(b => b.key === S.board)) S.board = 'guest';
       DATA = (d.posts || []).map(p => p.key ? p : { ...p, board: 'guest', key: `Dilr:${p.id}` });
-      TODAY = kstToday();
+      TODAY = kstToday(); dataUpdated = d.updated;
+      { const last = +store.get('bdr.lastVisit', 0) || 0; // 지난 방문 뒤 올라온 글 (3일 넘게 안 왔으면 표시 안 함)
+        if (last && Date.now() - last < 3 * 864e5) DATA.forEach(p => { if (Date.parse(p.posted) > last) FRESH.add(p.key); });
+        storeSet0('bdr.lastVisit', Date.now()); }
       const lag = (Date.now() - Date.parse(d.updated)) / 3600e3;
       $('meta').textContent = `최근 업데이트 ${ago(d.updated)} · 30분마다 갱신`;
       if (lag > 2) {
@@ -1328,6 +1341,27 @@ footer>a{padding:8px 0}
       $('list').setAttribute('aria-busy', 'false');
       $('list').innerHTML = `<div class="state">목록을 불러오지 못했어요.<br>잠시 후 다시 시도하거나 <a href="https://m.cafe.daum.net/dongarry/Dilr" target="_blank" rel="noopener">원문 게시판</a>에서 확인해 주세요.</div>`;
     });
+
+  // ---- 열어 둔 채로 있으면 새 글을 받아 옴 (화면이 보일 때 5분마다, 다른 창을 보다 돌아와도 확인)
+  let dataUpdated = '', lastPoll = Date.now();
+  async function pollData() {
+    if (document.hidden || !DATA.length || Date.now() - lastPoll < 4.5 * 60e3) return;
+    if (document.querySelector('.navbox, .repbox, .cafebox') || document.activeElement === $('q')) return; // 뭔가 하는 중이면 다음에
+    lastPoll = Date.now();
+    try {
+      const d = await (await fetch('data.json?t=' + Date.now(), { cache: 'no-store' })).json();
+      if (!d.updated || d.updated === dataUpdated) return;
+      const old = new Set(DATA.map(p => p.key));
+      DATA = (d.posts || []).map(p => p.key ? p : { ...p, board: 'guest', key: `Dilr:${p.id}` });
+      TODAY = kstToday(); dataUpdated = d.updated; $('meta').textContent = `최근 업데이트 ${ago(d.updated)} · 30분마다 갱신`;
+      const add = DATA.filter(p => !old.has(p.key)); add.forEach(p => FRESH.add(p.key)); storeSet0('bdr.lastVisit', Date.now());
+      render();
+      const mine = add.filter(p => filtered().includes(p)).length;
+      if (mine) { toast(`새 글 ${mine}건이 올라왔어요`); track('auto_refresh', { added: add.length, shown: mine }); }
+    } catch {}
+  }
+  setInterval(pollData, 60e3);
+  document.addEventListener('visibilitychange', pollData);
 
   if ('serviceWorker' in navigator && window.isSecureContext) {
     window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
