@@ -2,7 +2,8 @@
 // 게스트 구인 · 픽업게임 · 연습경기. 본문·작성자·연락처는 수집하지 않음. Node 20+ (내장 fetch)
 import { readFile, writeFile } from 'node:fs/promises';
 import { parsePost, postedAt, kstYmd } from './parser.mjs';
-import { buildPages } from './pages.mjs';
+import { buildPages, setPlaceIds } from './pages.mjs';
+import { verifyPlaces } from './places.mjs';
 
 const GRPID = 'IGaj';           // dongarry 카페 내부 ID
 export const BOARDS = [
@@ -186,6 +187,7 @@ async function main() {
     added, posts: dedup,
   };
   await writeFile(OUT, JSON.stringify(out));
+  setPlaceIds(await verifyPlaces(dedup, today).catch(e => { console.error('places:', e.message); return null; }));
   const pages = await buildPages(out);
   console.log(log.join(' / '), `| saved=${dedup.length} added=${added.length} pages=${pages}`);
 }

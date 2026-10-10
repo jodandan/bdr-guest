@@ -20,7 +20,7 @@ const WEEK = ['일', '월', '화', '수', '목', '금', '토'];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 // a, b = [광역, 동네, 슬러그, 위도, 경도]
 const km = (a, b) => { const R = 6371, t = x => x * Math.PI / 180; const h = Math.sin(t(b[3] - a[3]) / 2) ** 2 + Math.cos(t(a[3])) * Math.cos(t(b[3])) * Math.sin(t(b[4] - a[4]) / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); };
-const unent = s => String(s ?? '').replace(/&(amp|lt|gt|quot|#34|#39);/g, (_, k) => ({ amp: '&', lt: '<', gt: '>', quot: '"', '#34': '"', '#39': "'" }[k]));
+export const unent = s => String(s ?? '').replace(/&(amp|lt|gt|quot|#34|#39);/g, (_, k) => ({ amp: '&', lt: '<', gt: '>', quot: '"', '#34': '"', '#39': "'" }[k]));
 const where = p => p.region2 ? label(p.region1, p.region2) : (p.region1 || '');
 const label = (r1, d) => d === '경기광주' ? '경기 광주' : `${r1} ${d}`;
 function dayLabel(ymd, today) {
@@ -138,6 +138,9 @@ export function placeOf(title, region2) {
   return q;
 }
 
+let PLACE_IDS = null; // 카카오 장소 확인 결과('검색어 → 장소 ID', places.mjs). null이면 확인 전 방식
+export function setPlaceIds(m) { PLACE_IDS = m; }
+const placeChecked = q => !q || !PLACE_IDS ? q : PLACE_IDS[q] ? q : null;
 function postPage(p, today) {
   const path = `/p/${postSlug(p.key)}/`, url = `${SITE}${path}`;
   const t = unent(p.title);
@@ -156,8 +159,8 @@ function postPage(p, today) {
   if (p.date && p.date >= today && !p.closed) q.set('d', p.date); // 마감 글은 날짜까지 좁히면 0건이 되기 쉬워 지역만
   if (p.board && p.board !== 'guest') q.set('b', p.board);
   const more = `/?${q}`;
-  const spot = !p.closed && !(p.date && p.date < today) ? placeOf(t, p.region2) : null;
-  const navHtml = spot ? `<div class="nv"><span>📍 ${esc(spot)} 길찾기</span><a href="https://map.kakao.com/link/search/${encodeURIComponent(spot)}" target="_blank" rel="noopener" data-app="kakao">카카오맵<span class="sr"> (새 창)</span></a><a href="https://map.naver.com/p/search/${encodeURIComponent(spot)}" target="_blank" rel="noopener" data-app="naver">네이버 지도<span class="sr"> (새 창)</span></a></div><script>document.querySelectorAll('.nv a').forEach(function(a){a.addEventListener('click',function(){gtag('event','directions',{post_id:${JSON.stringify(p.key)},app:a.dataset.app,from:'share'})})})</script>` : '';
+  const spot = !p.closed && !(p.date && p.date < today) ? placeChecked(placeOf(t, p.region2)) : null;
+  const navHtml = spot ? `<div class="nv"><span>📍 ${esc(spot)} 길찾기</span><a href="${PLACE_IDS && PLACE_IDS[spot] ? `https://map.kakao.com/link/to/${PLACE_IDS[spot]}` : `https://map.kakao.com/link/search/${encodeURIComponent(spot)}`}" target="_blank" rel="noopener" data-app="kakao">카카오맵<span class="sr"> (새 창)</span></a><a href="https://map.naver.com/p/search/${encodeURIComponent(spot)}" target="_blank" rel="noopener" data-app="naver">네이버 지도<span class="sr"> (새 창)</span></a></div><script>document.querySelectorAll('.nv a').forEach(function(a){a.addEventListener('click',function(){gtag('event','directions',{post_id:${JSON.stringify(p.key)},app:a.dataset.app,from:'share'})})})</script>` : '';
   return `<!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(ogTitle)} | 훕게스트</title>
