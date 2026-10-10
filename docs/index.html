@@ -8,10 +8,12 @@
 <meta name="description" content="서울·경기·인천 농구 게스트 구함, 픽업게임, 연습경기·교류전 모집 글을 지역·날짜·시간대별로 한눈에. 다음카페 BDR 동아리농구방과 네이버 농심카페 글을 30분마다 모아 보여주는 비공식 사이트.">
 <meta name="keywords" content="농구 게스트, 농구 게스트 구함, 농구 게스트 모집, 농구 픽업게임, 농구 교류전, 농구 연습경기, 서울 농구 게스트, 경기 농구 게스트, 인천 농구 게스트, BDR 동아리농구방, 농심카페">
 <link rel="canonical" href="https://hoopguest.kro.kr/">
-<meta name="theme-color" content="#E0201B">
+<meta name="theme-color" content="#CF3326" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111316" media="(prefers-color-scheme: dark)">
+<script>try{var hgT=JSON.parse(localStorage.getItem('bdr.theme')||'null');if(hgT==='dark'||hgT==='light'){document.documentElement.dataset.theme=hgT;document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){m.content=hgT==='dark'?'#111316':'#CF3326'})}}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Black+Han+Sans&family=Gasoek+One&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -29,212 +31,240 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","name":"훕게스트","alternateName":["hoopguest","HOOPGUEST","농구 게스트 모아보기"],"url":"https://hoopguest.kro.kr/","inLanguage":"ko","description":"서울·경기·인천 농구 게스트 구함·픽업게임·교류전 모집 글을 지역·날짜·시간대별로 모아보는 비공식 사이트"},{"@type":"ItemList","name":"지역별 농구 게스트 모아보기","itemListElement":[{"@type":"ListItem","position":1,"name":"서울 농구 게스트","url":"https://hoopguest.kro.kr/r/seoul/"},{"@type":"ListItem","position":2,"name":"경기 농구 게스트","url":"https://hoopguest.kro.kr/r/gyeonggi/"},{"@type":"ListItem","position":3,"name":"인천 농구 게스트","url":"https://hoopguest.kro.kr/r/incheon/"}]}]}</script>
 <link rel="icon" href="ball.svg" type="image/svg+xml">
 <style>
+/* 훕게스트 디자인 (10-10 개편): 밝은 화면 = 정돈된 코트(빨강) / 어두운 화면 = 야간 코트(주황)
+   기본은 기기 설정, 위쪽 해/달 버튼으로 바꾸면 html[data-theme]로 고정 */
 :root{
-  --bg:#FFFDF6;--dot:rgba(14,14,16,.09);--card:#fff;--text:#0E0E10;--sub:#4E4E55;--line:#0E0E10;
-  --accent:#E0201B;--accent-strong:#C8161B;--yellow:#FFE14D;--ink:#0E0E10;--on-ink:#fff;
-  --chip:#fff;--chip-on:#E0201B;--chip-on-text:#fff;--muted:#6e6e76;--shadow-c:#0E0E10;
-  --f-display:"Gasoek One","Black Han Sans","Noto Sans KR",sans-serif;
+  --bg:#F4F2EE;--card:#fff;--text:#17181A;--sub:#5E5A53;--muted:#7A766E;--line:#E3DED5;--line2:#D3CDC2;
+  --accent:#B4231A;--accent-strong:#CF3326;--on-accent:#fff;--hero:#CF3326;--hero-text:#fff;--hero-sub:rgba(255,255,255,.92);
+  --ink:#17181A;--on-ink:#fff;--chip:#fff;--chip-on:#17181A;--chip-on-text:#fff;--pill:#F1EEE8;--pill-text:#17181A;
+  --hl:#FFE7A3;--hl-text:#3D2F00;--star:#E0A100;--track:#E6E2DA;--seg-on:#fff;--soft:#FBEDEB;--shadow:0 6px 18px rgba(23,24,26,.08);
+  --yellow:var(--hl);--shadow-c:transparent;
+  --f-display:"Black Han Sans","Noto Sans KR",sans-serif;
   --f-head:"Black Han Sans","Noto Sans KR",sans-serif;
   --f-body:"Noto Sans KR",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  color-scheme:light;
 }
-@media (prefers-color-scheme:dark){
-  :root{--bg:#121214;--dot:rgba(244,241,232,.07);--card:#1C1C20;--text:#F4F1E8;--sub:#B4B0A8;--line:#F4F1E8;
-  --accent:#FF6B5E;--accent-strong:#E0201B;--ink:#F4F1E8;--on-ink:#121214;--chip:#1C1C20;--chip-on:#E0201B;--chip-on-text:#fff;--muted:#9a9aa2;--shadow-c:#E0201B}
-}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#111316;--card:#1B1E23;--text:#F4F4F2;--sub:#A3A7AE;--muted:#8F949C;--line:#2A2E35;--line2:#383D45;
+  --accent:#FF8A33;--accent-strong:#FF7A1A;--on-accent:#111316;--hero:#16181C;--hero-text:#F4F4F2;--hero-sub:#A3A7AE;
+  --ink:#F4F4F2;--on-ink:#111316;--chip:#1E2126;--chip-on:#FF7A1A;--chip-on-text:#111316;--pill:#262A30;--pill-text:#E3E4E6;
+  --hl:#FFC48F;--hl-text:#2A1500;--star:#FF7A1A;--track:#1E2126;--seg-on:#2C3037;--soft:#2A1D12;--shadow:0 6px 18px rgba(0,0,0,.35);color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111316;--card:#1B1E23;--text:#F4F4F2;--sub:#A3A7AE;--muted:#8F949C;--line:#2A2E35;--line2:#383D45;
+  --accent:#FF8A33;--accent-strong:#FF7A1A;--on-accent:#111316;--hero:#16181C;--hero-text:#F4F4F2;--hero-sub:#A3A7AE;
+  --ink:#F4F4F2;--on-ink:#111316;--chip:#1E2126;--chip-on:#FF7A1A;--chip-on-text:#111316;--pill:#262A30;--pill-text:#E3E4E6;
+  --hl:#FFC48F;--hl-text:#2A1500;--star:#FF7A1A;--track:#1E2126;--seg-on:#2C3037;--soft:#2A1D12;--shadow:0 6px 18px rgba(0,0,0,.35);color-scheme:dark}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
-body{margin:0;background-color:var(--bg);background-image:radial-gradient(var(--dot) 1.1px,transparent 1.4px);background-size:10px 10px;color:var(--text);font:15px/1.5 var(--f-body)}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 var(--f-body);transition:background-color .25s ease,color .25s ease}
 a{color:inherit}
 button{font:inherit;color:inherit}
 .wrap{max-width:720px;margin:0 auto;padding:0 16px}
-/* 헤더: 빨간 원고 + 집중선 */
-.hero{background:#E0201B;color:#fff;border-bottom:3px solid #0E0E10;position:relative;overflow:hidden}
-.hero .wrap{position:relative;z-index:1}
-.hero .wrap::before{content:"";position:absolute;z-index:-1;width:2400px;height:2400px;left:calc(16px + 23px - 1200px);top:calc(26px + 30px - 1200px);background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 1200'%3E%3Cpath fill='%230E0E10' fill-opacity='0.28' d='M636 600L1500 603L1500 597ZM647 604L1497 674L1498 661ZM642 606L1488 744L1491 725ZM637 605L1490 734L1494 708ZM648 610L1479 792L1481 782ZM642 612L1461 861L1466 844ZM638 610L1464 851L1471 828ZM647 617L1446 908L1449 900ZM642 619L1419 973L1425 959ZM638 616L1423 964L1432 944ZM632 617L1397 1017L1400 1012ZM640 625L1362 1079L1369 1068ZM636 622L1368 1070L1378 1053ZM631 622L1328 1129L1343 1108ZM638 631L1292 1176L1298 1168ZM634 627L1298 1168L1309 1154ZM629 627L1252 1221L1268 1204ZM634 637L1209 1263L1215 1257ZM632 633L1217 1256L1227 1245ZM626 632L1163 1302L1180 1288ZM621 629L1115 1338L1120 1334ZM628 638L1124 1332L1134 1324ZM622 636L1065 1371L1081 1361ZM617 633L1003 1405L1026 1393ZM623 643L1022 1395L1031 1390ZM618 640L958 1426L974 1419ZM613 637L892 1451L915 1443ZM618 647L912 1444L920 1441ZM613 644L845 1466L859 1462ZM608 640L777 1483L797 1478ZM608 635L797 1478L803 1477ZM607 647L728 1491L740 1489ZM603 642L658 1498L677 1497ZM603 637L668 1498L694 1495ZM601 649L608 1500L619 1500ZM597 644L538 1498L555 1499ZM598 639L548 1499L571 1500ZM594 650L488 1493L497 1494ZM591 645L419 1482L433 1484ZM593 640L429 1484L450 1487ZM591 635L371 1470L376 1472ZM585 645L303 1450L315 1454ZM587 640L313 1453L331 1459ZM586 635L247 1428L271 1438ZM578 644L193 1403L202 1407ZM581 640L202 1407L217 1415ZM580 634L140 1373L160 1385ZM572 642L90 1341L96 1346ZM575 638L98 1347L110 1355ZM575 632L41 1305L58 1318ZM576 627L-5 1267L-0 1271ZM569 636L3 1274L13 1282ZM570 630L-48 1225L-34 1238ZM571 624L-95 1172L-78 1192ZM563 632L-81 1188L-74 1196ZM565 626L-125 1133L-115 1147ZM567 621L-165 1074L-152 1094ZM558 628L-153 1092L-149 1099ZM560 622L-190 1032L-182 1045ZM563 617L-221 968L-212 988ZM568 616L-212 988L-210 993ZM556 617L-240 923L-236 935ZM559 612L-263 856L-257 874ZM564 612L-260 866L-252 890ZM553 612L-276 808L-273 818ZM557 607L-289 739L-286 756ZM561 607L-288 749L-283 772ZM550 605L-296 690L-295 698ZM554 601L-300 619L-299 634ZM559 602L-300 630L-299 651ZM564 599L-300 570L-300 576ZM553 595L-294 500L-296 512ZM558 596L-296 510L-297 529ZM563 594L-286 440L-290 465ZM553 588L-273 381L-276 392ZM557 590L-276 391L-279 408ZM563 588L-257 323L-263 346ZM553 582L-236 267L-239 275ZM557 584L-240 277L-245 291ZM563 583L-212 212L-221 231ZM569 582L-185 159L-187 164ZM558 578L-190 168L-196 179ZM564 577L-153 107L-164 124ZM570 577L-112 50L-128 70ZM561 571L-125 67L-131 75ZM566 572L-81 12L-92 24ZM572 572L-33 -40L-49 -23ZM564 565L-48 -25L-53 -19ZM569 566L3 -74L-8 -64ZM575 568L58 -119L41 -106ZM578 572L41 -106L37 -102ZM573 561L98 -147L88 -140ZM579 563L158 -184L142 -175ZM581 568L149 -179L127 -166ZM578 556L202 -207L193 -203ZM583 559L267 -236L251 -230ZM585 564L257 -232L235 -223ZM584 552L313 -253L305 -250ZM589 556L381 -273L367 -269ZM589 561L371 -270L350 -265ZM593 565L429 -284L423 -282ZM594 553L499 -294L486 -293ZM594 558L489 -293L470 -291ZM598 562L559 -299L533 -298ZM601 551L619 -300L608 -300ZM600 556L608 -300L591 -300ZM603 561L679 -297L656 -298ZM608 550L738 -289L730 -291ZM606 555L728 -291L713 -293ZM608 560L798 -278L777 -283ZM610 565L855 -263L850 -265ZM613 555L846 -266L833 -269ZM614 560L913 -244L895 -250ZM615 566L978 -217L954 -227ZM619 555L959 -226L949 -230ZM620 561L1022 -195L1007 -203ZM621 567L1083 -159L1063 -172ZM626 557L1065 -171L1058 -175ZM626 563L1124 -132L1112 -140ZM626 568L1180 -88L1163 -102ZM622 572L1163 -102L1159 -106ZM632 565L1217 -55L1208 -64ZM631 571L1266 -5L1253 -19ZM627 574L1259 -13L1242 -31ZM638 569L1299 32L1292 24ZM636 575L1341 89L1331 75ZM632 577L1335 81L1321 61ZM643 574L1368 130L1363 123ZM640 579L1402 192L1395 179ZM636 581L1398 183L1387 164ZM633 585L1423 237L1421 231ZM644 584L1449 302L1445 291ZM640 585L1446 293L1439 275ZM636 589L1468 360L1460 335ZM648 590L1481 418L1479 408ZM643 590L1479 408L1476 391ZM639 594L1492 478L1488 454ZM650 596L1498 537L1497 529ZM645 596L1497 527L1496 512ZM641 599L1500 597L1500 576Z'/%3E%3C/svg%3E") center/contain no-repeat;pointer-events:none}
-.hero .wrap{padding-top:18px;padding-bottom:14px}
-.hero .intro{margin-top:16px}
-.cacts{display:flex;flex-wrap:wrap;align-items:center;gap:2px 14px;margin-top:4px}
-@media (min-width:720px){.hero .wrap{padding-top:26px;padding-bottom:20px}.hero .intro{margin-top:22px}}
-.brand{display:flex;align-items:center;gap:12px;margin:0}
-.brand img{width:46px;height:46px;flex:none;border-radius:50%;box-shadow:0 0 0 5px #FFFDF6,0 0 0 8px #0E0E10}
-.brand h1{margin:0 0 6px 4px;position:relative;font:400 28px/1 var(--f-display);letter-spacing:-.01em;color:#0E0E10;background:#fff;border:3px solid #0E0E10;padding:8px 12px 10px;transform:rotate(1.5deg);box-shadow:4px 4px 0 #0E0E10}
-.brand .label{position:absolute;right:-14px;bottom:-16px;font:400 16px/1.2 var(--f-head);background:#0E0E10;color:#FFE14D;padding:2px 8px 4px;transform:rotate(-5deg);white-space:nowrap}
-.hero .meta{color:#fff;opacity:.9}
+/* 머리 영역 */
+.hero{background:var(--hero);color:var(--hero-text);border-bottom:1px solid var(--line);transition:background-color .25s ease}
+.hero .wrap{position:relative;padding-top:18px;padding-bottom:16px}
+.brand{display:flex;align-items:center;gap:10px;margin:0;padding-right:52px}
+.brand img{width:40px;height:40px;flex:none;border-radius:50%}
+.brand h1{margin:0;font:400 30px/1.1 var(--f-display);letter-spacing:.01em;color:var(--hero-text);display:flex;align-items:center;gap:8px}
+.brand .label{font:700 12px/1 var(--f-body);letter-spacing:0;padding:5px 8px;border-radius:999px;background:rgba(255,255,255,.18);color:var(--hero-text)}
+:root[data-theme="dark"] .brand .label{background:var(--pill);color:var(--accent)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .brand .label{background:var(--pill);color:var(--accent)}}
+.themebtn{position:absolute;top:12px;right:max(8px,env(safe-area-inset-right));width:44px;height:44px;border:0;border-radius:12px;background:transparent;color:var(--hero-text);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s ease,transform .12s ease}
+.themebtn:hover{background:rgba(255,255,255,.14)}
+.themebtn:active{transform:scale(.9)}
+.themebtn svg{width:22px;height:22px;transition:transform .35s cubic-bezier(.3,1.4,.5,1),opacity .2s ease}
+.themebtn .moon{position:absolute}
+.themebtn[data-mode="light"] .sun{opacity:0;transform:rotate(-90deg) scale(.6)}
+.themebtn[data-mode="dark"] .moon{opacity:0;transform:rotate(90deg) scale(.6)}
+.themebtn:focus-visible{outline:3px solid var(--hero-text);outline-offset:2px}
+.hero .meta{color:var(--hero-sub)}
 .meta{color:var(--sub);font-size:13px;margin-top:6px}
-.intro{margin:10px 0 0;font-weight:500}
-.stale{margin-top:12px;padding:10px 12px;background:var(--yellow);color:#0E0E10;border:2px solid #0E0E10;font-size:13px;line-height:1.5}
-/* 탭 */
-.tabs{display:flex;gap:6px;margin:16px 0 6px;padding:2px 0 4px;overflow-x:auto;scrollbar-width:none}
+.intro{margin:12px 0 0;font-weight:500}
+.cacts{display:flex;flex-wrap:wrap;align-items:center;gap:2px 4px;margin-top:4px}
+.stale{margin-top:12px;padding:10px 12px;background:var(--hl);color:var(--hl-text);border-radius:12px;font-size:13px;line-height:1.5}
+/* 탭: 분리형 버튼 */
+.tabs{display:flex;gap:4px;margin:16px 0 8px;padding:4px;border-radius:12px;background:var(--track);overflow-x:auto;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
-.tab{flex:none;background:var(--card);border:2.5px solid var(--line);padding:8px 12px;font-size:15px;font-weight:500;color:var(--sub);cursor:pointer;min-height:42px}
-.tab[aria-selected="true"]{background:var(--ink);color:var(--on-ink);font-weight:700;transform:rotate(-2deg)}
+.tab{flex:1 0 auto;background:transparent;border:0;border-radius:9px;padding:8px 12px;font-size:15px;font-weight:700;color:var(--sub);cursor:pointer;min-height:40px;transition:background .2s ease,color .2s ease,box-shadow .2s ease}
+.tab[aria-selected="true"]{background:var(--seg-on);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .tab:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 /* 필터 */
-.bar{padding:8px 0 12px}
+.bar{padding:6px 0 10px}
 .row{display:flex;gap:6px;overflow-x:auto;padding:4px 0;scrollbar-width:none}
 .row::-webkit-scrollbar{display:none}
 .row[hidden]{display:none}
-.lbl{flex:none;align-self:stretch;display:flex;align-items:center;font:400 14px/1 var(--f-body);color:var(--text);width:44px;position:sticky;left:0;background:var(--bg);z-index:1;box-shadow:6px 0 6px -2px var(--bg)}
-.row.more{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 36px),transparent)}
-.chip.all[aria-pressed="true"]{background:var(--card);color:var(--text);font-weight:700;box-shadow:inset 0 -4px 0 var(--line)}
+.lbl{flex:none;align-self:stretch;display:flex;align-items:center;font:700 13px/1 var(--f-body);color:var(--sub);width:44px;position:sticky;left:0;background:var(--bg);z-index:1;box-shadow:6px 0 6px -2px var(--bg)}
+.row.more{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 56px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 56px),transparent)}
 .chk{flex:none;display:inline-flex;align-items:center;gap:6px;background:none;border:0;padding:4px 10px 4px 2px;font-size:14px;font-weight:500;color:var(--text);cursor:pointer;min-height:36px;white-space:nowrap}
-.chk::before{content:"";width:18px;height:18px;border:2px solid var(--line);background:var(--card);box-sizing:border-box}
+.chk::before{content:"";width:18px;height:18px;border:1.5px solid var(--line2);border-radius:5px;background:var(--card);box-sizing:border-box;transition:background-color .15s ease,border-color .15s ease}
 .chk[aria-pressed="true"]{font-weight:700}
-.chk[aria-pressed="true"]::before{background:var(--line) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='10'%3E%3Cpath d='M1 5l3.5 3.5L11 1' stroke='%23fff' stroke-width='2.4' fill='none'/%3E%3C/svg%3E") no-repeat center}
-.fsum{display:none;width:100%;align-items:center;gap:10px;margin-top:8px;padding:10px 12px;border:2px solid var(--line);background:var(--card);color:var(--text);font-size:14px;cursor:pointer;text-align:left;min-height:44px}
-.fsum-k{font:400 15px/1 var(--f-head)}
+.chk[aria-pressed="true"]::before{background:var(--chip-on) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='10'%3E%3Cpath d='M1 5l3.5 3.5L11 1' stroke='%23fff' stroke-width='2.4' fill='none'/%3E%3C/svg%3E") no-repeat center;border-color:var(--chip-on)}
+.fsum{display:none;width:100%;align-items:center;gap:10px;margin-top:8px;padding:10px 12px;border:1px solid var(--line2);border-radius:12px;background:var(--card);color:var(--text);font-size:14px;cursor:pointer;text-align:left;min-height:44px}
+.fsum-k{font-weight:700}
 .fsum-v{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}
 .fsum-v.none{font-weight:500;color:var(--sub)}
-.fsum-c{transition:transform .15s}
+.fsum-c{transition:transform .2s ease}
 .fsum[aria-expanded="true"] .fsum-c{transform:rotate(180deg)}
 .fpanel{padding-top:4px}
 .chk:focus-visible,.fsum:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 @media (max-width:639px),(max-height:500px){.fsum{display:flex}.fpanel[hidden]{display:none}}
-.chip{flex:none;border:2px solid var(--line);background:var(--chip);border-radius:0;padding:6px 12px;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;min-height:36px}
-.chip[aria-pressed="true"]{background:var(--chip-on);color:var(--chip-on-text);font-weight:700}
-.chip.sm{padding:4px 10px;font-size:13px;min-height:32px}
+.chip{flex:none;border:1px solid var(--line2);background:var(--chip);color:var(--text);border-radius:999px;padding:6px 14px;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;min-height:36px;transition:background-color .15s ease,border-color .15s ease,color .15s ease,transform .12s ease}
+.chip:active{transform:scale(.96)}
+.chip[aria-pressed="true"]{background:var(--chip-on);border-color:var(--chip-on);color:var(--chip-on-text);font-weight:700}
+.chip.all[aria-pressed="true"]{background:none;border-color:transparent;box-shadow:none;font-weight:500;color:var(--sub)}
+.chip.sm{padding:4px 12px;font-size:13px;min-height:32px}
 .chip:focus-visible,.star:focus-visible,a:focus-visible,input:focus-visible,.linkbtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .chip.nearby{border-style:dashed}
-.chip.homesel{appearance:none;-webkit-appearance:none;font:inherit;font-size:13px;font-weight:700;color:#111;background:var(--yellow) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0h10L5 6z' fill='%23111'/%3E%3C/svg%3E") no-repeat right 10px center;padding-right:28px;width:auto;max-width:9.5em}
+.chip.homesel{appearance:none;-webkit-appearance:none;font:inherit;font-size:13px;font-weight:700;color:var(--hl-text);background:var(--hl) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0h10L5 6z' fill='%23333'/%3E%3C/svg%3E") no-repeat right 10px center;border-color:transparent;padding-right:28px;width:auto;max-width:9.5em}
 .tools{display:flex;gap:8px;align-items:center;margin-top:4px}
-.search{flex:1;min-width:0;border:2px solid var(--line);background:var(--card);border-radius:0;padding:9px 12px;font-size:16px;color:var(--text)}
-.count{font-size:14px;font-weight:700;color:var(--text);padding:14px 0 4px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.search{flex:1;min-width:0;border:1px solid var(--line2);background:var(--card);border-radius:12px;padding:10px 14px;font-size:16px;color:var(--text);transition:border-color .15s ease,box-shadow .15s ease}
+.search:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent);outline:0}
+.count{font-size:14px;font-weight:700;color:var(--text);padding:12px 0 4px;display:flex;justify-content:space-between;align-items:center;gap:8px}
 .cr{display:flex;align-items:center;gap:4px}
 .cr .linkbtn{min-height:36px;padding:0 4px;white-space:nowrap}
 #count{white-space:nowrap}
-.ibtn{position:relative;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:42px;height:42px;border:2px solid var(--line);background:var(--card);color:var(--text);cursor:pointer;padding:0;font:inherit;font-size:11px;font-weight:700;line-height:1;white-space:nowrap}
+.ibtn{position:relative;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:42px;height:42px;border:1px solid var(--line2);border-radius:12px;background:var(--card);color:var(--text);cursor:pointer;padding:0;font:inherit;font-size:11px;font-weight:700;line-height:1;white-space:nowrap;transition:background-color .15s ease,transform .12s ease}
+.ibtn:active{transform:scale(.92)}
 .ibtn svg{width:16px;height:16px;flex:none}
-.ibtn[aria-pressed="true"]{background:var(--yellow);color:#111}
+.ibtn[aria-pressed="true"],.ibtn[aria-expanded="true"]{background:var(--ink);border-color:var(--ink);color:var(--on-ink)}
 .ibtn .dot{position:absolute;top:-4px;right:-4px;width:10px;height:10px;border-radius:50%;background:var(--accent-strong);border:2px solid var(--bg)}
 .ibtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .linkbtn{background:none;border:0;color:var(--accent);cursor:pointer;padding:4px;font-size:13px;font-weight:700}
+/* 지금 갈 수 있는 곳 */
+.nowbtn{display:flex;align-items:center;gap:10px;width:100%;margin-top:8px;min-height:44px;padding:9px 14px;border:1px solid var(--line2);border-radius:12px;background:var(--card);color:var(--text);font-size:15px;font-weight:700;text-align:left;cursor:pointer;transition:background-color .2s ease,border-color .2s ease}
+.nowbtn small{margin-left:auto;font-size:13px;font-weight:500;color:var(--sub)}
+.nowbtn[aria-pressed="true"]{background:var(--soft);border-color:var(--accent-strong)}
+.nowbtn[aria-pressed="true"] small{color:var(--text)}
+.nowbtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.nowbtn.empty{border-style:dashed}
+.nowbtn.empty span{color:var(--sub)}
+.nowbtn span{white-space:nowrap;display:inline-flex;align-items:center;gap:10px}.nowbtn small{text-align:right}
+.ldot{width:8px;height:8px;border-radius:50%;background:var(--accent-strong);flex:none;animation:pulse 2s ease-out infinite}
+.nowbtn.empty .ldot{animation:none;background:var(--muted)}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent-strong) 55%,transparent)}70%{box-shadow:0 0 0 8px transparent}100%{box-shadow:0 0 0 0 transparent}}
 /* 목록 */
-.day{display:inline-block;position:sticky;top:8px;z-index:3;background:var(--ink);color:var(--on-ink);font:400 17px/1.3 var(--f-head);padding:4px 12px 6px;margin:22px 0 12px;transform:rotate(-2deg)}
+.dayh{position:sticky;top:0;z-index:3;margin:10px -16px 6px;padding:10px 16px 8px;background:var(--bg)}
+.day{display:flex;align-items:baseline;gap:8px;font:400 19px/1.3 var(--f-head);color:var(--text)}
 .day b{font-weight:400}
+.day small{font:500 13px/1 var(--f-body);color:var(--sub)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-.day small{font:700 13px/1 var(--f-body, inherit);opacity:.8;margin-left:4px}
-.skip{position:absolute;left:8px;top:-60px;z-index:50;background:var(--ink);color:var(--on-ink);padding:10px 14px;font-weight:700;border:2px solid var(--line)}
+.skip{position:absolute;left:8px;top:-60px;z-index:50;background:var(--ink);color:var(--on-ink);padding:10px 14px;font-weight:700;border-radius:10px}
 .skip:focus{top:8px}
-.totop{position:fixed;right:16px;bottom:20px;z-index:20;width:48px;height:48px;border:3px solid var(--line);background:var(--yellow);color:#111;font:400 13px/1.1 var(--f-head);box-shadow:3px 3px 0 var(--shadow-c);cursor:pointer}
+.totop{position:fixed;right:16px;bottom:calc(20px + env(safe-area-inset-bottom));z-index:20;width:48px;height:48px;border:0;border-radius:50%;background:var(--ink);color:var(--on-ink);font:700 12px/1.1 var(--f-body);box-shadow:var(--shadow);cursor:pointer;transition:transform .15s ease}
+.totop:active{transform:scale(.92)}
 .totop[hidden]{display:none}
 .totop:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-.card{display:flex;gap:12px;background:var(--card);border:3px solid var(--line);border-radius:0;padding:14px 10px 14px 12px;margin-bottom:14px;box-shadow:5px 5px 0 var(--shadow-c)}
+.card{display:flex;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 8px 10px 14px;margin-bottom:10px;transition:box-shadow .2s ease,border-color .2s ease}
+@media (hover:hover){.card:hover{box-shadow:var(--shadow)}}
+.anim .card{animation:cardin .35s ease both}
+.anim .card:nth-child(3){animation-delay:.04s}.anim .card:nth-child(4){animation-delay:.08s}.anim .card:nth-child(5){animation-delay:.12s}.anim .card:nth-child(6){animation-delay:.16s}.anim .card:nth-child(n+7){animation-delay:.2s}
+@keyframes cardin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .card.closed{opacity:.5}
 .card.seen .title{color:var(--sub)}
 .card.seen .time{opacity:.55}
 .seenmark{font-weight:700;color:var(--sub)}
 .srcm{font-weight:700}
-.srcm::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:currentColor;margin-right:4px;vertical-align:1px}
-.srcm.nv{color:#157A34}.srcm.dm{color:#C8161B}
-@media (prefers-color-scheme:dark){.srcm.nv{color:#5FD38A}.srcm.dm{color:#FF7A6E}}
-.chip.srcchip.nv[aria-pressed="true"]{background:#157A34;border-color:var(--line);color:#fff}
-.chip.srcchip.dm[aria-pressed="true"]{background:#C8161B;border-color:var(--line);color:#fff}
-.compact .card{padding:8px 8px 8px 10px;margin-bottom:8px;box-shadow:3px 3px 0 var(--shadow-c);gap:10px}
-.compact .time{width:58px;padding-right:6px;border-right-width:2px}
-.compact .time .s{font-size:17px}
-.compact .tags{margin-bottom:2px}
-.compact .title{font-size:14px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.compact .sub{margin-top:2px}
-.compact .ics,.compact .rep,.compact .dup{display:none}
-.compact .star{min-width:30px;min-height:30px;font-size:19px}
-.nowbtn{display:flex;align-items:center;gap:10px;width:100%;margin-top:8px;min-height:44px;padding:9px 12px;border:2px solid var(--line);background:var(--card);color:var(--text);font-size:15px;font-weight:700;text-align:left;cursor:pointer;box-shadow:3px 3px 0 var(--line)}
-.nowbtn small{margin-left:auto;font-size:13px;font-weight:500;color:var(--sub)}
-.nowbtn[aria-pressed="true"]{background:var(--accent-strong);color:#fff}
-.nowbtn[aria-pressed="true"] small{color:#fff}
-.nowbtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-.tag.soon{background:var(--accent-strong);color:#fff;border-color:#0E0E10}
+.srcm::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:currentColor;margin-right:4px;vertical-align:1px}
+.srcm.nv{color:#157A34}.srcm.dm{color:#B4231A}
+:root[data-theme="dark"] .srcm.nv{color:#5FD38A}:root[data-theme="dark"] .srcm.dm{color:#FF8A7E}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .srcm.nv{color:#5FD38A}:root:not([data-theme="light"]) .srcm.dm{color:#FF8A7E}}
+.chip.srcchip.nv[aria-pressed="true"]{background:#157A34;border-color:#157A34;color:#fff}
+.chip.srcchip.dm[aria-pressed="true"]{background:#B4231A;border-color:#B4231A;color:#fff}
+.time{flex:none;width:72px;text-align:left}
+.time .s{font:400 22px/1.15 var(--f-display);letter-spacing:.01em}
+.time .e{font-size:12px;color:var(--sub);margin-top:2px}
+.time .unk{font:700 14px/1.35 var(--f-body);color:var(--muted)}
+.time .amb{margin-top:4px;font:700 11px/1.2 var(--f-body);color:var(--accent)}
+:root[data-theme="dark"] .time .s{color:var(--accent-strong)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .time .s{color:var(--accent-strong)}}
+.body{flex:1;min-width:0}
+.tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:4px;align-items:center}
+.tag{font-size:12px;padding:2px 8px;background:var(--pill);color:var(--pill-text);border-radius:6px;font-weight:700}
+.tag.g{background:transparent;box-shadow:inset 0 0 0 1px var(--line2);color:var(--sub);font-weight:500}
+.tag.c{background:transparent;box-shadow:inset 0 0 0 1px var(--line2);color:var(--text);font-weight:500}
+.tag.soon{background:var(--accent-strong);color:var(--on-accent)}
+.tag.x{background:var(--ink);color:var(--on-ink)}
+.newwrap{display:inline-flex}
+.tag.new{background:var(--hl);color:var(--hl-text);letter-spacing:.04em}
+.title{font-size:15px;font-weight:500;line-height:1.45;padding:2px 0;word-break:keep-all;overflow-wrap:anywhere;text-decoration:none;display:block}
+.title:hover{text-decoration:underline;text-decoration-thickness:2px;text-decoration-color:var(--accent)}
+.sub{font-size:12px;color:var(--sub);margin-top:4px;display:flex;gap:2px 12px;align-items:center;flex-wrap:wrap}
+.nav,.shr,.ics,.rep{background:none;border:0;border-radius:8px;color:var(--accent);font-size:13px;font-weight:700;text-decoration:none;cursor:pointer;transition:background-color .15s ease}
+.cacts>.nav,.cacts>.shr,.cacts>.ics,.cacts>.rep{padding:8px 8px;margin:0 0 0 -8px}
+.cacts>*+*{margin-left:0}
+.nav:hover,.shr:hover,.ics:hover{background:var(--soft)}
+.ics{color:var(--sub)}
+.nav:focus-visible,.shr:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.navbox,.repbox{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px;font-size:13px}
+.navbox .chip,.repbox .chip{font-size:13px;padding:4px 12px;min-height:32px;text-decoration:none;color:var(--text)}
+.star{flex:none;background:none;border:0;font-size:22px;line-height:1;color:var(--muted);cursor:pointer;padding:4px;align-self:flex-start;min-width:40px;min-height:40px;margin:-8px 0 0;transition:color .15s ease}
+.star[aria-pressed="true"]{color:var(--star)}
+.star.pop{animation:pop .34s cubic-bezier(.3,1.6,.5,1)}
+@keyframes pop{0%{transform:scale(.55)}100%{transform:scale(1)}}
 .dup{margin-top:6px;font-size:13px}
 .dup summary{cursor:pointer;color:var(--sub);font-weight:700;padding:4px 0;min-height:24px}
 .dup .dupt{font-size:14px;margin-top:4px}
 .dupm{display:block;font-size:12px;color:var(--sub)}
-.unkbox{margin:22px 0 8px;padding-top:14px;border-top:2px dashed var(--line)}
+.unkbox{margin:22px 0 8px;padding-top:14px;border-top:1px dashed var(--line2)}
 .unkbox p{margin:6px 0 14px;font-size:13px;color:var(--sub)}
 .sugs{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:14px}
 .sugs .chip b{color:var(--accent)}
-.time{flex:none;width:74px;text-align:center;border-right:3px solid var(--accent);padding-right:8px}
-.time .s{font:400 22px/1.15 var(--f-display);letter-spacing:-.01em}
-.time .e{font-size:12px;color:var(--sub)}
-.time .unk{font:400 15px/1.3 var(--f-head);color:var(--muted)}
-.time .amb{margin-top:4px;font:700 11px/1.2 var(--f-body);color:var(--accent)}
-.body{flex:1;min-width:0}
-.tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:5px;align-items:center}
-.tag{font-size:12px;padding:1px 7px 2px;background:var(--yellow);color:#0E0E10;border:1.5px solid #0E0E10;font-weight:700}
-.tag.g{background:transparent;border-color:var(--line);color:var(--sub);font-weight:500}
-.tag.c{background:transparent;border-color:var(--text);color:var(--text);font-weight:500}
-.mapbox{margin:0 0 12px;border:3px solid var(--line);background:var(--card)}
+.compact .card{padding:9px 6px 8px 12px;margin-bottom:6px;gap:10px;border-radius:12px}
+.compact .time{width:58px}
+.compact .time .s{font-size:16px}
+.compact .tags{margin-bottom:2px}
+.compact .title{font-size:14px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.compact .sub{margin-top:2px}
+.compact .ics,.compact .rep,.compact .dup{display:none}
+.compact .star{min-width:32px;min-height:32px;font-size:19px}
+.mapbox{margin:0 0 12px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--card)}
 #map{height:min(55vh,420px);width:100%}
 .mapnote{margin:0;padding:6px 10px;font-size:13px;color:var(--sub)}
-.mpin{display:grid;place-items:center;border-radius:50%;background:#E0201B;color:#fff;font:700 13px/1 var(--f-body);border:2px solid #0E0E10;box-shadow:2px 2px 0 #0E0E10}
-.favnote{margin:0 0 10px;padding:8px 12px;border:2px solid var(--line);border-radius:10px;background:var(--card);color:var(--text);font-size:13px;line-height:1.5}
+.mpin{display:grid;place-items:center;border-radius:50%;background:var(--accent-strong);color:var(--on-accent);font:700 13px/1 var(--f-body);border:2px solid var(--card);box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.mpin.on{background:var(--hl);color:var(--hl-text)}
+.leaflet-container{font-family:inherit}
+.favnote{margin:0 0 10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--text);font-size:13px;line-height:1.5}
 .linkbtn{margin-left:6px;padding:0;border:0;background:none;font-weight:700;color:var(--accent);text-decoration:underline;cursor:pointer}
 .linkbtn.x{float:right;margin-left:10px;text-decoration:none;color:var(--sub)}
-.mpin.on{background:#FFE14D;color:#0E0E10}
-.leaflet-container{font-family:inherit}
-.tag.x{background:var(--ink);color:var(--on-ink);border-color:var(--ink)}
-.tag.new{font:400 12px/1 "Anton","Black Han Sans",sans-serif;letter-spacing:.04em;background:var(--yellow);color:#0E0E10;border:0;padding:8px 12px;
-  clip-path:polygon(50% 0,60% 22%,82% 6%,78% 32%,100% 36%,82% 54%,98% 76%,72% 72%,66% 100%,50% 80%,34% 100%,28% 72%,2% 76%,18% 54%,0 36%,22% 32%,18% 6%,40% 22%);
-  filter:drop-shadow(1px 0 0 #0E0E10) drop-shadow(-1px 0 0 #0E0E10) drop-shadow(0 1px 0 #0E0E10) drop-shadow(0 -1px 0 #0E0E10)}
-.newwrap{display:inline-flex;filter:drop-shadow(1.2px 0 0 #0E0E10) drop-shadow(-1.2px 0 0 #0E0E10) drop-shadow(0 1.2px 0 #0E0E10) drop-shadow(0 -1.2px 0 #0E0E10)}
-.newwrap .tag.new{filter:none}
-.title{font-size:15px;font-weight:500;line-height:1.45;padding:2px 0;word-break:keep-all;overflow-wrap:anywhere;text-decoration:none;display:block}
-.title:hover{text-decoration:underline;text-decoration-thickness:2px;text-decoration-color:var(--accent)}
-.sub{font-size:13px;color:var(--sub);margin-top:6px;display:flex;gap:2px 12px;align-items:center;flex-wrap:wrap}
-.shr{background:none;border:0;padding:6px 0;margin:-6px 0;color:var(--accent);font-size:13px;font-weight:700;text-decoration:underline;cursor:pointer}
-.shr:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-.rep,.ics{background:none;border:0;padding:6px 0;margin:-6px 0;color:var(--sub);font-size:13px;text-decoration:underline;cursor:pointer}
-.repbox{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-.repbox .chip{font-size:13px;padding:4px 10px;min-height:32px}
-.star{flex:none;background:none;border:0;font-size:22px;line-height:1;color:var(--muted);cursor:pointer;padding:4px;align-self:flex-start;min-width:34px;min-height:34px}
-.star[aria-pressed="true"]{color:#F59F00;text-shadow:0 0 1px #0E0E10}
-.state{text-align:center;padding:48px 16px;color:var(--sub);background:var(--card);border:3px dashed var(--line)}
+.state{text-align:center;padding:48px 16px;color:var(--sub);background:var(--card);border:1px dashed var(--line2);border-radius:14px}
 .state button{margin-top:12px}
 .ssr h2{font-size:16px;margin:18px 0 8px}.ssr ul{list-style:none;margin:0;padding:0}.ssr li{padding:8px 0;border-bottom:1px solid var(--line);font-size:14px;overflow-wrap:anywhere}.ssr li b{margin-right:6px}.ssr a{color:var(--text)}
-.skel{height:84px;border:3px solid var(--line);background:linear-gradient(90deg,var(--card),var(--bg),var(--card));background-size:200% 100%;animation:sh 1.2s infinite;margin-bottom:14px}
+.skel{height:84px;border-radius:14px;background:linear-gradient(90deg,var(--card),var(--track),var(--card));background-size:200% 100%;animation:sh 1.2s infinite;margin-bottom:10px}
 @keyframes sh{to{background-position:-200% 0}}
-footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 84px;border-top:3px solid var(--line);margin-top:28px}
+footer{color:var(--sub);font-size:12px;line-height:1.7;padding:28px 0 84px;border-top:1px solid var(--line);margin-top:28px}
 footer>a{padding:8px 0}
 .repq{width:100%;font-size:13px;color:var(--sub)}
 .areas{margin-bottom:16px;font-size:13px}.areas p{margin:4px 0}.areas a{color:var(--sub);display:inline-block;padding:5px 5px;margin:0 1px 1px 0}.areas b{color:var(--text)}
-.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);width:max-content;max-width:calc(100vw - 32px);background:var(--ink);color:var(--on-ink);border:2px solid var(--line);padding:10px 16px;font-size:14px;font-weight:700;opacity:0;transition:opacity .2s;pointer-events:none;box-shadow:4px 4px 0 var(--accent)}
-.toast.on{opacity:1}
-.pushbox{margin-top:10px;padding:12px;border:3px solid var(--line);background:var(--card);font-size:14px;line-height:1.55;box-shadow:5px 5px 0 var(--shadow-c)}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translate(-50%,12px);width:max-content;max-width:calc(100vw - 32px);background:var(--ink);color:var(--on-ink);border-radius:12px;padding:11px 16px;font-size:14px;font-weight:700;opacity:0;transition:opacity .2s ease,transform .25s cubic-bezier(.3,1.3,.5,1);pointer-events:none;box-shadow:var(--shadow)}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.pushbox{margin-top:10px;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--card);font-size:14px;line-height:1.55;box-shadow:var(--shadow);animation:boxin .22s ease}
+@keyframes boxin{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 .pushbox b{color:var(--accent)}
 .pushbox .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
-.pushbox .chip.primary{background:var(--accent-strong);border-color:var(--line);color:#fff;font-weight:700}
+.pushbox .chip.primary{background:var(--accent-strong);border-color:var(--accent-strong);color:var(--on-accent);font-weight:700}
 .pushbox .note{color:var(--sub);font-size:12px;margin-top:8px}
-@media (prefers-reduced-motion:reduce){.skel{animation:none}.tab[aria-selected="true"],.day,.brand .label{transform:none}}
-@media (min-width:720px){.brand h1{font-size:34px}.brand img{width:54px;height:54px}.hero .wrap::before{left:calc(16px + 27px - 1200px);top:calc(26px + 34px - 1200px)}}
-@media (max-width:639px){.card{padding:12px 8px 12px 10px;gap:10px;margin-bottom:12px}.time{width:62px;padding-right:6px}.time .s{font-size:20px}.day{margin:16px 0 10px}.cacts{gap:2px 12px}.tabs{margin-top:12px}.count{padding-top:10px}}
-.nav{background:none;border:0;padding:6px 0;margin:-6px 0;color:var(--accent);font-size:13px;font-weight:700;text-decoration:underline;cursor:pointer}
-.nav:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-.cacts{column-gap:8px}
-.navbox{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px;font-size:13px}
-.navbox .chip{font-size:13px;padding:4px 10px;min-height:32px;text-decoration:none;color:var(--text)}
-.cacts>.nav,.cacts>.shr,.cacts>.ics,.cacts>.rep{padding:10px 3px;margin:-10px -3px}
-.nowbtn.empty{border-style:dashed}
-.nowbtn.empty span{color:var(--sub)}
-.dayh{position:sticky;top:0;z-index:3;margin:10px -16px 4px;padding:8px 16px 8px;background:var(--bg)}
-.dayh .day{position:static;margin:0}
-.row.more{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 56px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 56px),transparent)}
-.cafebox{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px;padding:10px;border:2px dashed var(--line);font-size:13px}
+.cafebox{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px;padding:10px;border:1px dashed var(--line2);border-radius:12px;font-size:13px;animation:boxin .22s ease}
 .cafebox p{margin:0 0 2px;flex-basis:100%;line-height:1.5}
 .cafebox .chip{display:inline-flex;align-items:center;min-height:36px;padding:0 12px;text-decoration:none;color:var(--text)}
-.notice{position:relative;margin-top:12px;padding:10px 40px 10px 12px;background:var(--ink);color:var(--on-ink);border:2px solid var(--line);font-size:14px;line-height:1.5}
-.notice a{color:var(--yellow);font-weight:700;margin-left:4px}
+.cafebox .chip,.navbox .chip{white-space:normal;max-width:100%;flex:0 1 auto}
+.notice{position:relative;margin-top:12px;padding:10px 40px 10px 12px;background:var(--ink);color:var(--on-ink);border-radius:12px;font-size:14px;line-height:1.5}
+.notice a{color:var(--hl);font-weight:700;margin-left:4px}
 .noticex{position:absolute;top:2px;right:2px;width:36px;height:36px;background:none;border:0;color:var(--on-ink);font-size:16px;cursor:pointer}
-@media (max-width:639px),(max-height:500px){.hero .wrap{padding-top:12px;padding-bottom:10px}.brand{gap:10px}.brand img{width:34px;height:34px;box-shadow:0 0 0 3px #FFFDF6,0 0 0 5px #0E0E10}.brand h1{font-size:21px;padding:5px 9px 7px;border-width:2.5px;box-shadow:3px 3px 0 #0E0E10;margin-bottom:4px}.brand .label{font-size:13px;right:-10px;bottom:-13px}.hero .wrap::before{left:calc(16px + 17px - 1200px);top:calc(12px + 17px - 1200px)}.hero .intro{margin-top:20px;line-height:1.5}.hero .meta{font-size:12px}#meta{margin-top:2px}.tabs{margin-top:10px}.tab{min-height:38px;padding:6px 11px;font-size:14px}.search{padding:7px 12px}.nowbtn,.fsum{min-height:40px;padding-top:7px;padding-bottom:7px;margin-top:6px}.count{padding-top:8px}.dayh{margin-top:4px}.dayh .day{margin:2px 0 2px}}
-.nowbtn span{white-space:nowrap}.nowbtn small{text-align:right}
-@media (max-width:359px){.nowbtn{font-size:14px}.nowbtn small{font-size:12px}}
-@supports (-webkit-touch-callout:none){.chip.homesel{font-size:16px}}
-.wrap{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
-.totop{bottom:calc(20px + env(safe-area-inset-bottom))}.toast{bottom:calc(24px + env(safe-area-inset-bottom))}
-.time{width:80px}.compact .time{width:62px}.compact .time .s{font-size:16px}
-@media (max-width:639px),(max-height:500px){.time{width:68px}.time .s{font-size:18px}.compact .time{width:60px}.compact .time .s{font-size:16px}.cacts{column-gap:8px}}
-.cafebox .chip,.navbox .chip{white-space:normal;max-width:100%;flex:0 1 auto}@media (max-width:359px){.cafebox{padding:8px}}
-.fmorebtn{display:flex;align-items:center;gap:4px;background:none;border:0;padding:6px 0 6px 62px;min-height:36px;font-size:13px;font-weight:700;color:var(--sub);cursor:pointer}.fmorebtn .n{color:var(--accent)}.fmorebtn[aria-expanded="true"] .ar{transform:rotate(180deg)}.fmorebtn .ar{display:inline-block;transition:transform .15s}.fmorebtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-.chip.all[aria-pressed="true"]{background:none;border-color:transparent;box-shadow:none;font-weight:500;color:var(--sub)}
-.acctal{margin-top:10px;padding-top:10px;border-top:2px dashed var(--line)}.alrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px}.alk{flex:0 0 100%;font-size:12px;font-weight:700;color:var(--sub)}
+.fmorebtn{display:flex;align-items:center;gap:4px;background:none;border:0;padding:6px 0 6px 50px;min-height:36px;font-size:13px;font-weight:700;color:var(--sub);cursor:pointer}.fmorebtn .n{color:var(--accent)}.fmorebtn[aria-expanded="true"] .ar{transform:rotate(180deg)}.fmorebtn .ar{display:inline-block;transition:transform .2s ease}.fmorebtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.acctal{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line2)}.alrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px}.alk{flex:0 0 100%;font-size:12px;font-weight:700;color:var(--sub)}
 .kakao{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 18px;background:#FEE500;color:rgba(0,0,0,.85);border-radius:10px;font-weight:700;text-decoration:none}.kakao:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+@media (min-width:720px){.hero .wrap{padding-top:24px;padding-bottom:20px}.brand h1{font-size:34px}.brand img{width:46px;height:46px}.themebtn{top:20px}}
+@media (max-width:639px),(max-height:500px){
+  .hero .wrap{padding-top:10px;padding-bottom:10px}.brand{gap:8px}.brand img{width:30px;height:30px}.brand h1{font-size:23px}.brand .label{font-size:11px;padding:4px 7px}
+  .themebtn{top:4px}.hero .intro{margin-top:6px;font-size:13px;line-height:1.5}.hero .meta{font-size:12px}#meta{margin-top:2px}
+  .tabs{margin-top:10px}.tab{min-height:36px;padding:6px 10px;font-size:14px}.search{padding:8px 12px}.nowbtn,.fsum{min-height:42px;padding-top:7px;padding-bottom:7px;margin-top:6px}.count{padding-top:8px}.dayh{margin-top:4px;padding-top:8px}
+  .card{padding:12px 4px 8px 12px;gap:10px}.time{width:62px}.time .s{font-size:19px}.compact .time{width:56px}.compact .time .s{font-size:16px}
+}
+@media (max-width:359px){.nowbtn{font-size:14px}.nowbtn small{font-size:12px}.cafebox{padding:8px}.tab{font-size:13px;padding:6px 8px}}
+@media (min-width:1080px){.wrap{max-width:1040px}.dayg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:12px;align-items:start}.dayg>.dayh{grid-column:1/-1}.compact .dayg{grid-template-columns:repeat(3,minmax(0,1fr))}.pushbox{max-width:640px}}
+@supports (-webkit-touch-callout:none){.chip.homesel{font-size:16px}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 <script>
   // 카카오 로그인에서 돌아오면 주소의 #login=… 을 GA보다 먼저 꺼내 저장하고 주소에서 지운다
@@ -257,6 +287,7 @@ footer>a{padding:8px 0}
 <header class="hero">
   <div class="wrap">
     <div class="brand"><img src="ball.svg" alt="" width="42" height="42"><h1>훕게스트 <span class="label">모아보기</span></h1></div>
+    <button class="themebtn" id="btnTheme" type="button" aria-label="어두운 화면으로" title="어두운 화면으로" data-mode="light"><svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg></button>
     <p class="meta intro">서울·경기·인천 농구 게스트·픽업게임·연습경기 글을 지역·날짜·시간대로 골라 보세요.</p>
     <div class="meta" id="meta">불러오는 중…</div>
   </div>
@@ -271,7 +302,7 @@ footer>a{padding:8px 0}
     <div class="tools" role="search">
       <input id="q" class="search" type="search" placeholder="체육관·팀명·동네 검색" aria-label="제목 검색">
     </div>
-    <button class="nowbtn" id="btnNow" type="button" aria-pressed="false"><span>⚡ 지금 갈 수 있는 곳</span><small id="nowInfo"></small></button>
+    <button class="nowbtn" id="btnNow" type="button" aria-pressed="false"><span><i class="ldot" aria-hidden="true"></i>지금 갈 수 있는 곳</span><small id="nowInfo"></small></button>
     <button class="fsum" id="fToggle" type="button" aria-expanded="true" aria-controls="fpanel">
       <span class="fsum-k">필터</span><span class="fsum-v" id="fsumText">조건 없음</span><span class="fsum-c" aria-hidden="true">▾</span>
     </button>
@@ -301,7 +332,7 @@ footer>a{padding:8px 0}
   </div>
   <p class="favnote" id="favNote" role="status" hidden></p>
   <section class="mapbox" id="mapBox" hidden aria-label="지역별 글 지도"><div id="map"></div><p class="mapnote" id="mapNote"></p></section>
-  <main id="list" aria-busy="true" tabindex="-1" aria-label="모집 글 목록">
+  <main id="list" class="anim" aria-busy="true" tabindex="-1" aria-label="모집 글 목록">
     <!--ssr--><section class="ssr"><h2>10/10 (토) 수도권 농구 게스트·픽업 모집 80건</h2><ul><li><b>05:40</b> <a href="/r/seoul/gwanak/">서울 관악</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347735" rel="nofollow noopener" target="_blank">(관악구) 10월 10일 토요일 새벽 5시40분 ~8시 관악구민종합체육센터 게스트구인합니다</a></li><li><b>05:50</b> <a href="/r/gyeonggi/namyangju/">경기 남양주</a> 게스트 · <a href="https://cafe.naver.com/cornrow/1792433" rel="nofollow noopener" target="_blank">[별내, 서울] 10월 10일 토요일 새벽 5:50 ~ 8:00 게스트 4명 모집(SK주니어 체육관)</a></li><li><b>06:00</b> <a href="/r/gyeonggi/gwangju/">경기 광주</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347787" rel="nofollow noopener" target="_blank">[경기광주 직동] 10/10(토) 오전 6시 ~ 8시 30분 팀 G.AJE에서 게스트 모십니다</a></li><li><b>06:00</b> <a href="/r/gyeonggi/yongin/">경기 용인</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347563" rel="nofollow noopener" target="_blank">용인] 10/10(토) 오전 6:00-9:00 게스트 모집</a></li><li><b>06:00</b> <a href="/r/gyeonggi/gimpo/">경기 김포</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347557" rel="nofollow noopener" target="_blank">[김포.파주.일산.서울] TEAM.DMZ에서 10/10(토) 오전6시~9시 게스트모집중 (7000)</a></li><li><b>06:00</b> <a href="/r/gyeonggi/hwaseong/">경기 화성</a> 게스트 · <a href="https://cafe.naver.com/cornrow/1792677" rel="nofollow noopener" target="_blank">[화성시 효행구] 매송다목적체육관, 10월 10일(토), 오전 6시~8시, 게스트 모집</a></li><li><b>06:00</b> <a href="/r/incheon/seohae/">인천 서해</a> 게스트 · <a href="https://cafe.naver.com/cornrow/1792551" rel="nofollow noopener" target="_blank">[서구 석남로] 10월10일(토) 오전6시-8시 개스트모집</a></li><li><b>06:00</b> <a href="/r/seoul/gangnam/">서울 강남</a> 연습경기·교류전 · <a href="https://m.cafe.daum.net/dongarry/MptT/360686" rel="nofollow noopener" target="_blank">(강남스포츠문화센터 수서역)10월 10일 (토) 06:00~09:00에서 교류전팀 초청합니다.</a></li><li><b>06:00</b> <a href="/r/seoul/gangnam/">서울 강남</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347278" rel="nofollow noopener" target="_blank">(강남,경기성남)10월 10일 토요일 오전 6시-8시30분 수서역 인근 게스트 구합니다</a></li><li><b>06:30</b> <a href="/r/seoul/mapo/">서울 마포</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347646" rel="nofollow noopener" target="_blank">10.10토 06:30-09:00 상암체육관 SMG게스트 모집</a></li><li><b>06:40</b> <a href="/r/gyeonggi/yongin/">경기 용인</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347681" rel="nofollow noopener" target="_blank">[용인] 10월 10일 (토) 오전6시40분~9시 팀 RUN&amp;HOME(JJ클랜)에서 즐겜하실 게스트 모십니다.</a></li><li><b>07:00</b> <a href="/r/gyeonggi/seongnam/">경기 성남</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347776" rel="nofollow noopener" target="_blank">[광주/성남/분당/하남] 10/10 토요일 7:00~10:00 팀 볼스터에서 게스트 모집합니다.</a></li><li><b>07:00</b> <a href="/r/gyeonggi/namyangju/">경기 남양주</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347754" rel="nofollow noopener" target="_blank">[남양주] 10월10일 (토) 07:00 - 09:00 게스트모집</a></li><li><b>07:00</b> <a href="/r/gyeonggi/suwon/">경기 수원</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347717" rel="nofollow noopener" target="_blank">[수원영통] 10/10 토 오전 07-09시 게스트 초대합니다.</a></li><li><b>07:00</b> <a href="/r/seoul/seocho/">서울 서초</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347714" rel="nofollow noopener" target="_blank">(서초,개포) 10/10(토) 오전 7시 ~ 9시 게스트 구인</a></li><li><b>07:00</b> <a href="/r/gyeonggi/yongin/">경기 용인</a> 게스트 · <a href="https://cafe.naver.com/cornrow/1792904" rel="nofollow noopener" target="_blank">[수지구 동천동] 10월 9일 토요일 아침 7-9시 게스트 모집</a></li><li><b>07:00</b> <a href="/r/gyeonggi/namyangju/">경기 남양주</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347701" rel="nofollow noopener" target="_blank">[남양주 덕소] 10월 10일 토요일 / 오전 07:00 ~ 09:00 게스트 구인</a></li><li><b>07:00</b> <a href="/r/gyeonggi/bucheon/">경기 부천</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347615" rel="nofollow noopener" target="_blank">[부천,시흥,광명] 10/10 (토)07시~09시 팀 리버스에서 게스트 모집</a></li><li><b>07:00</b> <a href="/r/gyeonggi/siheung/">경기 시흥</a> 게스트 · <a href="https://cafe.naver.com/cornrow/1792288" rel="nofollow noopener" target="_blank">[시흥,부천,광명] 10월10일(토) 오전 7~9시 게스트 모집</a></li><li><b>08:00</b> <a href="/r/incheon/bupyeong/">인천 부평</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347785" rel="nofollow noopener" target="_blank">[인천 부평구] 10/10 (토) 08:00~10:30 팀 리쥼에서 초청합니다</a></li><li><b>08:00</b> <a href="/r/gyeonggi/goyang/">경기 고양</a> 게스트 · <a href="https://cafe.naver.com/cornrow/1792715" rel="nofollow noopener" target="_blank">[덕양구] 10월 10일 토요일 오전 08:00~11:00 게스트 모집</a></li><li><b>08:00</b> <a href="/r/incheon/bupyeong/">인천 부평</a> 연습경기·교류전 · <a href="https://m.cafe.daum.net/dongarry/MptT/360617" rel="nofollow noopener" target="_blank">[인천](부평) 토요일 오전 8시 ~ 10시 30분 상대팀 초청합니다!!</a></li><li><b>09:00</b> <a href="/r/gyeonggi/seongnam/">경기 성남</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347712" rel="nofollow noopener" target="_blank">[분당/판교/광주/수지] 10월10일 토요일 광주 문형동 오전 9시00분 ~ 11시30분 게스트모집</a></li><li><b>09:00</b> <a href="/r/incheon/yeongjong/">인천 영종</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347703" rel="nofollow noopener" target="_blank">(인천영종) 10월10일(토) 09시-13시</a></li><li><b>09:00</b> <a href="/r/seoul/gangnam/">서울 강남</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347516" rel="nofollow noopener" target="_blank">[강남구]10/10(토) 09:00~11:00 팀 원더베어즈에서 초청합니다.</a></li><li><b>09:00</b> <a href="/r/gyeonggi/pocheon/">경기 포천</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347443" rel="nofollow noopener" target="_blank">[포천, 동두천, 양주, 의정부] 10. 10.(토) 09-12시 포천 선단동체육센터</a></li><li><b>09:00</b> <a href="/r/gyeonggi/gwangju/">경기 광주</a> 연습경기·교류전 · <a href="https://m.cafe.daum.net/dongarry/MptT/360737" rel="nofollow noopener" target="_blank">[광주] 10월10일 토요일 9시~12시 교류전(3파전) 팀 초청합니다.</a></li><li><b>09:00</b> <a href="/r/gyeonggi/yongin/">경기 용인</a> 연습경기·교류전 · <a href="https://m.cafe.daum.net/dongarry/MptT/360583" rel="nofollow noopener" target="_blank">[광주 용인 성남 이천] 10월10일 토요일 9시~12시 교류전 팀 초청합니다.</a></li><li><b>09:00</b> <a href="/r/seoul/">서울</a> 연습경기·교류전 · <a href="https://m.cafe.daum.net/dongarry/MptT/360333" rel="nofollow noopener" target="_blank">[서울] 10.10 토 9-12 UTB 연습경기 구합니다!!</a></li><li><b>10:00</b> <a href="/r/incheon/seohae/">인천 서해</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347837" rel="nofollow noopener" target="_blank">인천 서해구 오늘밤(10/10토) 10시 - 1시</a></li><li><b>10:00</b> <a href="/r/gyeonggi/gunpo/">경기 군포</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347805" rel="nofollow noopener" target="_blank">[군포 안양] 10/10 (토) 오전 10시~12시 게스트 모집합니다.</a></li><li><b>10:00</b> <a href="/r/gyeonggi/anyang/">경기 안양</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347797" rel="nofollow noopener" target="_blank">평범농구클럽에서 2026년 10월 10일(토) 10-12시 안양 정관장 아레나 보조체육관 게스트 초청드립니다</a></li><li><b>10:00</b> <a href="/r/gyeonggi/anyang/">경기 안양</a> 게스트 · <a href="https://cafe.naver.com/cornrow/1792961" rel="nofollow noopener" target="_blank">[안양/범계/평촌/군포/산본/과천/의왕/수원/광명/안산/시흥] 10월 10일 (토) 10-12시 게스트 모집</a></li><li><b>10:00</b> <a href="/r/seoul/guro/">서울 구로</a> 게스트 · <a href="https://cafe.naver.com/cornrow/1792819" rel="nofollow noopener" target="_blank">[구로구 신도림]10월10일(토) 10:00~13:00   2030게스트 모집합니다</a></li><li><b>10:00</b> <a href="/r/seoul/guro/">서울 구로</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347611" rel="nofollow noopener" target="_blank">[구로구] 10월10일(토) 10:00~13:00 팀steam에서 2030게스트 초청합니다</a></li><li><b>10:00</b> <a href="/r/gyeonggi/siheung/">경기 시흥</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347492" rel="nofollow noopener" target="_blank">[시흥] 10월 10일(토) 오전 오전10~12시 게스트 모집 합니다.</a></li><li><b>10:30</b> <a href="/r/incheon/bupyeong/">인천 부평</a> 게스트 · <a href="https://cafe.naver.com/cornrow/1792914" rel="nofollow noopener" target="_blank">(부평십정)10/10 토 오전10:30</a></li><li><b>11:00</b> <a href="/r/seoul/seongbuk/">서울 성북</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347665" rel="nofollow noopener" target="_blank">[성북구] 10/10(토) 11:00~13:20 팀 메이드에서 초청합니다</a></li><li><b>12:00</b> <a href="/r/seoul/guro/">서울 구로</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347854" rel="nofollow noopener" target="_blank">[개봉] 10월 10일 토요일 12:00-15:00 개봉역 광명사거리역 인근 게스트 뒷선 1분 모십니다.</a></li><li><b>12:00</b> <a href="/r/gyeonggi/uijeongbu/">경기 의정부</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347774" rel="nofollow noopener" target="_blank">[의정부] 10/10 토요일 12시~15시 게스트 모십니다!!@!</a></li><li><b>12:00</b> <a href="/r/seoul/guro/">서울 구로</a> 연습경기·교류전 · <a href="https://m.cafe.daum.net/dongarry/MptT/360774" rel="nofollow noopener" target="_blank">[개봉] 10월 10일 토요일 12:00-15:00 개봉역 광명사거리역 인근 초청</a></li><li><b>12:30</b> <a href="/r/seoul/">서울</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347678" rel="nofollow noopener" target="_blank">10월 10일(토) 해방촌 12시30분~15시30분 게스트 구합니다</a></li><li><b>13:00</b> <a href="/r/seoul/geumcheon/">서울 금천</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347894" rel="nofollow noopener" target="_blank">[서울][금천구] 오늘급구!! 10/10(토) 1300-1600 금천구청역 인근 게스트 2분 모십니다^^</a></li><li><b>13:00</b> <a href="/r/gyeonggi/hwaseong/">경기 화성</a> 게스트 · <a href="https://cafe.naver.com/cornrow/1793015" rel="nofollow noopener" target="_blank">화성시 병점 구봉산 다목적체육관 10월 10일 토요일 13시-17시 까지(4시간) 게스트 모십니다.</a></li><li><b>13:00</b> <a href="/r/seoul/geumcheon/">서울 금천</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347788" rel="nofollow noopener" target="_blank">[서울][금천구] 10/10(토) 1300-1600 금천구청역 인근 게스트 모십니다^^</a></li><li><b>13:00</b> <a href="/r/seoul/gangseo/">서울 강서</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347741" rel="nofollow noopener" target="_blank">(강서구) 10월10일(토) 13-16시 경서중 게스트 구인합니다.</a></li><li><b>13:00</b> <a href="/r/seoul/mapo/">서울 마포</a> 연습경기·교류전 · <a href="https://m.cafe.daum.net/dongarry/MptT/360761" rel="nofollow noopener" target="_blank">[마포구] 신석초등학교 10/10(토) 13:00~16:00 초청드립니다.</a></li><li><b>13:00</b> <a href="/r/seoul/geumcheon/">서울 금천</a> 연습경기·교류전 · <a href="https://m.cafe.daum.net/dongarry/MptT/360701" rel="nofollow noopener" target="_blank">[서울] [금천구] 10/10(토) 1300 - 1600 금나래문화체육센터로 1팀 모십니다!!</a></li><li><b>13:30</b> <a href="/r/gyeonggi/bucheon/">경기 부천</a> 게스트 · <a href="https://cafe.naver.com/cornrow/1792929" rel="nofollow noopener" target="_blank">[부천,인천,광명,시흥,강서,양천] 10월 10일 토요일 부천 오정레포츠센터 1시반 - 5시 게스트 모집</a></li><li><b>14:00</b> <a href="/r/gyeonggi/gunpo/">경기 군포</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347672" rel="nofollow noopener" target="_blank">[군포, 안양 의왕] 10일(토)군포 국민체육센터 P2시~ P6시 게스트 초청합니다.</a></li><li><b>14:30</b> <a href="/r/seoul/dongjak/">서울 동작</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347818" rel="nofollow noopener" target="_blank">[동작구] 10/10(토) 오후 2시 30분-오후 5시 게스트 구인합니다.</a></li><li><b>14:30</b> <a href="/r/seoul/dongjak/">서울 동작</a> 게스트 · <a href="https://cafe.naver.com/cornrow/1792948" rel="nofollow noopener" target="_blank">[동작구] 10월 10일 토 오후 2시 30분~5시 게스트 모집합니다.</a></li><li><b>14:50</b> <a href="/r/seoul/jungnang/">서울 중랑</a> 게스트 · <a href="https://cafe.naver.com/cornrow/1792976" rel="nofollow noopener" target="_blank">[중랑]10월 10일 토 14:50 ~ 16:50 팀무브에서 게스트를 구합니다.</a></li><li><b>14:50</b> <a href="/r/seoul/jungnang/">서울 중랑</a> 연습경기·교류전 · <a href="https://m.cafe.daum.net/dongarry/MptT/360785" rel="nofollow noopener" target="_blank">[중랑] 10월 10일(토) 14시50분 ~ 16시50분 초청합니다</a></li><li><b>15:00</b> <a href="/r/seoul/seongbuk/">서울 성북</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347907" rel="nofollow noopener" target="_blank">[성북구]10/10(토) 석계역 인근 오후3시~6시 게스트 구합니다.</a></li><li><b>15:00</b> <a href="/r/seoul/gangseo/">서울 강서</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347901" rel="nofollow noopener" target="_blank">[강서구]10월10일(토) 3-6시 9호선 신방화역 공항고등학교 게스트 1분 모십니다</a></li><li><b>15:00</b> <a href="/r/seoul/seongbuk/">서울 성북</a> 연습경기·교류전 · <a href="https://m.cafe.daum.net/dongarry/MptT/360750" rel="nofollow noopener" target="_blank">(서울)(성북)10월 10일 (토) 15시~18시 레이토에서 팀 초청합니다.</a></li><li><b>15:00</b> <a href="/r/seoul/gangseo/">서울 강서</a> 연습경기·교류전 · <a href="https://m.cafe.daum.net/dongarry/MptT/360675" rel="nofollow noopener" target="_blank">[강서구]10월10일(토) 3시~6시 9호선 신방화역 공항고 한팀 초청합니다</a></li><li><b>15:30</b> <a href="/r/seoul/yangcheon/">서울 양천</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347920" rel="nofollow noopener" target="_blank">[양천구]10월10일 토요일 15:30-17:30오지팀에서 급게스트구합니다</a></li><li><b>15:30</b> <a href="/r/seoul/yangcheon/">서울 양천</a> 연습경기·교류전 · <a href="https://m.cafe.daum.net/dongarry/MptT/360712" rel="nofollow noopener" target="_blank">[서울][양천구]오지회에서초청드립니다. 10월10일(토) 오후3:30~5:30</a></li><li><b>16:00</b> <a href="/r/seoul/gangnam/">서울 강남</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347921" rel="nofollow noopener" target="_blank">급구 4시-[강남구]대진체육관 10월 10일. 토요일 오후 4~6 올인팀 (30~40대)에서 올코트 게스트 구합니다.</a></li><li><b>16:00</b> <a href="/r/seoul/eunpyeong/">서울 은평</a> 게스트 · <a href="https://cafe.naver.com/cornrow/1793046" rel="nofollow noopener" target="_blank">[은평] **오늘** 10월 10일 (토) / 오후 4-7시 / 게스트 모집</a></li><li><b>16:00</b> <a href="/r/seoul/eunpyeong/">서울 은평</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347912" rel="nofollow noopener" target="_blank">[은평구] **오늘** 10/10 (토) 16:00~19:00 팀 제로나인에서 초청합니다</a></li><li><b>16:00</b> <a href="/r/seoul/gangseo/">서울 강서</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347865" rel="nofollow noopener" target="_blank">[강서]10월 10일(토) 16시 ~ 19시 초청합니다</a></li><li><b>16:00</b> <a href="/r/seoul/eunpyeong/">서울 은평</a> 게스트 · <a href="https://cafe.naver.com/cornrow/1793010" rel="nofollow noopener" target="_blank">[은평] **오늘** 10/10(토) 오후 4-7시 게스트모집</a></li><li><b>16:00</b> <a href="/r/seoul/eunpyeong/">서울 은평</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347720" rel="nofollow noopener" target="_blank">[은평구] 10/10(토) 16:00~19:00 팀 제로나인에서 초청합니다</a></li><li><b>16:00</b> <a href="/r/seoul/eunpyeong/">서울 은평</a> 게스트 · <a href="https://cafe.naver.com/cornrow/1792915" rel="nofollow noopener" target="_blank">[은평] 10월 10일 (토) / 오후 4시~7시 / 게스트 모집</a></li><li><b>16:00</b> <a href="/r/seoul/eunpyeong/">서울 은평</a> 게스트 · <a href="https://cafe.naver.com/cornrow/1792794" rel="nofollow noopener" target="_blank">[은평] 10월 10일 (토) 오후 4시~7시 게스트모집</a></li><li><b>16:00</b> <a href="/r/seoul/eunpyeong/">서울 은평</a> 게스트 · <a href="https://cafe.naver.com/cornrow/1792649" rel="nofollow noopener" target="_blank">[은평] 10월 10일 (토) / 오후 4시-7시 / 혼성농구 게스트모집</a></li><li><b>16:30</b> <a href="/r/incheon/bupyeong/">인천 부평</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347075" rel="nofollow noopener" target="_blank">[부평십정] 10월10일 토 오후4시30분</a></li><li><b>17:00</b> <a href="/r/gyeonggi/namyangju/">경기 남양주</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347916" rel="nofollow noopener" target="_blank">[평내호평]10월10일(토)저녁5~8시 평내체육문화센터</a></li><li><b>17:00</b> <a href="/r/incheon/bupyeong/">인천 부평</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347885" rel="nofollow noopener" target="_blank">(부평십정)10/10 토 5:00</a></li><li><b>17:00</b> <a href="/r/incheon/bupyeong/">인천 부평</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347848" rel="nofollow noopener" target="_blank">(부평십정)10/10 오후5:00-8:00</a></li><li><b>17:00</b> <a href="/r/incheon/bupyeong/">인천 부평</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347791" rel="nofollow noopener" target="_blank">(부평십정)10/10 저녁5시</a></li><li><b>18:00</b> <a href="/r/seoul/dobong/">서울 도봉</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347964" rel="nofollow noopener" target="_blank">10월 10일 토요일 오후6시8시 도봉구청체육관 게스트 모십니다</a></li><li><b>18:00</b> <a href="/r/gyeonggi/hanam/">경기 하남</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347923" rel="nofollow noopener" target="_blank">[하남] 풍산멀티스포츠센터 10/10(토) 18시~20시 게스트 모집합니다</a></li><li><b>18:00</b> <a href="/r/seoul/gangdong/">서울 강동</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347879" rel="nofollow noopener" target="_blank">[강동구] 10월 10일 토요일 18:00-20:30 게스트 구합니다</a></li><li><b>18:00</b> <a href="/r/seoul/seongbuk/">서울 성북</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347849" rel="nofollow noopener" target="_blank">무료 ‼️[서울] [성북구] 10/10(토) 18:00~20:00 프라임타임에서 게스트 초청합니다. (한성대학교)</a></li><li><b>18:00</b> <a href="/r/seoul/">서울</a> 게스트 · <a href="https://m.cafe.daum.net/dongarry/Dilr/347847" rel="nofollow noopener" target="_blank">10/10일 토요일 저녁 6-9시 게스트 초청</a></li><li><b>18:00</b> <a href="/r/gyeonggi/hanam/">경기 하남</a> 연습경기·교류전 · <a href="https://m.cafe.daum.net/dongarry/MptT/360829" rel="nofollow noopener" target="_blank">[하남풍산]10/10(토) 18시~20시 교류전팀 구합니다</a></li></ul></section><!--/ssr-->
   </main>
 
@@ -791,6 +822,7 @@ footer>a{padding:8px 0}
   setPanel(!mqMobile.matches);
 
   function render() {
+    if (!render.done && DATA.length) { render.done = true; setTimeout(() => $('list').classList.remove('anim'), 1200); } // 첫 목록만 차례로 나타나는 효과
     syncUrl();
     // 마지막에 고른 지역을 자동 기억 — 단, 지도 동그라미로 잠깐 고른 지역은 기억하지 않음
     if (S.mapPick && !(S.r2.size === 1 && S.r2.has(S.mapPick))) S.mapPick = null;
@@ -924,6 +956,7 @@ footer>a{padding:8px 0}
     toast(saved.has(k) ? '저장했어요 · 필터의 “저장한 글만”으로 모아 볼 수 있어요' : '저장을 해제했어요');
     track(saved.has(k) ? 'save_post' : 'unsave_post', { post_id: k });
     render();
+    if (saved.has(k)) document.querySelector(`.star[data-key="${CSS.escape(k)}"]`)?.classList.add('pop');
   });
   $('q').addEventListener('input', e => { S.q = e.target.value; render(); });
   $('tgClosed').onclick = () => { S.hideClosed = !S.hideClosed; store.set('bdr.hideClosed', S.hideClosed); render(); };
@@ -1088,9 +1121,23 @@ footer>a{padding:8px 0}
   };
   renderPushBtn();
 
+  // ---- 화면 모드: 기본은 기기 설정(밝게/어둡게), 해·달 버튼으로 바꾸면 기억 (로그인하면 기기끼리 동기화)
+  const mqDark = window.matchMedia ? matchMedia('(prefers-color-scheme: dark)') : null;
+  const isDark = () => { const t = document.documentElement.dataset.theme; return t ? t === 'dark' : !!(mqDark && mqDark.matches); };
+  function applyTheme() {
+    const t = store.get('bdr.theme', null), root = document.documentElement;
+    if (t === 'dark' || t === 'light') root.dataset.theme = t; else delete root.dataset.theme;
+    const d = isDark(), b = $('btnTheme'), lab = d ? '밝은 화면으로' : '어두운 화면으로';
+    b.dataset.mode = d ? 'dark' : 'light'; b.setAttribute('aria-label', lab); b.title = lab;
+    document.querySelectorAll('meta[name="theme-color"]').forEach(m => { m.content = d ? '#111316' : '#CF3326'; });
+  }
+  $('btnTheme').onclick = () => { const next = isDark() ? 'light' : 'dark'; store.set('bdr.theme', next); applyTheme(); track('theme_toggle', { to: next }); };
+  if (mqDark && mqDark.addEventListener) mqDark.addEventListener('change', applyTheme);
+  applyTheme();
+
   // ---- 계정(카카오 로그인, 선택) — 저장한 글·설정·알림 조건을 기기끼리 동기화 (서버: 알림 서버 /auth/kakao, /me)
   const AUTH_KEY = 'bdr.auth';
-  const SYNC_KEYS = ['bdr.saved', 'bdr.fav', 'bdr.home', 'bdr.radius', 'bdr.mapApp', 'bdr.compact', 'bdr.hideClosed', 'bdr.alert'];
+  const SYNC_KEYS = ['bdr.saved', 'bdr.fav', 'bdr.home', 'bdr.radius', 'bdr.mapApp', 'bdr.compact', 'bdr.hideClosed', 'bdr.alert', 'bdr.theme'];
   let acctOn = false, acctApplying = false, acctTimer = 0, acctLast = 0, acctBye = false, acctDevices = 0, acctEdit = null;
   const authTok = () => store.get(AUTH_KEY, null);
   const localData = () => Object.fromEntries(SYNC_KEYS.map(k => [k.slice(4), store.get(k, null)]));
@@ -1113,7 +1160,7 @@ footer>a{padding:8px 0}
       const al = store.get('bdr.alert', null), on = store.get(PUSH_KEY, null); // 다른 기기에서 바꾼 맞춤 알림 → 이 기기 알림 표시도 맞춤
       if (on && al && al.label && on.label !== al.label) { storeSet0(PUSH_KEY, { ...on, label: al.label }); saveSwState({ filters: al.filters, label: al.label, query: al.query || '' }); }
     } finally { acctApplying = false; }
-    render(); renderMapPref();
+    applyTheme(); render(); renderMapPref();
   }
   async function pushSync() {
     if (!authTok()) return;
