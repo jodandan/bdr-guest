@@ -233,7 +233,6 @@ footer>a{padding:8px 0}
 .cafebox .chip,.navbox .chip{white-space:normal;max-width:100%;flex:0 1 auto}@media (max-width:359px){.cafebox{padding:8px}}
 .fmorebtn{display:flex;align-items:center;gap:4px;background:none;border:0;padding:6px 0 6px 62px;min-height:36px;font-size:13px;font-weight:700;color:var(--sub);cursor:pointer}.fmorebtn .n{color:var(--accent)}.fmorebtn[aria-expanded="true"] .ar{transform:rotate(180deg)}.fmorebtn .ar{display:inline-block;transition:transform .15s}.fmorebtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .chip.all[aria-pressed="true"]{background:none;border-color:transparent;box-shadow:none;font-weight:500;color:var(--sub)}
-.calbox{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px;font-size:13px}.calbox .chip{font-size:13px;padding:4px 10px;min-height:32px;text-decoration:none;color:var(--text);white-space:normal;max-width:100%;flex:0 1 auto}.calbox small{flex-basis:100%;color:var(--sub);font-size:12px;line-height:1.5}
 </style>
 <script>
   window.GA_ID = 'G-0DWSLR5007'; // GA4 측정 ID
@@ -631,7 +630,7 @@ footer>a{padding:8px 0}
     const on = saved.has(p.key);
     const when = S.sort === 'new' && p.date ? `${dayLabel(p.date)} · ` : '';
     const shr = `<button class="shr" type="button" data-key="${esc(p.key)}" aria-label="같이 갈 사람에게 공유">공유</button>`;
-    const ics = p.date && p.start ? `<button class="ics" type="button" data-key="${esc(p.key)}" aria-label="캘린더에 추가" aria-expanded="false">캘린더</button>` : '';
+    const ics = p.date && p.start ? `<a class="ics" href="${esc(gcalUrl(p))}" target="_blank" rel="noopener" data-key="${esc(p.key)}" aria-label="구글 캘린더에 추가 (새 창)">캘린더</a>` : '';
     const place = placeFor(p), app = mapApp();
     const nav = !place ? '' : app ? `<a class="nav" href="${esc(mapUrl(app, place))}" target="_blank" rel="noopener" data-key="${esc(p.key)}" data-app="${app}" data-place="${esc(place)}" title="${esc(place)} — ${MAPS[app]}에서 열기">길찾기<span class="sr"> ${esc(place)} (${MAPS[app]}, 새 창)</span></a>` : `<button class="nav" type="button" data-key="${esc(p.key)}" aria-expanded="false" aria-label="${esc(place)} 길찾기">길찾기</button>`;
     const rep = reported.has(p.key) ? '<span>신고됨</span>' : `<button class="rep" type="button" data-key="${esc(p.key)}" aria-expanded="false" aria-label="정보가 틀렸나요? 알려주기">정보 오류</button>`;
@@ -851,34 +850,6 @@ footer>a{padding:8px 0}
     const place = placeFor(p); if (place) q.set('location', place);
     return 'https://calendar.google.com/calendar/render?' + q.toString();
   }
-  function calChooser(btn) { // 캘린더: 구글 캘린더(바로 열림) / 기본 캘린더(.ics 파일) 고르기
-    const art = btn.closest('.card'); const open = art.querySelector('.calbox');
-    if (open) { open.remove(); btn.setAttribute('aria-expanded', 'false'); return; }
-    const p = byKey(btn.dataset.key);
-    const box = document.createElement('div'); box.className = 'calbox'; box.setAttribute('role', 'group'); box.setAttribute('aria-label', '캘린더 선택');
-    box.innerHTML = `<span>어느 캘린더에 넣을까요?</span><a class="chip" href="${esc(gcalUrl(p))}" target="_blank" rel="noopener" data-cal="google" data-key="${esc(p.key)}">구글 캘린더<span class="sr"> (새 창)</span></a><button class="chip" type="button" data-cal="ics" data-key="${esc(p.key)}">기본 캘린더(파일)</button><small>아이폰·갤럭시 기본 캘린더, 아웃룩은 '기본 캘린더(파일)'로 받은 파일을 열면 추가돼요</small>`;
-    art.querySelector('.body').appendChild(box); btn.setAttribute('aria-expanded', 'true'); box.querySelector('a').focus();
-  }
-  function downloadIcs(p) {
-    const [s, e] = span(p);
-    const [y, m, d] = p.date.split('-').map(Number);
-    const at = min => new Date(Date.UTC(y, m - 1, d, 0, min) - 9 * 3600e3).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
-    const text = s => String(s).replace(/[\\,;]/g, c => '\\' + c).replace(/\n/g, '\\n');
-    const board = (BOARDS.find(b => b.key === boardOf(p)) || {}).name || '';
-    const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//hoopguest.kro.kr//KO', 'CALSCALE:GREGORIAN', 'BEGIN:VEVENT',
-      `UID:${p.key.replace(':', '-')}@hoopguest.kro.kr`, `DTSTAMP:${at(0).slice(0, 8)}T000000Z`,
-      `DTSTART:${at(s)}`, `DTEND:${at(e)}`, `SUMMARY:${text('🏀 ' + p.title)}`,
-      `DESCRIPTION:${text(`${board} · 비용·장소·연락처는 원문에서 확인하세요\n${p.url}`)}`, `URL:${p.url}`,
-      'BEGIN:VALARM', 'TRIGGER:-PT2H', 'ACTION:DISPLAY', 'DESCRIPTION:농구 일정 2시간 전', 'END:VALARM',
-      'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
-    const url = URL.createObjectURL(new Blob([ics], { type: 'text/calendar;charset=utf-8' }));
-    const a = document.createElement('a'); a.href = url; a.download = `hoopguest-${p.date}-${p.start.replace(":", "")}.ics`;
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 5000);
-    track('add_calendar', { post_id: p.key, board: boardOf(p) });
-    toast('캘린더 파일을 받았어요. 열면 일정에 추가돼요');
-  }
-
   const byKey = k => DATA.find(x => x.key === k) || {};
   // 글 하나를 공유: 미리보기가 붙는 /p/<키>/ 페이지 링크를 보냄
   async function sharePost(p) {
@@ -894,8 +865,8 @@ footer>a{padding:8px 0}
   }
   $('list').addEventListener('keydown', e => { // Esc로 길찾기·정보 오류 선택창 닫기
     if (e.key !== 'Escape') return;
-    const box = e.target.closest('.card')?.querySelector('.navbox, .repbox, .cafebox, .calbox'); if (!box) return;
-    const btn = box.closest('.card').querySelector(box.classList.contains('navbox') ? 'button.nav' : box.classList.contains('cafebox') ? 'a.title' : box.classList.contains('calbox') ? '.ics' : '.rep');
+    const box = e.target.closest('.card')?.querySelector('.navbox, .repbox, .cafebox'); if (!box) return;
+    const btn = box.closest('.card').querySelector(box.classList.contains('navbox') ? 'button.nav' : box.classList.contains('cafebox') ? 'a.title' : '.rep');
     if (box.classList.contains('cafebox')) { cafeHintDone(box.dataset.src); track('cafe_hint', { step: 'close', cafe: box.dataset.src }); }
     box.remove(); if (btn) { btn.setAttribute('aria-expanded', 'false'); btn.focus(); }
   });
@@ -933,9 +904,7 @@ footer>a{padding:8px 0}
     const sh = e.target.closest('.shr');
     if (sh) { sharePost(byKey(sh.dataset.key)); return; }
     const ic = e.target.closest('.ics');
-    if (ic) { calChooser(ic); return; }
-    const cl = e.target.closest('.calbox [data-cal]');
-    if (cl) { const p = byKey(cl.dataset.key); if (cl.dataset.cal === 'ics') downloadIcs(p); else track('add_calendar', { post_id: p.key, board: boardOf(p), via: 'google' }); setTimeout(() => { const b = cl.closest('.calbox'); if (b) { b.closest('.card')?.querySelector('.ics')?.setAttribute('aria-expanded', 'false'); b.remove(); } }, 300); return; }
+    if (ic) { const p = byKey(ic.dataset.key); track('add_calendar', { post_id: p.key, board: boardOf(p), via: 'google' }); return; } // 구글 캘린더 일정 만들기 화면이 새 창으로 열림
     const a = e.target.closest('a.title');
     if (a && cafeHintFirst(e, a)) return;
     const cb = e.target.closest('.cafebox a');
@@ -960,7 +929,7 @@ footer>a{padding:8px 0}
     render();
     if (S.soon && S.r1 === '전체') toast('📍 내 근처를 고르면 가까운 곳만 볼 수 있어요');
   };
-  setInterval(() => { if (S.soon && !document.hidden && !document.querySelector('.navbox, .repbox, .cafebox, .calbox')) render(); }, 60000); // 남은 시간 갱신
+  setInterval(() => { if (S.soon && !document.hidden && !document.querySelector('.navbox, .repbox, .cafebox')) render(); }, 60000); // 남은 시간 갱신
   // 지도 보기 — 동네별 글 수를 동그라미로. Leaflet(cdnjs) + OpenStreetMap 타일, 처음 열 때만 불러옴
   let LMAP = null, LLAYER = null, leafletP = null;
   function loadLeaflet() {
